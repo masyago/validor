@@ -1,0 +1,27 @@
+# Python-generated files
+__pycache__/
+*.py[oc]
+build/
+dist/
+wheels/
+*.egg-info
+
+# macOS system files
+.DS_Store
+
+# IDE settings
+.vscode/
+
+# Docker files
+db-data/
+
+# Virtual environments
+.venv
+
+# Testing
+.pytest_cache/
+.coverage
+
+# Environment variables and secrets
+.env
+db/password.txt
