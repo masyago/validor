@@ -1,0 +1,17 @@
+panel_code: BMP
+panel_name: Basic Metabolic Panel
+panel_type: chemistry
+includes_analytes: [Na, K, Cl, HCO3, BUN, Cr, GLU, Ca]
+synonyms:
+  - chemistry panel
+  - chemistry screen
+  - chem 7
+  - electrolyte panel
+  - metabolic panel
+clinical_use: "The panel includes glucose, electrolytes, and markers of kidney 
+  function. It is used to assess health conditions or monitor treatment. It 
+  provides important information about the body's fluid balance,
+  metabolism, and kidney functions."
+aliases:
+  - blood test
+  - basic blood test

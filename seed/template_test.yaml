@@ -1,0 +1,28 @@
+test_name: Glucose
+synonyms: 
+ - blood sugar test
+ - blood sugar level
+ - blood glucose level
+ - serum glucose
+ - fasting glucose
+test_code: GLU
+panel_code: BMP
+analyte_type: carbohydrate
+clinical_use: "Healthcare providers most commonly use blood glucose tests for 
+  screening and monitoring of metabolic conditions"
+reference_ranges:
+  adult_generic:
+    low: 70
+    high: 99
+    units: mg/dL 
+interpretation_summary: 
+  high: "Elevated glucose may be associated with impaired glucose
+    metabolism."
+  low: “Low glucose can be associated with medication effects or other 
+    conditions; interpretation depends on context.”
+confounders: []
+aliases:
+  - blood sugar
+  - BS 
+  - sugar level
+  - sugar test

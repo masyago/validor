@@ -4,7 +4,28 @@ outputs as CVS, validates and normalizes results, enriches findings using
 controlled LLM workflows, and persist data in a FHIR-compliant PostgreSQL
 database with full auditability.
 
+## Scope
+### In Scope
 
+* Ingestion of canonical analyzer output
+    * The system assumes a canonical analyzer output schema. 
+      Instrument-specific formats would be handled via adapter layers in 
+      production
+    * The project models a subset of chemistry analyzer outputs. Hematology, 
+      coagulation, and hormone testing are out of scope.
+* Data ingestion format: CVS
+* One FHIR resource
+* Use of AI for flagging anomalies 
+
+
+### Out of Scope
+
+* Processing output from a vendor-specific analyzer
+* Frontend dashboards
+* Real clinical workflows
+* Authentication beyond basic API keys
+* Multi-tenant billing
+* Real device integrations
 
 ## Tech Stack
 
@@ -16,7 +37,10 @@ database with full auditability.
 * **Testing:** Pytest
 * **Environment & Dependency Management:** uv
 
+
 ## Service Architecture
+
+### High-level overview
 
 The service has layered architecture to isolate concerns and ensure that
 each layer have access only to the data appropriate to its responsibility. 
@@ -25,6 +49,9 @@ AI is treated as a controlled, non-authoritative augmentation layer
 1. External data source: Lab Analyzer Simulator
     * Data flows into the system through a controlled API boundary. No direct
      access to database and service-layer is allowed
+    * The system assumes a canonical analyzer output schema. 
+      Instrument-specific formats would be handled via adapter layers in 
+      production
 
 2. API Layer: FastAPI
    * Acts a single entry point
@@ -56,16 +83,31 @@ AI is treated as a controlled, non-authoritative augmentation layer
    * All outputs are validated against pre-defined schemas within the AI 
      Orchestration layer before further use
 
+### Trade-offs
+
+
 ## Metrics
 * Ingestion validation accuracy
 * LLM output reliability
 * Query performance 
 * FHIR standardization coverage
+* Performance optimization: Throughput increase
 * Test coverage
 
 
+## Vector Store Content Disclaimer
+The vector store contains high-level, educational summaries derived from 
+publicly available sources. Content is paraphrased, non-exhaustive, and used 
+solely to ground AI-generated explanations. It does not provide diagnostic or
+ treatment guidance.
+
 ## Features
 
+### FHIR Resources
+
+The service works with 2 resources: DiagnosticReport and Observation.
+DiagnosticReport resource groups Observation resources and provides clinical 
+context. Observation resource contains individual test result.
 
 ## Installation & Setup
 
