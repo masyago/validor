@@ -25,3 +25,6 @@ db-data/
 # Environment variables and secrets
 .env
 db/password.txt
+
+# Internal docs
+PROJECT_CONTEXT.md

@@ -1,7 +1,6 @@
 # Clinical Lab Analyzer
 Clinical Lab Analyzer is a backend service that ingests laboratory analyzer 
-outputs as CVS, validates and normalizes results, enriches findings using 
-controlled LLM workflows, and persist data in a FHIR-compliant PostgreSQL
+outputs as CSV, validates and normalizes results, enriches findings with schema-validated, non-authoritative annotations using controlled LLM workflows, and persist data in a FHIR-compliant PostgreSQL
 database with full auditability.
 
 ## Scope
@@ -13,9 +12,11 @@ database with full auditability.
       production
     * The project models a subset of chemistry analyzer outputs. Hematology, 
       coagulation, and hormone testing are out of scope.
-* Data ingestion format: CVS
-* One FHIR resource
-* Use of AI for flagging anomalies 
+* Data ingestion format: CSV
+* Two FHIR resources:
+    * Observation (individual analytes)
+    * DiagnosticReport (panel-level grouping)
+* Use of AI for flagging anomalies.  
 
 
 ### Out of Scope
@@ -26,6 +27,7 @@ database with full auditability.
 * Authentication beyond basic API keys
 * Multi-tenant billing
 * Real device integrations
+* Real PHI
 
 ## Tech Stack
 
@@ -43,7 +45,7 @@ database with full auditability.
 ### High-level overview
 
 The service has layered architecture to isolate concerns and ensure that
-each layer have access only to the data appropriate to its responsibility. 
+each layer has access only to the data appropriate to its responsibility. 
 AI is treated as a controlled, non-authoritative augmentation layer
 
 1. External data source: Lab Analyzer Simulator
@@ -108,6 +110,11 @@ solely to ground AI-generated explanations. It does not provide diagnostic or
 The service works with 2 resources: DiagnosticReport and Observation.
 DiagnosticReport resource groups Observation resources and provides clinical 
 context. Observation resource contains individual test result.
+
+### Note on AI Use
+
+* AI never modifies core clinical data
+* AI produces schema-validated annotations and explanations
 
 ## Installation & Setup
 
