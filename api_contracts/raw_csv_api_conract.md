@@ -102,7 +102,6 @@ Returned when conflict occurs:
 
 ```json
 {
-    "message": "An ingestion already exists for the run (instrument_id, run_id) but server-produced hash differs",
     "code": "RUN_ID_CONTENT_MISMATCH",
     "retryable": false,
     "existing_ingestion_id": "a7b1c3d4-e5f6-7890-1234-567890abcdef",
@@ -113,7 +112,8 @@ Returned when conflict occurs:
     "hashes": {
         "existing": "b94d27b9934d3e08a52e52d7da7dabfac484efe37a5380ee9088f7ace2efcde9",
         "submitted": "7509e5bda0c762d2bac7f90d758b5b2263fa01ccbc542ab5e3df163be08e6ca9"
-    }
+    },
+    "message": "An ingestion already exists for the run (instrument_id, run_id) but server-produced hash differs"
 }
 ```
 
@@ -127,10 +127,10 @@ File exceeds size limit.
 
 ```json
 {
-    "message": "File exceeds size limit.",
     "code": "PAYLOAD_TOO_LARGE",
     "retryable": false,
-    "max_bytes": 10485760
+    "max_bytes": 10485760,
+    "message": "File exceeds size limit."
 }
 ```
 
@@ -144,11 +144,11 @@ Media type is not `multipart/form-data`
 
 ```json
 {
-    "message": "Media type is not `multipart/form-data`.",
     "code": "UNSUPPORTED_MEDIA_TYPE",
     "retryable": false,
     "expected": "multipart/form-data",
-    "received": "application/json"
+    "received": "application/json",
+    "message": "Media type is not `multipart/form-data`."
 }
 ```
 
@@ -169,21 +169,21 @@ Missing field error
 
 ```json
 {
-  "message": "Validation error.",
   "code": "VALIDATION_ERROR",
   "retryable": false,
   "errors": [
       { "field": "instrument_id", "message": "field required" }
-      ]
+      ],
+  "message": "Validation error."
 }
 ```
 Hash mismatch error
 
 ```json
 {
-  "message": "Content integrity check failed.",
   "code": "CONTENT_HASH_MISMATCH",
-  "retryable": false
+  "retryable": false,
+  "message": "Content integrity check failed."
 }
 ```
 

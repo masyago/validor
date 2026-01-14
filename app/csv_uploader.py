@@ -1,5 +1,7 @@
 """
 CLI uploader for canonical analyzer CSV to ingestion API
+The uploader detects new exports and pushes them to
+POST /v1/ingestions on a schedule
 """
 
 import argparse

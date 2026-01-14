@@ -54,10 +54,21 @@ AI is treated as a controlled, non-authoritative augmentation layer
     * The system assumes a canonical analyzer output schema. 
       Instrument-specific formats would be handled via adapter layers in 
       production
+    * API layer create an export request record
+    * A simulated middleware fulfills it and then sends data to the API layer
+    * Authentication between uploader and API is intentionally omitted in this
+     project; in production this boundary would be secured via 
+     service-to-service authentication (e.g., mTLS or signed tokens) and 
+     network isolation.
 
 2. API Layer: FastAPI
    * Acts a single entry point
    * Responsible for request orchestration and boundary enforcement
+   * API Layer keeps track of each ingestion status:
+      - `PROCESSING`
+      - `FAILED VALIDATION` - terminal. Invalid input/schema
+      - `COMPLETED`
+      - `FAILED` - terminal non-validation errors
 
 3. Service Layer: Domain and Business Logic
    * Responsible for data validation, normalization, and conversion into domain
