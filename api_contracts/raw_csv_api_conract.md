@@ -129,7 +129,7 @@ File exceeds size limit.
 {
     "code": "PAYLOAD_TOO_LARGE",
     "retryable": false,
-    "max_bytes": 10485760,
+    "max_bytes": 1000000,
     "message": "File exceeds size limit."
 }
 ```

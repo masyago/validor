@@ -2,6 +2,7 @@ from typing import Annotated, Literal
 from fastapi import FastAPI, Header, File, UploadFile, Form
 from pydantic import BaseModel, Field, HTTPException, status, AfterValidator
 from datetime import datetime
+from app.core.enums import IngestionStatus
 
 
 class IngestionMetadata(BaseModel):
@@ -44,7 +45,7 @@ class IngestionDuplicateOkResponse(BaseModel):  # 200 OK - Duplicated matches
 
 class IngestionAcceptedResponse(BaseModel):  # 202 Accepted
     ingestion_id: str
-    status: str
+    status: IngestionStatus
     api_received_at: datetime
     message: str
 
@@ -73,7 +74,7 @@ class ValidationErrorDetail(BaseModel):
 class IngestionMissingFieldResponse(BaseModel):  # 422 Missing Field
     code: str
     retryable: bool
-    errors: dict[ValidationErrorDetail]
+    errors: list[ValidationErrorDetail]
     message: str
 
 
