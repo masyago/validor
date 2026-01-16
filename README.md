@@ -97,7 +97,8 @@ AI is treated as a controlled, non-authoritative augmentation layer
      Orchestration layer before further use
 
 ### Trade-offs
-
+Authentication and Trust Model
+For simplicity, the CSV uploader and ingestion API are assumed to operate within a trusted internal network. Authentication is intentionally omitted. In a production setting, this boundary would be enforced via API keys, mTLS, or service identity.
 
 ## Metrics
 * Ingestion validation accuracy

@@ -10,7 +10,7 @@ from fastapi import (
     Response,
 )
 from typing import Annotated
-from .schemas.ingestion import (
+from app.schemas.ingestion import (
     IngestionMetadata,
     IngestionDuplicateOkResponse,
     IngestionAcceptedResponse,
@@ -57,7 +57,7 @@ def calculate_sha256(file_content: bytes):
 
 
 @router.post(
-    "/v1/ingestions",
+    "/ingestions",
     response_model=IngestionAcceptedResponse,
     status_code=status.HTTP_202_ACCEPTED,
     responses={
@@ -145,8 +145,8 @@ async def create_ingestion(
     existing_ingestion_id_placeholder = "a7b1c3d4-e5f6-7890-1234-567890abcdef"
     db_sha256_placeholder = "b94d27b9934d3e08a52e52d7da7dabfac484efe37a5380ee9088f7ace2efcde9"  # Placeholder for existing hash
 
-    if db.server_sha256:  # Simulate finding record
-        if db.server_sha256 == server_sha256_new:
+    if db_sha256_placeholder:  # Simulate finding record
+        if db_sha256_placeholder == server_sha256_new:
             # Set the Location header for the 200 OK response
             response.headers["Location"] = (
                 f"/v1/ingestions/{existing_ingestion_id_placeholder}"
