@@ -143,38 +143,40 @@ async def create_ingestion(
     # placeholder: from db, retrieve server_sha256 if from a row that has both instrument_id and run_id:
     # existing_ingestion = crud.get_ingestion_by_run(...)
     existing_ingestion_id_placeholder = "a7b1c3d4-e5f6-7890-1234-567890abcdef"
-    db_sha256_placeholder = "b94d27b9934d3e08a52e52d7da7dabfac484efe37a5380ee9088f7ace2efcde9"  # Placeholder for existing hash
+    # db_sha256_placeholder = "b94d27b9934d3e08a52e52d7da7dabfac484efe37a5380ee9088f7ace2efcde9"  # Placeholder for existing hash
 
-    if db_sha256_placeholder:  # Simulate finding record
-        if db_sha256_placeholder == server_sha256_new:
-            # Set the Location header for the 200 OK response
-            response.headers["Location"] = (
-                f"/v1/ingestions/{existing_ingestion_id_placeholder}"
-            )
-            response.status_code = status.HTTP_200_OK
-            return IngestionDuplicateOkResponse(
-                existing_ingestion_id=existing_ingestion_id_placeholder,
-                message="The run was already submitted.",
-            )
+    # if db_sha256_placeholder:  # Simulate finding record
+    #     if db_sha256_placeholder == server_sha256_new:
+    #         # Set the Location header for the 200 OK response
+    #         response.headers["Location"] = (
+    #             f"/v1/ingestions/{existing_ingestion_id_placeholder}"
+    #         )
+    #         response.status_code = status.HTTP_200_OK
+    #         return IngestionDuplicateOkResponse(
+    #             existing_ingestion_id=existing_ingestion_id_placeholder,
+    #             message="The run was already submitted.",
+    #         )
 
-        else:
-            raise HTTPException(
-                status_code=status.HTTP_409_CONFLICT,
-                detail=IngestionDuplicateConflictResponse(
-                    code="RUN_ID_CONTENT_MISMATCH",
-                    retryable=False,
-                    existing_ingestion_id="a7b1c3d4-e5f6-7890-1234-567890abcdef",
-                    conflict_key={
-                        "instrument_id": "CHEM-ANALYZER-XYZ-789",
-                        "run_id": "RUN-20260112-1430-A",
-                    },
-                    hashes={
-                        "existing": "b94d27b9934d3e08a52e52d7da7dabfac484efe37a5380ee9088f7ace2efcde9",
-                        "submitted": "7509e5bda0c762d2bac7f90d758b5b2263fa01ccbc542ab5e3df163be08e6ca9",
-                    },
-                    message="An ingestion already exists for the run (instrument_id, run_id) but server-produced hash differs.",
-                ).model_dump(),
-            )
+    #     else:
+    #         # The exception body contains values placeholders:
+    #         # existing_ingestion_id, existing hash. Update when db is ready.
+    #         raise HTTPException(
+    #             status_code=status.HTTP_409_CONFLICT,
+    #             detail=IngestionDuplicateConflictResponse(
+    #                 code="RUN_ID_CONTENT_MISMATCH",
+    #                 retryable=False,
+    #                 existing_ingestion_id="a7b1c3d4-e5f6-7890-1234-567890abcdef",
+    #                 conflict_key={
+    #                     "instrument_id": metadata.instrument_id,
+    #                     "run_id": metadata.run_id,
+    #                 },
+    #                 hashes={
+    #                     "existing": "b94d27b9934d3e08a52e52d7da7dabfac484efe37a5380ee9088f7ace2efcde9",
+    #                     "submitted": server_sha256_new,
+    #                 },
+    #                 message="An ingestion already exists for the run (instrument_id, run_id) but server-produced hash differs.",
+    #             ).model_dump(),
+    #         )
 
     new_ingestion_id = str(uuid.uuid4())  # replace with id from db when ready
     response.headers["Location"] = f"/v1/ingestions/{new_ingestion_id}"
