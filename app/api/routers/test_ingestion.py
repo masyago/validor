@@ -6,6 +6,7 @@ from .ingestion import router
 # from datetime import datetime
 import io
 import uuid
+import hashlib
 
 
 from fastapi import FastAPI
@@ -21,7 +22,7 @@ client = TestClient(app)
 Plan:
 Write Unit Tests for ingestion.py:
 
-- Test the success path (202): Simulate a new, unique file upload.
+- [DONE] Test the success path (202): Simulate a new, unique file upload (with and without content hash)
 - Test the hash mismatch (422): Send a file where the client-provided hash doesn't match the server-calculated one.
 - Test the duplicate with same content (200): Mock the database call to return an existing record with a matching hash.
 - Test the duplicate with different content (409): Mock the database call to return an existing record with a different hash.
@@ -60,9 +61,30 @@ def test_202_success(
         assert False, "ingestion_id is not a valid UUID"
 
 
-def test_422_hash_mismatch():
-    pass
+# Test 422 Hash Mismatch. Content hahs provided by client doesn't match server
+# generated hash
+def test_422_hash_mismatch(valid_form_data, valid_csv_file):
+    mismatched_hash = "incorrect_content_hash"
 
+    valid_form_data["content_sha256"] = mismatched_hash
+
+    response = client.post(
+        "/ingestions",
+        data=valid_form_data,
+        files=valid_csv_file,
+    )
+
+    response_data = response.json()
+
+    assert response.status_code == 422
+    assert "CONTENT_HASH_MISMATCH" in response_data["detail"]["code"]
+    assert "integrity check failed" in response_data["detail"]["message"]
+
+
+"""  "code": "CONTENT_HASH_MISMATCH",
+  "retryable": false,
+  "message": "Content integrity check failed."
+  """
 
 # def test_200_duplicate_ok():
 #     response = client.get("/")
