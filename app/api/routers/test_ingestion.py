@@ -1,5 +1,6 @@
 from fastapi.testclient import TestClient
 import pytest
+from unittest.mock import patch
 
 from .ingestion import router
 
@@ -23,7 +24,7 @@ Plan:
 Write Unit Tests for ingestion.py:
 
 - [DONE] Test the success path (202): Simulate a new, unique file upload (with and without content hash)
-- Test the hash mismatch (422): Send a file where the client-provided hash doesn't match the server-calculated one.
+- [DONE] Test the hash mismatch (422): Send a file where the client-provided hash doesn't match the server-calculated one.
 - Test the duplicate with same content (200): Mock the database call to return an existing record with a matching hash.
 - Test the duplicate with different content (409): Mock the database call to return an existing record with a different hash.
 - Test the payload too large (413): Simulate a request with a Content-Length header that is too big.
@@ -81,20 +82,81 @@ def test_422_hash_mismatch(valid_form_data, valid_csv_file):
     assert "integrity check failed" in response_data["detail"]["message"]
 
 
-"""  "code": "CONTENT_HASH_MISMATCH",
-  "retryable": false,
-  "message": "Content integrity check failed."
-  """
+# Test 200 Duplicate - OK when submit a duplicate with matching content
+def test_200_duplicate_ok(valid_form_data, valid_csv_file, content_sha256):
+    existing_ingestion_id = str(uuid.uuid4())
 
-# def test_200_duplicate_ok():
-#     response = client.get("/")
-#     assert response.status_code == 200
-#     assert response.json() == {"msg": "Hello World"}
+    # Mock the database lookup to return existing record with matching hash
+    with patch("routers.ingestion.get_existing_ingestion") as mock_db:
+        mock_db.return_value = (existing_ingestion_id, content_sha256)
+
+        response = client.post(
+            "/ingestions",
+            data=valid_form_data,
+            files=valid_csv_file,
+        )
+
+    response_data = response.json()
+
+    assert response.status_code == 200
+    assert response_data["existing_ingestion_id"] == existing_ingestion_id
+    assert existing_ingestion_id in response.headers["Location"]
+    assert "already submitted" in response_data["message"]
 
 
-def test_409_duplicate_error():
-    pass
+# Test 409 duplicate. Duplicate error when content of the duplicate doesn't
+# match existing record
+def test_409_duplicate_error(valid_form_data, valid_csv_file, content_sha256):
+    existing_ingestion_id = str(uuid.uuid4())
+    existing_content_sha256 = "very_different_hash"
+
+    with patch("routers.ingestion.get_existing_ingestion") as mock_db:
+        mock_db.return_value = (existing_ingestion_id, existing_content_sha256)
+
+        response = client.post(
+            "/ingestions",
+            data=valid_form_data,
+            files=valid_csv_file,
+        )
+
+    response_data = response.json()
+
+    assert response.status_code == 409
+    assert response_data["detail"]["code"] == "RUN_ID_CONTENT_MISMATCH"
+    assert (
+        response_data["detail"]["existing_ingestion_id"]
+        == existing_ingestion_id
+    )
+    assert (
+        response_data["detail"]["conflict_key"]["instrument_id"]
+        == valid_form_data["instrument_id"]
+    )
+    assert (
+        response_data["detail"]["conflict_key"]["run_id"]
+        == valid_form_data["run_id"]
+    )
+    assert (
+        response_data["detail"]["hashes"]["existing"]
+        == existing_content_sha256
+    )
+    assert response_data["detail"]["hashes"]["submitted"] == content_sha256
+    assert (
+        "ingestion already exists"
+        in response_data["detail"]["message"].lower()
+    )
 
 
-def test_415_content_too_large():
-    pass
+def test_413_content_too_large(valid_form_data, valid_csv_file):
+    response = client.post(
+        "/ingestions",
+        data=valid_form_data,
+        files=valid_csv_file,
+        headers={"Content-Length": "3000000"},  # 3 MB > 1 MB limit
+    )
+
+    response_data = response.json()
+
+    assert response.status_code == 413
+    assert response_data["detail"]["code"] == "PAYLOAD_TOO_LARGE"
+    assert "exceeds" in response_data["detail"]["message"].lower()
+    assert response_data["detail"]["max_bytes"] == 1000000

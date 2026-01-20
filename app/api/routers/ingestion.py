@@ -25,6 +25,7 @@ import uuid
 from app.core.enums import IngestionStatus
 import hashlib
 import io
+from typing import Union
 
 router = APIRouter()
 
@@ -37,7 +38,7 @@ async def check_content_length(content_length: int | None = Header(None)):
     """
     if content_length and content_length > MAX_FILE_SIZE_BYTES:
         raise HTTPException(
-            status_code=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE,
+            status_code=status.HTTP_413_CONTENT_TOO_LARGE,
             detail=IngestionPayloadTooLargeResponse(
                 code="PAYLOAD_TOO_LARGE",
                 retryable=False,
@@ -56,11 +57,31 @@ def calculate_sha256(file_content: bytes):
     return hasher.hexdigest()
 
 
+def get_existing_ingestion(instrument_id: str, run_id: str):
+    """
+    Placeholder function for database lookup.
+    Returns (ingestion_id, content_sha256) if found, else (None, None).
+
+    TODO: Replace with actual database query when DB layer is implemented.
+    """
+    # This will be replaced with:
+    # existing = db.query(IngestionModel).filter_by(
+    #     instrument_id=instrument_id, run_id=run_id
+    # ).first()
+    # if existing:
+    #     return existing.ingestion_id, existing.content_sha256
+    return None, None
+
+
 @router.post(
     "/ingestions",
-    response_model=IngestionAcceptedResponse,
+    response_model=None,  # Disable automatic response validation
     status_code=status.HTTP_202_ACCEPTED,
     responses={
+        status.HTTP_202_ACCEPTED: {
+            "model": IngestionAcceptedResponse,
+            "description": "Ingestion accepted and is being processed.",
+        },
         status.HTTP_200_OK: {
             "model": IngestionDuplicateOkResponse,
             "description": "Duplicate exists and has identical content.",
@@ -139,53 +160,50 @@ async def create_ingestion(
                 ).model_dump(),
             )
 
-    # placeholder: from db, retrieve server_sha256 if from a row  that has both instrument_id and run_id:
-    # placeholder: from db, retrieve server_sha256 if from a row that has both instrument_id and run_id:
-    # existing_ingestion = crud.get_ingestion_by_run(...)
-    existing_ingestion_id_placeholder = "a7b1c3d4-e5f6-7890-1234-567890abcdef"
-    # db_sha256_placeholder = "b94d27b9934d3e08a52e52d7da7dabfac484efe37a5380ee9088f7ace2efcde9"  # Placeholder for existing hash
+    # Check for existing ingestion
+    existing_ingestion_id, db_sha256 = get_existing_ingestion(
+        metadata.instrument_id, metadata.run_id
+    )
 
-    # if db_sha256_placeholder:  # Simulate finding record
-    #     if db_sha256_placeholder == server_sha256_new:
-    #         # Set the Location header for the 200 OK response
-    #         response.headers["Location"] = (
-    #             f"/v1/ingestions/{existing_ingestion_id_placeholder}"
-    #         )
-    #         response.status_code = status.HTTP_200_OK
-    #         return IngestionDuplicateOkResponse(
-    #             existing_ingestion_id=existing_ingestion_id_placeholder,
-    #             message="The run was already submitted.",
-    #         )
+    if db_sha256 and existing_ingestion_id:  # Simulate finding record
+        if db_sha256 == server_sha256_new:
+            # Set the Location header for the 200 OK response
+            response.headers["Location"] = (
+                f"/v1/ingestions/{existing_ingestion_id}"
+            )
+            response.status_code = status.HTTP_200_OK
+            return IngestionDuplicateOkResponse(
+                existing_ingestion_id=existing_ingestion_id,
+                message="The run was already submitted.",
+            )
 
-    #     else:
-    #         # The exception body contains values placeholders:
-    #         # existing_ingestion_id, existing hash. Update when db is ready.
-    #         raise HTTPException(
-    #             status_code=status.HTTP_409_CONFLICT,
-    #             detail=IngestionDuplicateConflictResponse(
-    #                 code="RUN_ID_CONTENT_MISMATCH",
-    #                 retryable=False,
-    #                 existing_ingestion_id="a7b1c3d4-e5f6-7890-1234-567890abcdef",
-    #                 conflict_key={
-    #                     "instrument_id": metadata.instrument_id,
-    #                     "run_id": metadata.run_id,
-    #                 },
-    #                 hashes={
-    #                     "existing": "b94d27b9934d3e08a52e52d7da7dabfac484efe37a5380ee9088f7ace2efcde9",
-    #                     "submitted": server_sha256_new,
-    #                 },
-    #                 message="An ingestion already exists for the run (instrument_id, run_id) but server-produced hash differs.",
-    #             ).model_dump(),
-    #         )
+        else:
+            # The exception body contains values placeholders:
+            # existing_ingestion_id, existing hash. Update when db is ready.
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail=IngestionDuplicateConflictResponse(
+                    code="RUN_ID_CONTENT_MISMATCH",
+                    retryable=False,
+                    existing_ingestion_id=existing_ingestion_id,
+                    conflict_key={
+                        "instrument_id": metadata.instrument_id,
+                        "run_id": metadata.run_id,
+                    },
+                    hashes={
+                        "existing": db_sha256,
+                        "submitted": server_sha256_new,
+                    },
+                    message="An ingestion already exists for the run (instrument_id, run_id) but server-produced hash differs.",
+                ).model_dump(),
+            )
 
-    new_ingestion_id = str(uuid.uuid4())  # replace with id from db when ready
+    # No existing record. Create a new record
+    new_ingestion_id = str(uuid.uuid4())
     response.headers["Location"] = f"/v1/ingestions/{new_ingestion_id}"
     return IngestionAcceptedResponse(
         ingestion_id=new_ingestion_id,
         status=IngestionStatus.PROCESSING,
-        api_received_at=datetime.now(),  # replace with new_ingestion.api_received_at when db is ready
+        api_received_at=datetime.now(),
         message="Ingestion request received and is being processed.",
     )
-
-
-# That's it here for core logic? Probably will add some error handling
