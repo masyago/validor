@@ -108,6 +108,9 @@ For simplicity, the CSV uploader and ingestion API are assumed to operate within
 * Performance optimization: Throughput increase
 * Test coverage
 
+## Database
+Data pipeline: raw ingest - parsed relations - validated and normalized FHIR artifacts
+
 
 ## Vector Store Content Disclaimer
 The vector store contains high-level, educational summaries derived from 
