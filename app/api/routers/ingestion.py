@@ -27,6 +27,11 @@ import hashlib
 import io
 from typing import Union
 
+from sqlalchemy.orm import Session
+from sqlalchemy import select
+from app.persistence.models.core import RawData, Ingestion
+from app.db import get_session
+
 router = APIRouter()
 
 MAX_FILE_SIZE_BYTES = 1000000  # 1 MB
@@ -57,19 +62,19 @@ def calculate_sha256(file_content: bytes):
     return hasher.hexdigest()
 
 
-def get_existing_ingestion(instrument_id: str, run_id: str):
+def get_existing_ingestion(db: Session, instrument_id: str, run_id: str):
     """
     Placeholder function for database lookup.
     Returns (ingestion_id, content_sha256) if found, else (None, None).
 
     TODO: Replace with actual database query when DB layer is implemented.
     """
-    # This will be replaced with:
-    # existing = db.query(IngestionModel).filter_by(
-    #     instrument_id=instrument_id, run_id=run_id
-    # ).first()
-    # if existing:
-    #     return existing.ingestion_id, existing.content_sha256
+    query = select(Ingestion).where(
+        Ingestion.instrument_id == instrument_id, Ingestion.run_id == run_id
+    )
+    existing_record = db.scalars(query).first()
+    if existing_record:
+        return existing_record.ingestion_id, existing_record.server_sha256
     return None, None
 
 
@@ -118,9 +123,9 @@ async def create_ingestion(
     response: Response,
     file: Annotated[UploadFile, File()],
     metadata: IngestionMetadata = Depends(IngestionMetadata.as_form),
+    db: Session = Depends(get_session),
     # Uncomment when background tasks and database implemented:
     # background_tasks: BackgroundTasks,
-    # db: Session = Depends(get_db),
 ):
     """
     Logic:
@@ -162,7 +167,7 @@ async def create_ingestion(
 
     # Check for existing ingestion
     existing_ingestion_id, db_sha256 = get_existing_ingestion(
-        metadata.instrument_id, metadata.run_id
+        db, metadata.instrument_id, metadata.run_id
     )
 
     if db_sha256 and existing_ingestion_id:  # Simulate finding record
