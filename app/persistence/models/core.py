@@ -40,26 +40,6 @@ from app.persistence.base import Base
 # )
 
 
-class RawData(Base):
-    __tablename__ = "raw_data"
-
-    ingestion_id: Mapped[uuid.UUID] = mapped_column(
-        Uuid,
-        ForeignKey("ingestion.ingestion_id"),
-        primary_key=True,
-        default=uuid.uuid4,  # Generate UUID in Python
-    )  # FK to ingestion table
-    content_bytes: Mapped[bytes] = mapped_column(
-        LargeBinary, nullable=False
-    )  # BYTEA
-    content_mime: Mapped[str] = mapped_column(
-        Text, default="text/csv", nullable=False
-    )
-    content_size_bytes: Mapped[Optional[int]] = mapped_column(
-        BigInteger, nullable=True
-    )
-
-
 class Ingestion(Base):
     __tablename__ = "ingestion"
     __table_args__ = (
@@ -95,4 +75,24 @@ class Ingestion(Base):
     source_filename: Mapped[str] = mapped_column(Text, nullable=False)
     ingestion_idempotency_disposition: Mapped[Optional[str]] = mapped_column(
         Text, nullable=True
+    )
+
+
+class RawData(Base):
+    __tablename__ = "raw_data"
+
+    ingestion_id: Mapped[uuid.UUID] = mapped_column(
+        Uuid,
+        ForeignKey("ingestion.ingestion_id"),
+        primary_key=True,
+        default=uuid.uuid4,  # Generate UUID in Python
+    )  # FK to ingestion table
+    content_bytes: Mapped[bytes] = mapped_column(
+        LargeBinary, nullable=False
+    )  # BYTEA
+    content_mime: Mapped[str] = mapped_column(
+        Text, default="text/csv", nullable=False
+    )
+    content_size_bytes: Mapped[Optional[int]] = mapped_column(
+        BigInteger, nullable=True
     )

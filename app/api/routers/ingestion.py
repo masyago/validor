@@ -25,7 +25,7 @@ import uuid
 from app.core.enums import IngestionStatus
 import hashlib
 import io
-from typing import Union
+from typing import Union, Any
 
 from sqlalchemy.orm import Session
 from sqlalchemy import select
@@ -35,6 +35,10 @@ from app.db import get_session
 router = APIRouter()
 
 MAX_FILE_SIZE_BYTES = 1000000  # 1 MB
+
+
+async def _include_ingestion_models():
+    return
 
 
 async def check_content_length(content_length: int | None = Header(None)):
@@ -64,10 +68,9 @@ def calculate_sha256(file_content: bytes):
 
 def get_existing_ingestion(db: Session, instrument_id: str, run_id: str):
     """
-    Placeholder function for database lookup.
-    Returns (ingestion_id, content_sha256) if found, else (None, None).
-
-    TODO: Replace with actual database query when DB layer is implemented.
+    Search database for an existing record with specified instrument_id and run_id.
+    If the record exists, retrieve and return its ingestion_id and server_sha256.
+    Otherwise, return None for both.
     """
     query = select(Ingestion).where(
         Ingestion.instrument_id == instrument_id, Ingestion.run_id == run_id
@@ -76,6 +79,15 @@ def get_existing_ingestion(db: Session, instrument_id: str, run_id: str):
     if existing_record:
         return existing_record.ingestion_id, existing_record.server_sha256
     return None, None
+
+
+@router.get(
+    "/_include_ingestion_responses",
+    response_model=IngestionMissingFieldResponse,
+    include_in_schema=False,
+)
+def _include_ingestion_responses():
+    return {}
 
 
 @router.post(
@@ -117,13 +129,18 @@ def get_existing_ingestion(db: Session, instrument_id: str, run_id: str):
             },
         },
     },
-    dependencies=[Depends(check_content_length)],
+    dependencies=[
+        Depends(check_content_length),
+        Depends(_include_ingestion_models),
+    ],
 )
 async def create_ingestion(
     response: Response,
     file: Annotated[UploadFile, File()],
     metadata: IngestionMetadata = Depends(IngestionMetadata.as_form),
     db: Session = Depends(get_session),
+    _include1: Any = Depends(lambda: IngestionMissingFieldResponse),
+    _include2: Any = Depends(lambda: IngestionContentHashMismatchResponse),
     # Uncomment when background tasks and database implemented:
     # background_tasks: BackgroundTasks,
 ):
@@ -150,6 +167,7 @@ async def create_ingestion(
 
     """
     # Calculate file hash
+    # `read()` here returns the content as bytes
     file_content = await file.read()
     server_sha256_new = calculate_sha256(file_content)
 
@@ -205,10 +223,36 @@ async def create_ingestion(
 
     # No existing record. Create a new record
     new_ingestion_id = str(uuid.uuid4())
+    new_ingestion_api_received_at = datetime.now()
+
+    # Create and add Ingestion and RawData objects
+    new_ingestion_record = Ingestion(
+        ingestion_id=new_ingestion_id,
+        instrument_id=metadata.instrument_id,
+        run_id=metadata.run_id,
+        uploader_id=metadata.uploader_id,
+        spec_version=metadata.spec_version,
+        uploader_received_at=metadata.uploader_received_at,
+        api_received_at=new_ingestion_api_received_at,
+        submitted_sha256=metadata.content_sha256,
+        server_sha256=server_sha256_new,
+        status=IngestionStatus.PROCESSING,
+        source_filename=file.filename,
+    )
+    new_raw_data_record = RawData(
+        ingestion_id=new_ingestion_id,
+        content_bytes=file_content,
+        content_mime=file.content_type,
+        content_size_bytes=len(file_content),
+    )
+
+    db.add(new_ingestion_record)
+    db.add(new_raw_data_record)
+    db.commit()
     response.headers["Location"] = f"/v1/ingestions/{new_ingestion_id}"
     return IngestionAcceptedResponse(
         ingestion_id=new_ingestion_id,
         status=IngestionStatus.PROCESSING,
-        api_received_at=datetime.now(),
+        api_received_at=new_ingestion_api_received_at,
         message="Ingestion request received and is being processed.",
     )
