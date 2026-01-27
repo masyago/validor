@@ -1,4 +1,5 @@
-from flask_sqlalchemy import SQLAlchemy
+"""! FOR REFERENCE ONLY DO NOT USE"""
+
 from sqlalchemy.orm import relationship, DeclarativeBase, mapped_column, Mapped
 from sqlalchemy.sql.sqltypes import TIMESTAMP
 from sqlalchemy.sql.expression import text
@@ -26,25 +27,25 @@ import enum
 from datetime import datetime
 from pgvector.sqlalchemy import Vector
 
-db = SQLAlchemy()
+
+# class IngestionIdempotencyDisposition(enum.Enum):
+#     CREATED = "CREATED"
+#     DUPLICATE_IDENTICAL = "DUPLICATE_IDENTICAL"
+#     CONFLICT = "CONFLICT"
 
 
-class IngestionIdempotencyDisposition(enum.Enum):
-    CREATED = "CREATED"
-    DUPLICATE_IDENTICAL = "DUPLICATE_IDENTICAL"
-    CONFLICT = "CONFLICT"
-
-
-ingestion_idempotency_enum = SqlEnum(
-    IngestionIdempotencyDisposition,
-    name="ingestion_idempotency_disposition_enum",
-    create_type=True,
-)  # TODO: Set to False after first migration
+# ingestion_idempotency_enum = SqlEnum(
+#     IngestionIdempotencyDisposition,
+#     name="ingestion_idempotency_disposition_enum",
+#     create_type=True,
+# )  # TODO: Set to False after first migration
 
 
 class ResultComparator(enum.Enum):
     LESS = "<"
+    LESS_OR_EQUAL = "<="
     GREATER = ">"
+    GREATER_OR_EQUAL = ">="
     EQUAL = "="
 
 
@@ -76,9 +77,9 @@ class RawData(Base):
 
     ingestion_id: Mapped[uuid.UUID] = mapped_column(
         Uuid,
+        ForeignKey("ingestion.ingestion_id"),
         primary_key=True,
         default=uuid.uuid4,  # Generate UUID in Python
-        foreign_key=ForeignKey("ingestion.ingestion_id"),
     )  # FK to ingestion table
     content_bytes: Mapped[bytes] = mapped_column(
         LargeBinary, nullable=False

@@ -28,3 +28,6 @@ db/password.txt
 
 # Internal docs
 PROJECT_CONTEXT.md
+
+# Alembic cache
+alembic/versions/__pycache__/
