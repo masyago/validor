@@ -2,8 +2,32 @@ import pytest
 import io
 from datetime import datetime
 import hashlib
+from sqlalchemy import create_engine
+from sqlalchemy.orm import Session
 
-# Configuration Constants
+TEST_DATABASE_URL = "postgresql+psycopg://localhost:5432/test_cla"
+
+
+@pytest.fixture(scope="session")
+def test_db():
+    """Connect to the test database (tables already exist via Alembic)."""
+    engine = create_engine(TEST_DATABASE_URL, echo=True)
+    yield engine
+    engine.dispose()
+
+
+@pytest.fixture
+def db_session(test_db):
+    """Provide a clean database session for each test with transaction rollback."""
+    connection = test_db.connect()
+    transaction = connection.begin()
+    session = Session(bind=connection)
+
+    yield session
+
+    session.close()
+    transaction.rollback()  # Undo any changes made during the test
+    connection.close()
 
 
 @pytest.fixture(scope="session")

@@ -1,4 +1,10 @@
 from logging.config import fileConfig
+import sys
+from pathlib import Path
+
+# Add project root to Python path
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+
 
 from sqlalchemy import engine_from_config
 from sqlalchemy import pool
@@ -10,6 +16,11 @@ from app.persistence.models import core
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
 config = context.config
+
+# This should read from the appropriate section based on -n flag
+sqlalchemy_url = config.get_section(config.config_ini_section).get(
+    "sqlalchemy.url"
+)
 
 # Interpret the config file for Python logging.
 # This line sets up loggers basically.

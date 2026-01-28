@@ -196,7 +196,7 @@ async def create_ingestion(
             )
             response.status_code = status.HTTP_200_OK
             return IngestionDuplicateOkResponse(
-                existing_ingestion_id=existing_ingestion_id,
+                existing_ingestion_id=str(existing_ingestion_id),
                 message="The run was already submitted.",
             )
 
@@ -208,7 +208,7 @@ async def create_ingestion(
                 detail=IngestionDuplicateConflictResponse(
                     code="RUN_ID_CONTENT_MISMATCH",
                     retryable=False,
-                    existing_ingestion_id=existing_ingestion_id,
+                    existing_ingestion_id=str(existing_ingestion_id),
                     conflict_key={
                         "instrument_id": metadata.instrument_id,
                         "run_id": metadata.run_id,
