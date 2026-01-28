@@ -109,10 +109,10 @@ def test_202_success(
     assert raw_data_record.content_size_bytes > 0
 
 
-# Test 422 Hash Mismatch. Content hahs provided by client doesn't match server
+# Test 422 Hash Mismatch. Content hash provided by client doesn't match server
 # generated hash
-@pytest.mark.skip(reason="No database integration yet.")
-def test_422_hash_mismatch(valid_form_data, valid_csv_file):
+# @pytest.mark.skip(reason="No database integration yet.")
+def test_422_hash_mismatch(client, valid_form_data, valid_csv_file):
     mismatched_hash = "incorrect_content_hash"
 
     valid_form_data["content_sha256"] = mismatched_hash

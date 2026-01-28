@@ -37,8 +37,39 @@ router = APIRouter()
 MAX_FILE_SIZE_BYTES = 1000000  # 1 MB
 
 
-async def _include_ingestion_models():
-    return
+# async def _include_ingestion_models():
+#     return
+# def _merge_schemas(*models) -> dict[str, Any]:
+#     """Merge multiple Pydantic model schemas and their definitions."""
+#     all_defs: dict[str, Any] = {}
+#     one_of_schemas = []
+
+#     for model in models:
+#         schema = model.model_json_schema()
+#         # Extract and collect all $defs
+#         if "$defs" in schema:
+#             all_defs.update(schema["$defs"])
+#         # Add schema without $defs to oneOf
+#         schema_without_defs = {k: v for k, v in schema.items() if k != "$defs"}
+#         one_of_schemas.append(schema_without_defs)
+
+#     # Build the merged schema with $defs at root level
+#     merged_schema: dict[str, Any] = {"oneOf": one_of_schemas}
+#     if all_defs:
+#         merged_schema["$defs"] = all_defs
+
+
+#     return merged_schema
+# @router.get(
+#     "/_register_schemas",
+#     response_model=Union[
+#         IngestionMissingFieldResponse, IngestionContentHashMismatchResponse
+#     ],
+#     include_in_schema=False,
+# )
+# async def _register_schemas():
+#     """Dummy endpoint to register 422 response schemas in OpenAPI components."""
+#     pass
 
 
 async def check_content_length(content_length: int | None = Header(None)):
@@ -81,13 +112,13 @@ def get_existing_ingestion(db: Session, instrument_id: str, run_id: str):
     return None, None
 
 
-@router.get(
-    "/_include_ingestion_responses",
-    response_model=IngestionMissingFieldResponse,
-    include_in_schema=False,
-)
-def _include_ingestion_responses():
-    return {}
+# @router.get(
+#     "/_include_ingestion_responses",
+#     response_model=IngestionMissingFieldResponse,
+#     include_in_schema=False,
+# )
+# def _include_ingestion_responses():
+#     return {}
 
 
 @router.post(
@@ -115,14 +146,13 @@ def _include_ingestion_responses():
             "description": "Validation error, see response for details.",
             "content": {
                 "application/json": {
+                    # "schema": _merge_schemas(
+                    #     IngestionMissingFieldResponse,
+                    #     IngestionContentHashMismatchResponse,)
                     "schema": {
                         "oneOf": [
-                            {
-                                "$ref": f"#/components/schemas/{IngestionMissingFieldResponse.__name__}"
-                            },
-                            {
-                                "$ref": f"#/components/schemas/{IngestionContentHashMismatchResponse.__name__}"
-                            },
+                            IngestionMissingFieldResponse.model_json_schema(),
+                            IngestionContentHashMismatchResponse.model_json_schema(),
                         ]
                     },
                 },
@@ -131,7 +161,7 @@ def _include_ingestion_responses():
     },
     dependencies=[
         Depends(check_content_length),
-        Depends(_include_ingestion_models),
+        # Depends(_include_ingestion_models),
     ],
 )
 async def create_ingestion(
@@ -139,8 +169,8 @@ async def create_ingestion(
     file: Annotated[UploadFile, File()],
     metadata: IngestionMetadata = Depends(IngestionMetadata.as_form),
     db: Session = Depends(get_session),
-    _include1: Any = Depends(lambda: IngestionMissingFieldResponse),
-    _include2: Any = Depends(lambda: IngestionContentHashMismatchResponse),
+    # _include1: Any = Depends(lambda: IngestionMissingFieldResponse),
+    # _include2: Any = Depends(lambda: IngestionContentHashMismatchResponse),
     # Uncomment when background tasks and database implemented:
     # background_tasks: BackgroundTasks,
 ):
