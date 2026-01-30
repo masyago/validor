@@ -252,3 +252,17 @@ async def create_ingestion(
         api_received_at=new_ingestion_api_received_at,
         message="Ingestion request received and queued for processing.",
     )
+
+
+@router.post("/v1/ingestions/{ingestion_id}/process")
+def process_ingestion(
+    ingestion_id: UUID,
+    session: Session = Depends(get_session),
+):
+    svc = IngestionService(
+        raw_repo=RawDataRepository(session),
+        panel_repo=PanelRepository(session),
+        test_repo=TestRepository(session),
+    )
+    result = svc.process_ingestion(ingestion_id)
+    return result  # or status DTO
