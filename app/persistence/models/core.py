@@ -47,8 +47,8 @@ class Ingestion(Base):
             "instrument_id", "run_id", name="unique_instrument_run"
         ),
         CheckConstraint(
-            "(ingestion_idempotency_disposition IS NULL OR ingestion_idempotency_disposition IN ('CREATED', 'DUPLICATE_IDENTICAL', 'CONFLICT'))",
-            name="ck_ingestion_idempotency_disposition",
+            "ingestion_idempotency_disposition IS NULL OR ingestion_idempotency_disposition IN ('CREATED', 'DUPLICATE_IDENTICAL', 'CONFLICT')",
+            name="check_ingestion_idempotency_disposition",
         ),
     )
 

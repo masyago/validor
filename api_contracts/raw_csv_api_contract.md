@@ -80,9 +80,9 @@ processing.
 ```json
 {
   "ingestion_id": "a7b1c3d4-e5f6-7890-1234-567890abcdef",
-  "status": "PROCESSING",
+  "status": "RECEIVED",
   "api_received_at": "2026-01-12T14:35:10.123Z",
-  "message": "Ingestion request received and is being processed."
+  "message": "Ingestion request received and queued for processing."
 }
 ```
 

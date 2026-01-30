@@ -1,0 +1,9 @@
+run_id,sample_id,patient_id,panel_code,test_code,test_name,analyte_type,result,units,reference_range_low,reference_range_high,flag,collection_timestamp,instrument_id
+20260129_002,SAM-ea8e5b8a-2c29-438d-9f06-a8db2099d180,,,,Sodium,electrolyte,,mEq/L,135,145,high,2026-01-29T13:55:25.182715,CANONICAL_CHEM_ANALYZER_V1
+20260129_002,SAM-ea8e5b8a-2c29-438d-9f06-a8db2099d180,,,,Potassium,electrolyte,,mEq/L,3.5,5.1,low,2026-01-29T13:55:25.182715,CANONICAL_CHEM_ANALYZER_V1
+20260129_002,SAM-ea8e5b8a-2c29-438d-9f06-a8db2099d180,,,,Chloride,electrolyte,,mEq/L,98,107,,2026-01-29T13:55:25.182715,CANONICAL_CHEM_ANALYZER_V1
+20260129_002,SAM-ea8e5b8a-2c29-438d-9f06-a8db2099d180,,,,Bicarbonate,electrolyte,,mEq/L,22,29,,2026-01-29T13:55:25.182715,CANONICAL_CHEM_ANALYZER_V1
+20260129_002,SAM-ea8e5b8a-2c29-438d-9f06-a8db2099d180,,,,Blood Urea Nitrogen,metabolic waste,,mg/dL,7,20,,2026-01-29T13:55:25.182715,CANONICAL_CHEM_ANALYZER_V1
+20260129_002,SAM-ea8e5b8a-2c29-438d-9f06-a8db2099d180,,,,Creatinine,metabolic waste,,mg/dL,0.6,1.3,,2026-01-29T13:55:25.182715,CANONICAL_CHEM_ANALYZER_V1
+20260129_002,SAM-ea8e5b8a-2c29-438d-9f06-a8db2099d180,,,,Glucose,carbohydrate,,mg/dL,70,99,,2026-01-29T13:55:25.182715,CANONICAL_CHEM_ANALYZER_V1
+20260129_002,SAM-ea8e5b8a-2c29-438d-9f06-a8db2099d180,,,,Calcium,electrolyte,,mg/dL,8.6,10.2,,2026-01-29T13:55:25.182715,CANONICAL_CHEM_ANALYZER_V1

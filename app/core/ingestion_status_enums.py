@@ -8,13 +8,14 @@ from enum import Enum
 class IngestionStatus(str, Enum):
     """
     Defines possible statuses of an ingestion process.
-
-      - PROCESSING: The ingestion has been received and being processed.
+      - RECEIVED: The ingestion has been received and is queued to be processed.
+      - PROCESSING: The ingestion is being processed.
       - COMPLETED: The ingestion has been successfully processed.
       - FAILED VALIDATION: The ingestion process failed due invalid input/schema.
       - FAILED: The ingestion process failed due to non-validation errors.
     """
 
+    RECEIVED = "RECEIVED"
     PROCESSING = "PROCESSING"
     COMPLETED = "COMPLETED"
     FAILED_VALIDATION = "FAILED VALIDATION"

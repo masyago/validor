@@ -10,8 +10,11 @@ from sqlalchemy import engine_from_config
 from sqlalchemy import pool
 
 from alembic import context
-from app.persistence.models.core import Base
+
+
+from app.persistence.base import Base
 from app.persistence.models import core
+from app.persistence.models import parsing
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.

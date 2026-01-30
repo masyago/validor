@@ -12,7 +12,7 @@ import hashlib
 
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
-from app.db import get_session
+from app.api.routers.dependencies import get_session
 
 # Create a client that includes the router
 app = FastAPI()
@@ -73,7 +73,7 @@ def test_202_success(
 
     assert response.status_code == 202
     assert "ingestion_id" in response_data
-    assert response_data["status"] == "PROCESSING"
+    assert response_data["status"] == "RECEIVED"
     assert "Ingestion request received" in response_data["message"]
 
     # Checks that the ingestion_id in response is valid uuid
@@ -142,7 +142,7 @@ def test_200_duplicate_ok(
 
     from app.persistence.models.core import Ingestion, RawData
     from datetime import datetime
-    from app.core.enums import IngestionStatus
+    from app.core.ingestion_status_enums import IngestionStatus
 
     # Create an existing ingestion and add it to the database
     existing_ingestion_id = uuid.uuid4()
@@ -202,7 +202,7 @@ def test_409_duplicate_error(
     #     mock_db.return_value = (existing_ingestion_id, existing_content_sha256)
     from app.persistence.models.core import Ingestion, RawData
     from datetime import datetime
-    from app.core.enums import IngestionStatus
+    from app.core.ingestion_status_enums import IngestionStatus
 
     # Create an existing ingestion and add it to the database. Use intentionally incorrect server_sha256
     existing_ingestion_id = uuid.uuid4()

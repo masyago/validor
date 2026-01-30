@@ -1,5 +1,6 @@
 from fastapi import (
     APIRouter,
+    BackgroundTasks,
     File,
     UploadFile,
     Form,
@@ -22,7 +23,7 @@ from app.schemas.ingestion import (
 )
 from datetime import datetime
 import uuid
-from app.core.enums import IngestionStatus
+from app.core.ingestion_status_enums import IngestionStatus
 import hashlib
 import io
 from typing import Union, Any
@@ -30,46 +31,17 @@ from typing import Union, Any
 from sqlalchemy.orm import Session
 from sqlalchemy import select
 from app.persistence.models.core import RawData, Ingestion
-from app.db import get_session
+from app.api.routers.dependencies import get_session
+
+# from app.services.tasks.ingestion_tasks import process_ingestion_task
+from app.persistence.repositories.ingestion_repo import (
+    IngestionRepository,
+    RawDataRepository,
+)
 
 router = APIRouter()
 
 MAX_FILE_SIZE_BYTES = 1000000  # 1 MB
-
-
-# async def _include_ingestion_models():
-#     return
-# def _merge_schemas(*models) -> dict[str, Any]:
-#     """Merge multiple Pydantic model schemas and their definitions."""
-#     all_defs: dict[str, Any] = {}
-#     one_of_schemas = []
-
-#     for model in models:
-#         schema = model.model_json_schema()
-#         # Extract and collect all $defs
-#         if "$defs" in schema:
-#             all_defs.update(schema["$defs"])
-#         # Add schema without $defs to oneOf
-#         schema_without_defs = {k: v for k, v in schema.items() if k != "$defs"}
-#         one_of_schemas.append(schema_without_defs)
-
-#     # Build the merged schema with $defs at root level
-#     merged_schema: dict[str, Any] = {"oneOf": one_of_schemas}
-#     if all_defs:
-#         merged_schema["$defs"] = all_defs
-
-
-#     return merged_schema
-# @router.get(
-#     "/_register_schemas",
-#     response_model=Union[
-#         IngestionMissingFieldResponse, IngestionContentHashMismatchResponse
-#     ],
-#     include_in_schema=False,
-# )
-# async def _register_schemas():
-#     """Dummy endpoint to register 422 response schemas in OpenAPI components."""
-#     pass
 
 
 async def check_content_length(content_length: int | None = Header(None)):
@@ -97,28 +69,19 @@ def calculate_sha256(file_content: bytes):
     return hasher.hexdigest()
 
 
-def get_existing_ingestion(db: Session, instrument_id: str, run_id: str):
-    """
-    Search database for an existing record with specified instrument_id and run_id.
-    If the record exists, retrieve and return its ingestion_id and server_sha256.
-    Otherwise, return None for both.
-    """
-    query = select(Ingestion).where(
-        Ingestion.instrument_id == instrument_id, Ingestion.run_id == run_id
-    )
-    existing_record = db.scalars(query).first()
-    if existing_record:
-        return existing_record.ingestion_id, existing_record.server_sha256
-    return None, None
-
-
-# @router.get(
-#     "/_include_ingestion_responses",
-#     response_model=IngestionMissingFieldResponse,
-#     include_in_schema=False,
-# )
-# def _include_ingestion_responses():
-#     return {}
+# def get_existing_ingestion(db: Session, instrument_id: str, run_id: str):
+#     """
+#     Search database for an existing record with specified instrument_id and run_id.
+#     If the record exists, retrieve and return its ingestion_id and server_sha256.
+#     Otherwise, return None for both.
+#     """
+#     query = select(Ingestion).where(
+#         Ingestion.instrument_id == instrument_id, Ingestion.run_id == run_id
+#     )
+#     existing_record = db.scalars(query).first()
+#     if existing_record:
+#         return existing_record.ingestion_id, existing_record.server_sha256
+#     return None, None
 
 
 @router.post(
@@ -165,6 +128,7 @@ def get_existing_ingestion(db: Session, instrument_id: str, run_id: str):
     ],
 )
 async def create_ingestion(
+    background_tasks: BackgroundTasks,
     response: Response,
     file: Annotated[UploadFile, File()],
     metadata: IngestionMetadata = Depends(IngestionMetadata.as_form),
@@ -214,45 +178,43 @@ async def create_ingestion(
             )
 
     # Check for existing ingestion
-    existing_ingestion_id, db_sha256 = get_existing_ingestion(
-        db, metadata.instrument_id, metadata.run_id
+    existing_ingestion = IngestionRepository(db).get_by_instrument_id_run_id(
+        metadata.instrument_id, metadata.run_id
     )
 
-    if db_sha256 and existing_ingestion_id:  # Simulate finding record
-        if db_sha256 == server_sha256_new:
+    if existing_ingestion:  # Simulate finding record
+        if existing_ingestion.server_sha256 == server_sha256_new:
             # Set the Location header for the 200 OK response
             response.headers["Location"] = (
-                f"/v1/ingestions/{existing_ingestion_id}"
+                f"/v1/ingestions/{existing_ingestion.ingestion_id}"
             )
             response.status_code = status.HTTP_200_OK
             return IngestionDuplicateOkResponse(
-                existing_ingestion_id=str(existing_ingestion_id),
+                existing_ingestion_id=str(existing_ingestion.ingestion_id),
                 message="The run was already submitted.",
             )
 
         else:
-            # The exception body contains values placeholders:
-            # existing_ingestion_id, existing hash. Update when db is ready.
             raise HTTPException(
                 status_code=status.HTTP_409_CONFLICT,
                 detail=IngestionDuplicateConflictResponse(
                     code="RUN_ID_CONTENT_MISMATCH",
                     retryable=False,
-                    existing_ingestion_id=str(existing_ingestion_id),
+                    existing_ingestion_id=str(existing_ingestion.ingestion_id),
                     conflict_key={
                         "instrument_id": metadata.instrument_id,
                         "run_id": metadata.run_id,
                     },
                     hashes={
-                        "existing": db_sha256,
+                        "existing": existing_ingestion.server_sha256,
                         "submitted": server_sha256_new,
                     },
                     message="An ingestion already exists for the run (instrument_id, run_id) but server-produced hash differs.",
                 ).model_dump(),
             )
 
-    # No existing record. Create a new record
-    new_ingestion_id = str(uuid.uuid4())
+    # Create new records
+    new_ingestion_id = uuid.uuid4()
     new_ingestion_api_received_at = datetime.now()
 
     # Create and add Ingestion and RawData objects
@@ -266,7 +228,7 @@ async def create_ingestion(
         api_received_at=new_ingestion_api_received_at,
         submitted_sha256=metadata.content_sha256,
         server_sha256=server_sha256_new,
-        status=IngestionStatus.PROCESSING,
+        status=IngestionStatus.RECEIVED,
         source_filename=file.filename,
     )
     new_raw_data_record = RawData(
@@ -276,13 +238,17 @@ async def create_ingestion(
         content_size_bytes=len(file_content),
     )
 
-    db.add(new_ingestion_record)
-    db.add(new_raw_data_record)
+    IngestionRepository(db).create(new_ingestion_record)
+    RawDataRepository(db).create(new_raw_data_record)
     db.commit()
+
+    # Enqueue CSV file processing
+    # background_tasks.add_task(process_ingestion_task, new_ingestion_id)
+
     response.headers["Location"] = f"/v1/ingestions/{new_ingestion_id}"
     return IngestionAcceptedResponse(
-        ingestion_id=new_ingestion_id,
-        status=IngestionStatus.PROCESSING,
+        ingestion_id=str(new_ingestion_id),
+        status=IngestionStatus.RECEIVED,
         api_received_at=new_ingestion_api_received_at,
-        message="Ingestion request received and is being processed.",
+        message="Ingestion request received and queued for processing.",
     )

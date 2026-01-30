@@ -13,33 +13,16 @@ from sqlalchemy import (
     Uuid,
     text,
     ForeignKey,
-    Enum as SqlEnum,
     Numeric,
     UniqueConstraint,
     Index,
+    CheckConstraint,
 )
 import uuid
 from typing import Optional
-from sqlalchemy.dialects.postgresql import JSONB, ENUM
-import enum
+from sqlalchemy.dialects.postgresql import JSONB
 from datetime import datetime
 from app.persistence.base import Base
-
-
-# Replace with CheckConstraint (=CHECK in postgres)
-# class ResultComparator(enum.Enum):
-#     LESS = "<"
-#     LESS_OR_EQUAL = "<="
-#     GREATER = ">"
-#     GREATER_OR_EQUAL = ">="
-#     EQUAL = "="
-
-
-# result_comparator_enum = SqlEnum(
-#     ResultComparator,
-#     name="result_comparator_enum",
-#     create_type=True,  # TODO: Set to False after first migration
-# )
 
 
 class Panel(Base):
@@ -78,6 +61,10 @@ class Test(Base):
             "analyte_type",
             name="unique_panel_test_analyte",
         ),
+        CheckConstraint(
+            "result_comparator IS NULL OR result_comparator IN ('<', '<=', '>', '>=', '=')",
+            name="check_test_result_comparator",
+        ),
     )
 
     test_id: Mapped[uuid.UUID] = mapped_column(
@@ -97,8 +84,8 @@ class Test(Base):
         Numeric, nullable=True
     )
     # Change this line
-    result_comparator: Mapped[Optional[ResultComparator]] = mapped_column(
-        result_comparator_enum, nullable=True
+    result_comparator: Mapped[Optional[str]] = mapped_column(
+        Text, nullable=True
     )
 
     ref_low_raw: Mapped[Optional[str]] = mapped_column(Text, nullable=True)

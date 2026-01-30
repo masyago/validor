@@ -2,7 +2,7 @@ from typing import Annotated, Literal
 from fastapi import Form
 from pydantic import BaseModel, Field, AfterValidator
 from datetime import datetime
-from app.core.enums import IngestionStatus
+from app.core.ingestion_status_enums import IngestionStatus
 
 
 class IngestionMetadata(BaseModel):
