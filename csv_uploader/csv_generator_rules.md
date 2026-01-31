@@ -26,7 +26,7 @@ instrument_id
 `patient_id` one per CSV
 `result` selected by the generator. Mostly between reference_range_low and reference_range_high with values outside the range
 `flag` optional, generated based on `result` value: low, high, or questionable result (needs manual review/dilution).
-`collection_timestamp` script generated (datetime.now())
+`collection_timestamp` script generated (datetime.now()). One timestamp per panel (not per individual test)
 `instrument_id` retrieve from config.py file
 
 

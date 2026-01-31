@@ -1,29 +1,31 @@
 """
-Docstring for app.services.parser
-Parses data from CSV and prepares it for database.
+Parses data from CSV into a list of dictionaries, from bytes to rows.
+No domain logic.
 """
 
 import csv
 import io
 
-# from app.persistence.repositories.raw_data_repo import RawDataRepository
-
-# raw_data_repo = RawDataRepository()
-
-# csv_bytes = raw_repo.get_content_bytes(ingestion_id)
-
 
 class CanonicalAnalyzerCsvParser:
-    def parse(self, content_bytes: bytes) -> list[dict]:
-        data = csv_bytes.decode("utf-8")
+    def parse(self, content_bytes: bytes) -> list[dict[str, str]]:
+        data = content_bytes.decode("utf-8-sig")
         f = io.StringIO(data)
-        reader = csv.DictReader(
-            f
-        )  # each row is a dict where key is a column name
-        # for row in reader:
-        #     print(row)
-        return list(reader)
+        # Each CSV row is a dict where key is a column name
+        reader = csv.DictReader(f)
 
+        rows: list[dict[str, str]] = []
+        for raw_row in reader:
+            # DictReader values should already be strings, but normalize anyway
+            normalized = {
+                str(k): (
+                    v.strip()
+                    if isinstance(v, str)
+                    else ("" if v is None else str(v))
+                )
+                for k, v in raw_row.items()
+                if k is not None
+            }
+            rows.append(normalized)
 
-csv_bytes = b"name,age\nAlice,\nBob,25"
-print(CanonicalAnalyzerCsvParser().parse(csv_bytes))
+        return rows

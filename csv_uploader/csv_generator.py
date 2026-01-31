@@ -1,7 +1,7 @@
 """The script simulates CSV files produced by a canonical lab analyzer."""
 
 import csv
-from datetime import datetime, date
+from datetime import datetime, date, timezone
 import yaml
 from pathlib import Path
 import json
@@ -249,7 +249,7 @@ def main() -> None:
         # Generate metadata
         patient_id = f"PAT-{uuid.uuid4()}"
         sample_id = f"SAM-{uuid.uuid4()}"
-        collection_timestamp = datetime.now().isoformat()
+        collection_timestamp = datetime.now(timezone.utc).isoformat()
 
         # Generate CSV based on profile
         csv_data = generate_csv_rows(

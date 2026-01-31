@@ -25,9 +25,11 @@ clarity.
 ### Immutable (source of truth)
 
 * `ingestion`
+   
 * `raw_data`
     * one-to-one relationship with `ingestion` on key `ingestion.ingestion_id`.
      Both sides are mandatory
+    
 
 
 ### Staged Data

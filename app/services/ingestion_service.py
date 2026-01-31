@@ -1,3 +1,6 @@
+from app.services.parser import CanonicalAnalyzerCsvParser
+
+
 class IngestionService:
     def __init__(self):
         self.raw_repo = raw_repo
