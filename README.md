@@ -65,8 +65,9 @@ AI is treated as a controlled, non-authoritative augmentation layer
    * Acts a single entry point
    * Responsible for request orchestration and boundary enforcement
    * API Layer keeps track of each ingestion status:
+      - `RECEIVED`
       - `PROCESSING`
-      - `FAILED VALIDATION` - terminal. Invalid input/schema
+      - `FAILED VALIDATION` - terminal. Invalid input/schema. Any validation error persist nothing for `Panel` and `Test`. 
       - `COMPLETED`
       - `FAILED` - terminal non-validation errors
 

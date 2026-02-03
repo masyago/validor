@@ -18,14 +18,11 @@ Test Model - Required fields from CSV:
 """
 
 from __future__ import annotations
-
+from collections import defaultdict
 from dataclasses import dataclass
 from datetime import datetime, timezone
-from decimal import Decimal, InvalidOperation
 import re
 import uuid
-from typing import Any, Optional
-
 
 
 @dataclass
@@ -35,29 +32,32 @@ class RowValidationError:
     message: str
 
 
-class PanelRowValidation:
+class PanelValidation:
     """
     Step 1: validate one row's panel fields and build a payload usable by Panel(**payload).
     Step 2 (later): group rows into panels and enforce consistency within each group.
     """
+
     # Required CSV fields to include in Panel
-    PANEL_REQUIRED_FIELDS = ["patient_id", "panel_code", "collection_timestamp"]
+    PANEL_REQUIRED_FIELDS = [
+        "patient_id",
+        "panel_code",
+        "collection_timestamp",
+    ]
 
     # Optional CSV fields to include in Panel
     PANEL_OPTIONAL_FIELDS = ["sample_id"]
-    
+
     def _validate_prefixed_uuid(
-            self,
-            value: str,
-            *,
-            field: str,
-            prefix: str, 
-            row_number: int) -> RowValidationError | None:
+        self, value: str, *, field: str, prefix: str, row_number: int
+    ) -> RowValidationError | None:
 
         if not value.startswith(prefix):
-            return RowValidationError(row_number=row_number,
-                                       field=field,
-                                       message=f"must start with {prefix}") 
+            return RowValidationError(
+                row_number=row_number,
+                field=field,
+                message=f"must start with {prefix}",
+            )
         else:
             try:
                 uuid.UUID(value.removeprefix(prefix))
@@ -65,108 +65,265 @@ class PanelRowValidation:
                 return RowValidationError(
                     row_number=row_number,
                     field=field,
-                    message=f"id format must be '{prefix}-<uuid>'")
+                    message=f"id format must be '{prefix}<uuid>'",
+                )
         return None
 
-
-    def _validate_timestamp(self,
-                            timestamp_string: str,
-                            *,
-                            field: str,
-                            row_number: int) -> RowValidationError | None:
+    def _validate_timestamp(
+        self, timestamp_string: str, *, field: str, row_number: int
+    ) -> RowValidationError | None:
         try:
             collection_timestamp = datetime.fromisoformat(timestamp_string)
-            if collection_timestamp > datetime.now():
+
+            # Guardrail for a naive timestamp
+            if collection_timestamp.tzinfo is None:
+                collection_timestamp = collection_timestamp.replace(
+                    tzinfo=timezone.utc
+                )
+
+            if collection_timestamp > datetime.now(timezone.utc):
                 return RowValidationError(
                     row_number=row_number,
                     field=field,
-                    message=f"cannot be in future")
-            
+                    message=f"cannot be in future",
+                )
+
         except ValueError:
             return RowValidationError(
-                    row_number=row_number,
-                    field=field,
-                    message=f"must be ISO 8601 datetime")
+                row_number=row_number,
+                field=field,
+                message=f"must be ISO 8601 datetime",
+            )
+        return None
 
     # Payload per each row in CSV
-    def build_panel_payload(self, row, row_number):
+    def build_panel_payload(self, row: dict[str, str], row_number: int):
         errors: list[RowValidationError] = []
-        
+
         def require(field: str) -> str | None:
             val = row.get(field, "")
             if val is None or val.strip() == "":
-                errors.append(RowValidationError(row_number=row_number, field=field, message="required field missing"))
+                errors.append(
+                    RowValidationError(
+                        row_number=row_number,
+                        field=field,
+                        message="required field missing",
+                    )
+                )
                 return None
             return val.strip()
-    
+
+        def optional(field: str) -> str | None:
+            val = row.get(field, "")
+            if val is None:
+                return None
+            s = val.strip()
+            return s if s != "" else None
+
         patient_id = require("patient_id")
         panel_code = require("panel_code")
         timestamp_raw = require("collection_timestamp")
-        sample_id = row["sample_id"]
+        sample_id = optional("sample_id")
 
         if patient_id is None or panel_code is None or timestamp_raw is None:
             return None, errors
-    
+
         patient_id_error = self._validate_prefixed_uuid(
             patient_id,
-            field = "patient_id",
+            field="patient_id",
             prefix="PAT-",
-            row_number=row_number)
-        
+            row_number=row_number,
+        )
+
         if patient_id_error:
             errors.append(patient_id_error)
-        
-        sample_id_error = self._validate_prefixed_uuid(
-            sample_id,
-            field = "sample_id",
-            prefix="SAM-",
-            row_number=row_number)
-        
-        if sample_id:
+
+        if sample_id is not None:
+            sample_id_error = self._validate_prefixed_uuid(
+                sample_id,
+                field="sample_id",
+                prefix="SAM-",
+                row_number=row_number,
+            )
+
             if sample_id_error:
                 errors.append(sample_id_error)
-        
+
         timestamp_error = self._validate_timestamp(
-            timestamp_raw,
-            field="collection_timestamp",
-            row_number=row_number)
-        
+            timestamp_raw, field="collection_timestamp", row_number=row_number
+        )
+
         if timestamp_error:
             errors.append(timestamp_error)
 
         if errors:
             return None, errors
-        
 
-        
-
-
-
-    def determine_panels(self, rows):
-        self.results = set()
-        for row in rows:
-            for result in self.results:
-                unique_panel_row = {
-                    "panel_code": row["panel_code"],
-                    "sample_id": row["sample_id"],
-                    "timestamp": row["timestamp"],
-                }
-                if unique_panel_row not in self.results:
-                    self.results.add(unique_panel_row)
-
-        # check that patient_id is consistent for the panel_code+sample_id+timestamp combo
-        for 
-
-    def prepare_validation_output_per_panel_row(self):
-
-        return {
-            "patient_id": row["patient_id"],
-            "panel_code": row["panel_code"],
-            "sample_id": row["sample_id"],
-            "collection_timestamp": row["collection_timestamp"],
-            "errors": PanelRowValidation.errors
+        payload = {
+            "patient_id": patient_id,
+            "panel_code": panel_code,
+            "sample_id": sample_id,
+            "collection_timestamp": datetime.fromisoformat(timestamp_raw),
         }
+
+        # Normalize naive timestamps to UTC in the payload
+        ts = payload["collection_timestamp"]
+        if isinstance(ts, datetime) and ts.tzinfo is None:
+            payload["collection_timestamp"] = ts.replace(tzinfo=timezone.utc)
+
+        return payload, errors
+
+    def determine_panels(self, rows: list[dict[str, str]]) -> tuple[
+        dict[
+            tuple[str, str | None, datetime], list[tuple[int, dict[str, str]]]
+        ],
+        list[RowValidationError],
+    ]:
+        """
+        Groups rows by (panel_code, sample_id, collection_timestamp).
+
+        Returns:
+          - groups: key -> list of original row dicts
+          - errors: validation errors + cross-row consistency errors
+        """
+        errors: list[RowValidationError] = []
+        """
+        Groups dict structure:
+         - key is a tuple (panel_code, sample_id, collection_timestamp)
+         - values is a list of rows from CSV
+        """
+        groups: dict[
+            tuple[str, str | None, datetime], list[tuple[int, dict[str, str]]]
+        ] = defaultdict(list)
+
+        # Track patient_id per group to enforce consistency
+        patient_id_by_key: dict[tuple[str, str | None, datetime], str] = {}
+
+        for row_number, row in enumerate(rows, start=1):
+            payload, row_errors = self.build_panel_payload(row, row_number)
+            if row_errors:
+                errors.extend(row_errors)
+                continue
+            assert payload is not None
+
+            key = (
+                payload["panel_code"],  # str
+                payload["sample_id"],  # str | None
+                payload["collection_timestamp"],  # datetime
+            )
+
+            # Consistency check: same patient_id within a panel group
+            patient_id = payload["patient_id"]
+            existing_patient_id = patient_id_by_key.get(key)
+            if existing_patient_id is None:
+                patient_id_by_key[key] = patient_id
+            elif existing_patient_id != patient_id:
+                errors.append(
+                    RowValidationError(
+                        row_number=row_number,
+                        field="patient_id",
+                        message=(
+                            "patient_id must be consistent for the same "
+                            "(panel_code, sample_id, collection_timestamp) group"
+                        ),
+                    )
+                )
+                continue
+
+            groups[key].append((row_number, row))
+
+        return groups, errors
 
 
 class TestValidation:
-    pass
+    # For reference only:
+
+    # RESULT_COMPARATORS: "<", "<=", ">", ">=", "="
+    # REQUIRED_FIELDS: ["test_code", "result"]
+    # OPTIONAL_FIELDS:
+    #     "test_name",
+    #     "analyte_type",
+    #     "units_raw",
+    #     "ref_low_raw",
+    #     "ref_low_raw",
+    #     "flag"
+
+    def _parse_result_field(self, result_raw: str) -> tuple[str | None, str]:
+        s = result_raw.strip()
+        comparator_pattern = r"^(>=|<=|[>=<])"
+        match = re.match(comparator_pattern, s)
+
+        if match:
+            result_comparator = match.group(0)
+            end_index = match.end()
+            remainder = s[end_index:].strip()
+            return result_comparator, remainder
+
+        return None, s
+
+    def _parse_result_numeric(self, remainder: str) -> float | None:
+        try:
+            result_value_num = float(remainder)
+            return result_value_num
+        except ValueError:
+            return None
+
+    def build_test_payload(self, row: dict[str, str], row_number: int):
+        errors: list[RowValidationError] = []
+
+        def require(field: str) -> str | None:
+            val = row.get(field, "")
+            if val is None or val.strip() == "":
+                errors.append(
+                    RowValidationError(
+                        row_number=row_number,
+                        field=field,
+                        message="required field missing",
+                    )
+                )
+                return None
+            return val.strip()
+
+        def optional(field: str) -> str | None:
+            val = row.get(field, "")
+            if val is None:
+                return None
+            s = val.strip()
+            return s if s != "" else None
+
+        test_code = require("test_code")
+        result_raw = require("result")
+
+        if test_code is None or result_raw is None:
+            return None, errors
+
+        result_comparator, remainder = self._parse_result_field(result_raw)
+        result_value_num = self._parse_result_numeric(remainder)
+
+        if result_value_num is not None and result_value_num < 0:
+            errors.append(
+                RowValidationError(
+                    row_number=row_number,
+                    field="result",
+                    message="numeric result cannot be negative",
+                )
+            )
+
+        if errors:
+            return None, errors
+
+        payload = {
+            "row_number": row_number,
+            "test_code": test_code,
+            "test_name": optional("test_name"),
+            "analyte_type": optional("analyte_type"),
+            "result_raw": result_raw,
+            "units_raw": optional("units"),
+            "result_value_num": result_value_num,
+            "result_comparator": result_comparator,
+            "ref_low_raw": optional("reference_range_low"),
+            "ref_high_raw": optional("reference_range_high"),
+            "flag": optional("flag"),
+        }
+
+        return payload, []
