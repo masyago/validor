@@ -23,6 +23,7 @@ from dataclasses import dataclass
 from datetime import datetime, timezone
 import re
 import uuid
+from typing import Any
 
 
 @dataclass
@@ -174,27 +175,22 @@ class PanelValidation:
         return payload, errors
 
     def determine_panels(self, rows: list[dict[str, str]]) -> tuple[
-        dict[
-            tuple[str, str | None, datetime], list[tuple[int, dict[str, str]]]
-        ],
+        dict[tuple[str, str | None, datetime], dict[str, Any]],
         list[RowValidationError],
     ]:
-        """
-        Groups rows by (panel_code, sample_id, collection_timestamp).
 
-        Returns:
-          - groups: key -> list of original row dicts
-          - errors: validation errors + cross-row consistency errors
-        """
         errors: list[RowValidationError] = []
+
         """
         Groups dict structure:
          - key is a tuple (panel_code, sample_id, collection_timestamp)
-         - values is a list of rows from CSV
+         - values is a dict:
+            - "panel_payload": {payload here}
+            - "panel_rows": [(row_num, row)... list of rows from CSV]
         """
-        groups: dict[
-            tuple[str, str | None, datetime], list[tuple[int, dict[str, str]]]
-        ] = defaultdict(list)
+        groups: dict[tuple[str, str | None, datetime], dict[str, Any]] = (
+            defaultdict(lambda: {"panel_payload": None, "panel_rows": []})
+        )
 
         # Track patient_id per group to enforce consistency
         patient_id_by_key: dict[tuple[str, str | None, datetime], str] = {}
@@ -229,10 +225,12 @@ class PanelValidation:
                     )
                 )
                 continue
+            if groups[key]["panel_payload"] is None:
+                groups[key]["panel_payload"] = payload
 
-            groups[key].append((row_number, row))
+            groups[key]["panel_rows"].append((row_number, row))
 
-        return groups, errors
+        return dict(groups), errors
 
 
 class TestValidation:
@@ -268,7 +266,9 @@ class TestValidation:
         except ValueError:
             return None
 
-    def build_test_payload(self, row: dict[str, str], row_number: int):
+    def build_test_payload(
+        self, row: dict[str, str], row_number: int
+    ) -> tuple[dict[str, Any] | None, list[RowValidationError]]:
         errors: list[RowValidationError] = []
 
         def require(field: str) -> str | None:

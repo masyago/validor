@@ -44,3 +44,19 @@ class IngestionRepository:
         # ingestion.processing_started_at = datetime.now(timezone.utc)
         self.session.flush()
         return True
+
+    def mark_failed_validation(
+        self, ingestion_id: UUID, error_code, error_detail
+    ) -> bool:
+
+        stmt = select(Ingestion).where(Ingestion.ingestion_id == ingestion_id)
+        ingestion = self.session.scalars(stmt).one_or_none()
+        if not ingestion:
+            return False
+
+        ingestion.error_code = error_code
+        ingestion.error_detail = error_detail
+        ingestion.status = IngestionStatus.FAILED_VALIDATION
+
+        self.session.flush()
+        return True

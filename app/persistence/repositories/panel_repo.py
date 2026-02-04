@@ -1,14 +1,31 @@
 """
 Methods to add:
 - add a new row
-- get CSV file (for further parsing, normalization)
+- retrieve a row by panel_id
+- retrieve rows (zero or more) by ingestion_id
 """
 
-# class PanelRepository:
-#     def __init__(self, session: Session):
-#         self.session = session
+from sqlalchemy.orm import Session
+from sqlalchemy import select
+from uuid import UUID
 
-#     def create(self, panel: Panel) -> Panel:
-#         self.session.add(panel)
-#         self.session.flush()
-#         return panel
+from app.persistence.models.parsing import Panel
+
+
+class PanelRepository:
+    def __init__(self, session: Session):
+        self.session = session
+
+    def get_by_panel_id(self, panel_id: UUID) -> Panel | None:
+        stmt = select(Panel).where(Panel.panel_id == panel_id)
+        return self.session.scalars(stmt).one_or_none()
+
+    # Returns zero or multiple rows. If zero rows, returns an empty list
+    def get_by_ingestion_id(self, ingestion_id: UUID) -> list[Panel]:
+        stmt = select(Panel).where(Panel.ingestion_id == ingestion_id)
+        return list(self.session.scalars(stmt).all())
+
+    def create(self, panel: Panel) -> Panel:
+        self.session.add(panel)
+        self.session.flush()
+        return panel
