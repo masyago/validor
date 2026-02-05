@@ -34,10 +34,8 @@ from app.persistence.models.core import RawData, Ingestion
 from app.api.routers.dependencies import get_session
 
 # from app.services.tasks.ingestion_tasks import process_ingestion_task
-from app.persistence.repositories.ingestion_repo import (
-    IngestionRepository,
-    RawDataRepository,
-)
+from app.persistence.repositories.ingestion_repo import IngestionRepository
+from app.persistence.repositories.raw_data_repo import RawDataRepository
 
 router = APIRouter()
 
@@ -254,15 +252,16 @@ async def create_ingestion(
     )
 
 
-@router.post("/v1/ingestions/{ingestion_id}/process")
-def process_ingestion(
-    ingestion_id: UUID,
-    session: Session = Depends(get_session),
-):
-    svc = IngestionService(
-        raw_repo=RawDataRepository(session),
-        panel_repo=PanelRepository(session),
-        test_repo=TestRepository(session),
-    )
-    result = svc.process_ingestion(ingestion_id)
-    return result  # or status DTO
+# TODO: update when normalizer is ready
+# @router.post("/v1/ingestions/{ingestion_id}/process")
+# def process_ingestion(
+#     ingestion_id: UUID,
+#     session: Session = Depends(get_session),
+# ):
+#     svc = IngestionService(
+#         raw_repo=RawDataRepository(session),
+#         panel_repo=PanelRepository(session),
+#         test_repo=TestRepository(session),
+#     )
+#     result = svc.process_ingestion(ingestion_id)
+#     return result  # or status DTO

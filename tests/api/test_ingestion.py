@@ -2,7 +2,7 @@ from fastapi.testclient import TestClient
 import pytest
 from unittest.mock import patch
 
-from ...app.api.routers.ingestion import router
+from app.api.routers.ingestion import router
 
 # from datetime import datetime
 import io

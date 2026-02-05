@@ -75,6 +75,7 @@ AI is treated as a controlled, non-authoritative augmentation layer
    * Responsible for data validation, normalization, and conversion into domain
      models
    * Coordinates with AI enrichment workflows
+   * Normalization. Normalization is a deterministic, idempotent transformation from validated canonical domain records into FHIR-shaped entities, adding transform/version metadata and enforcing representation-level invariants; it does not re-validate raw ingestion, but it does validate the produced normalized artifact (and any serialized FHIR JSON) and records provenance via processing events.
 
 4. Persistence Layer: Database
    * Stores raw and normalized data, generated FHIR resources and 
