@@ -60,3 +60,19 @@ class IngestionRepository:
 
         self.session.flush()
         return True
+
+    def mark_failed(
+        self, ingestion_id: UUID, error_code, error_detail
+    ) -> bool:
+
+        stmt = select(Ingestion).where(Ingestion.ingestion_id == ingestion_id)
+        ingestion = self.session.scalars(stmt).one_or_none()
+        if not ingestion:
+            return False
+
+        ingestion.error_code = error_code
+        ingestion.error_detail = error_detail
+        ingestion.status = IngestionStatus.FAILED
+
+        self.session.flush()
+        return True

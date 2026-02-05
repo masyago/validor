@@ -34,11 +34,6 @@ class RowValidationError:
 
 
 class PanelValidation:
-    """
-    Step 1: validate one row's panel fields and build a payload usable by Panel(**payload).
-    Step 2 (later): group rows into panels and enforce consistency within each group.
-    """
-
     # Required CSV fields to include in Panel
     PANEL_REQUIRED_FIELDS = [
         "patient_id",

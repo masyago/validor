@@ -199,7 +199,16 @@ class IngestionService:
 
             return
 
-        except Exception:
+        except Exception as e:
             # Optional: if you add ingestion_repo.mark_failed(...), call it here.
             # Keep re-raising so ingestion_tasks.py rolls back.
+            self.ingestion_repo.mark_failed(
+                ingestion_id=ingestion_id,
+                error_code="non-validation error",
+                error_detail={
+                    "message": str(e),
+                    "type": type(e).__name__,
+                },
+            )
+
             raise
