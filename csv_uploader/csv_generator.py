@@ -98,15 +98,15 @@ def generate_result_value(low: float, high: float) -> tuple[float, str | None]:
 
     if rand < 0.70:  # 70% normal (within range)
         result = random.uniform(low, high)
-        flag = None
+        flag = "NORMAL"
     elif rand < 0.85:  # 15% low (below range)
         range_width = high - low
         result = random.uniform(low - (range_width * 0.3), low)
-        flag = "low"
+        flag = "LOW"
     else:  # 15% high (above range)
         range_width = high - low
         result = random.uniform(high, high + (range_width * 0.3))
-        flag = "high"
+        flag = "HIGH"
 
     return round(result, 2), flag
 

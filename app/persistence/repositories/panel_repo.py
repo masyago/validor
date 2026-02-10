@@ -1,10 +1,3 @@
-"""
-Methods to add:
-- add a new row
-- retrieve a row by panel_id
-- retrieve rows (zero or more) by ingestion_id
-"""
-
 from sqlalchemy.orm import Session
 from sqlalchemy import select
 from uuid import UUID

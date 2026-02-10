@@ -1,59 +1,28 @@
-from sqlalchemy.orm import relationship, DeclarativeBase, mapped_column, Mapped
+from sqlalchemy.orm import mapped_column, Mapped
 from sqlalchemy.sql.sqltypes import TIMESTAMP
 from sqlalchemy.sql.expression import text
 from sqlalchemy import (
-    Column,
-    Integer,
-    String,
-    LargeBinary,
-    Integer,
+    CheckConstraint,
     Text,
-    BigInteger,
-    func,
     Uuid,
-    text,
     ForeignKey,
-    Enum as SqlEnum,
     Numeric,
     UniqueConstraint,
-    Index,
 )
 import uuid
 from typing import Optional
-from sqlalchemy.dialects.postgresql import JSONB, ENUM
-import enum
+from sqlalchemy.dialects.postgresql import JSONB
 from datetime import datetime
 from app.persistence.base import Base
 
 
-# Replace with CheckConstraint in DiagnosticReport
-# class DiagnosticReportStatus(enum.Enum):
-#     FINAL = "final"
-
-
-# diagnostic_report_status_enum = SqlEnum(
-#     DiagnosticReportStatus,
-#     name="diagnostic_report_status_enum",
-#     create_type=True,  # Set to False after first migration
-
-# Replace with CheckConstraint in Observation
-# class ResultComparator(enum.Enum):
-#     LESS = "<"
-#     LESS_OR_EQUAL = "<="
-#     GREATER = ">"
-#     GREATER_OR_EQUAL = ">="
-#     EQUAL = "="
-
-
-# result_comparator_enum = SqlEnum(
-#     ResultComparator,
-#     name="result_comparator_enum",
-#     create_type=True,  # TODO: Set to False after first migration
-# )
-
-
 class DiagnosticReport(Base):
     __tablename__ = "diagnostic_report"
+    __table_args__ = (
+        CheckConstraint(
+            "status IN ('FINAL')", name="check_diagnostic_report_status"
+        ),
+    )
 
     diagnostic_report_id: Mapped[uuid.UUID] = mapped_column(
         Uuid, primary_key=True, default=uuid.uuid4
@@ -66,23 +35,34 @@ class DiagnosticReport(Base):
     )
     patient_id: Mapped[str] = mapped_column(Text, nullable=False, index=True)
     panel_code: Mapped[str] = mapped_column(Text, nullable=False)
-    effective_at: Mapped = mapped_column(
+
+    # Same as `collection_timestamp` from `Panel` model
+    effective_at: Mapped[datetime] = mapped_column(
         TIMESTAMP(timezone=True), nullable=False
     )
-    issued_at: Mapped = mapped_column(TIMESTAMP(timezone=True), nullable=False)
-    resource_json: Mapped[Optional[dict]] = mapped_column(JSONB, nullable=True)
-    # Update with CheckConstraint
-    status: Mapped[Optional[DiagnosticReportStatus]] = mapped_column(
-        diagnostic_report_status_enum, nullable=True
+    normalized_at: Mapped[datetime] = mapped_column(
+        TIMESTAMP(timezone=True), nullable=False
     )
+    resource_json: Mapped[Optional[dict]] = mapped_column(JSONB, nullable=True)
+    status: Mapped[str] = mapped_column(Text, default="FINAL", nullable=False)
 
 
 class Observation(Base):
     __tablename__ = "observation"
-    __table_args__ = UniqueConstraint(
-        "diagnostic_report_id", "code", name="unique_report_code"
+    __table_args__ = (
+        UniqueConstraint(
+            "diagnostic_report_id",
+            "code",
+            name="unique_diagnostic_report_id_code",
+        ),
+        CheckConstraint(
+            "status IN ('FINAL')", name="check_observation_status"
+        ),
+        CheckConstraint(
+            "comparator IS NULL OR comparator IN ('<', '<=', '>', '>=', '=')",
+            name="check_observation_comparator",
+        ),
     )
-
     # Identity/provenance
     observation_id: Mapped[uuid.UUID] = mapped_column(
         Uuid, primary_key=True, default=uuid.uuid4
@@ -104,16 +84,17 @@ class Observation(Base):
     # Clinical content
     code: Mapped[str] = mapped_column(Text, nullable=False, index=True)
     display: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
-    effective_at: Mapped[Optional[datetime]] = mapped_column(
-        TIMESTAMP(timezone=True), nullable=True
+
+    # Same as `collection_timestamp` from `Panel` model
+    effective_at: Mapped[datetime] = mapped_column(
+        TIMESTAMP(timezone=True), nullable=False
+    )
+    normalized_at: Mapped[datetime] = mapped_column(
+        TIMESTAMP(timezone=True), nullable=False
     )
     value_num: Mapped[Optional[float]] = mapped_column(Numeric, nullable=True)
     value_text: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
-
-    # Replace with CHECK
-    comparator: Mapped[Optional[ResultComparator]] = mapped_column(
-        result_comparator_enum, nullable=True
-    )
+    comparator: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
     unit: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
     ref_low_num: Mapped[Optional[float]] = mapped_column(
         Numeric, nullable=True
@@ -121,6 +102,12 @@ class Observation(Base):
     ref_high_num: Mapped[Optional[float]] = mapped_column(
         Numeric, nullable=True
     )
-    flag: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
-    status: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    flag_analyzer_interpretation: Mapped[Optional[str]] = mapped_column(
+        Text, nullable=True
+    )
+    flag_system_interpretation: Mapped[Optional[str]] = mapped_column(
+        Text, nullable=True
+    )
+    discrepancy: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    status: Mapped[str] = mapped_column(Text, default="FINAL", nullable=False)
     resource_json: Mapped[Optional[dict]] = mapped_column(JSONB, nullable=True)

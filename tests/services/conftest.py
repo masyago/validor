@@ -23,8 +23,7 @@ CSV_COLUMNS = [
 @pytest.fixture
 def base_row(run_id: str, instrument_id: str) -> dict[str, str]:
     """
-    A fully-populated, canonical 'row dict' like you'd get from csv.DictReader or your parser.
-    All values are strings
+    Canonical row after CSV is parsed by parser to dict[rows]
     """
     return {
         "run_id": run_id,

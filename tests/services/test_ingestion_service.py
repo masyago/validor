@@ -242,7 +242,7 @@ class TestIngestionServiceIntegration:
         panels = PanelRepository(db_session).get_by_ingestion_id(ingestion_id)
         assert panels == []
 
-        # Status + error detail persisted on ingestion
+        # Status and error detail persisted on ingestion
         ingestion = db_session.scalars(
             select(Ingestion).where(Ingestion.ingestion_id == ingestion_id)
         ).one()

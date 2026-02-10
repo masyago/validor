@@ -7,11 +7,11 @@ Panel Model - Required fields from CSV:
 - patient_id. confirm that format is  "PAT-{uuid.uuid4()"
 - panel_code.
 - sample_id. confirm format "SAM-{uuid.uuid4()"
-- collection_stamp. check that it's a datetime data type, not in the future
+- collection_timestamp. check that it's a datetime data type, not in the future
 
 Test Model - Required fields from CSV:
 - test_code
-- result_raw. try to convert text to a number (after removing potential result_comparator), if ok - assign to result_value_num. Assign result_comparator if present
+- result. try to convert text to a number (after removing potential result_comparator), if ok - assign to result_value_num. Assign result_comparator if present
 
 - if result_value_num present, check that the value is not negative.
 

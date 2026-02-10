@@ -47,7 +47,10 @@ FHIR-like normalized and validated data
 
 * `diagnostic_report`
 * `observation`
+ Normalization. Normalization is a deterministic, idempotent transformation from validated canonical domain records into FHIR-shaped entities, adding transform/version metadata and enforcing representation-level invariants; it does not re-validate raw ingestion, but it does validate the produced normalized artifact (and any serialized FHIR JSON) and records provenance via processing events.
 
+ Status: "FINAL". Only one status. Because a normalized artifact is only meaningful if it’s complete and internally consistent. Failure is a pipeline concern, not a persisted clinical artifact.
+ 
 ### AI Augmentation
 
 * `ai_annotation`
