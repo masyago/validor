@@ -75,7 +75,7 @@ AI is treated as a controlled, non-authoritative augmentation layer
    * Responsible for data validation, normalization, and conversion into domain
      models
    * Coordinates with AI enrichment workflows
-   *
+   * FHIR Serializer versions are append-only. No silent edits to existing versions allowed.
 
 
 4. Persistence Layer: Database
@@ -102,6 +102,9 @@ AI is treated as a controlled, non-authoritative augmentation layer
 ### Trade-offs
 Authentication and Trust Model
 For simplicity, the CSV uploader and ingestion API are assumed to operate within a trusted internal network. Authentication is intentionally omitted. In a production setting, this boundary would be enforced via API keys, mTLS, or service identity.
+
+FHIR Resources
+We deliberately don’t use a full FHIR object library. Instead, we emit a strictly versioned, minimal R4-compliant projection using Pydantic so the JSON exactly reflects our domain semantics and remains reproducible across pipeline versions.
 
 ## Metrics
 * Ingestion validation accuracy
