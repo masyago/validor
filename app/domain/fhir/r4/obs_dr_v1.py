@@ -8,7 +8,7 @@ from typing import Literal, Optional, Any, Sequence
 from pydantic import model_validator, ValidationError, Field
 from uuid import UUID
 from datetime import datetime, timezone
-from domain.fhir.base import (
+from app.domain.fhir.base import (
     Annotation,
     Coding,
     CodeableConcept,
@@ -148,8 +148,8 @@ class R4ObsDrV1Serializer:
         Maps normalized Observation row to an R4 Observation dict.
         """
 
-        valueQuantity = None
-        valueString = None
+        valueQuantity: Optional[Quantity] = None
+        valueString: Optional[str] = None
 
         if getattr(ob, "value_num") is not None:
             value_quantity = Quantity(

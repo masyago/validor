@@ -7,8 +7,19 @@ from __future__ import annotations
 from typing import Any, Optional
 from datetime import datetime, timezone
 import uuid
+import json
+from dataclasses import dataclass
+from sqlalchemy.orm import Session
+from sqlalchemy.exc import SQLAlchemyError
 
 from app.persistence.models.parsing import Panel, Test
+from app.persistence.models.normalization import DiagnosticReport, Observation
+from app.persistence.repositories.panel_repo import PanelRepository
+from app.persistence.repositories.test_repo import TestRepository
+from app.persistence.repositories.diagnostic_report_repo import (
+    DiagnosticReportRepository,
+)
+from app.persistence.repositories.observation_repo import ObservationRepository
 from app.services.utils import (
     NormalizationError,
     parse_str_to_num,
@@ -16,6 +27,11 @@ from app.services.utils import (
     require_non_null,
     require_str,
     optional,
+)
+from app.domain.fhir.r4.obs_dr_v1 import (
+    R4ObsDrV1Serializer,
+    ObservationR4,
+    DiagnosticReportR4,
 )
 
 ALLOWED_COMPARATORS = {"<", "<=", ">", ">=", "="}
@@ -75,15 +91,13 @@ class DiagnosticReportNormalization:
         if errors:
             return None, errors
 
-        now = datetime.now(timezone.utc)
-
         payload: dict[str, Any] = {
             "ingestion_id": ingestion_id,
             "panel_id": panel_id,
             "patient_id": patient_id,
             "panel_code": panel_code,
             "effective_at": effective_at,
-            "normalized_at": now,
+            "normalized_at": None,  # set by the NormalizerJob
             "resource_json": None,
             "status": "FINAL",
         }
@@ -112,7 +126,8 @@ class ObservationNormalization:
     - [NEW] discrepancy (str)
 
     Other fields:
-    - REQUIRED: diagnostic_report.diagnostic_report_id -> diagnostic_report_id
+
+    - Note: it'll be added to the payload right before persisting it. REQUIRED: diagnostic_report.diagnostic_report_id -> diagnostic_report_id
     - REQUIRED: panel.ingestion_id -> ingestion_id
     - REQUIRED: panel.patient_id -> patient_id
     - REQUIRED: panel.collection_timestamp -> effective_at
@@ -122,8 +137,8 @@ class ObservationNormalization:
 
     """
 
-    def build_observation_payload(
-        self, *, panel: Panel, test: Test, diagnostic_report_id: uuid.UUID
+    def build_observation_payload_core(
+        self, *, panel: Panel, test: Test
     ) -> tuple[Optional[dict[str, Any]], list[NormalizationError]]:
         errors: list[NormalizationError] = []
 
@@ -231,17 +246,14 @@ class ObservationNormalization:
 
         # TODO: If provided and computed flags differ, add a note to processing_event
 
-        now = datetime.now(timezone.utc)
-
         payload: dict[str, Any] = {
             "test_id": test_id,
-            "diagnostic_report_id": diagnostic_report_id,
             "ingestion_id": ingestion_id,
             "patient_id": patient_id,
             "code": code,
             "display": optional(getattr(test, "test_name", None)),
             "effective_at": effective_at,
-            "normalized_at": now,
+            "normalized_at": None,  # set by the NormalizerJob
             "value_num": value_num,
             "value_text": value_text,
             "comparator": comparator,
@@ -257,201 +269,232 @@ class ObservationNormalization:
 
         return payload, errors
 
-
-class DiagnosticReportCreateJSON:
-    # if fails, still persist DiagnosticReport, keep `resource_json` as None
-    # TODO: send FHIR_JSON_GENERATION_FAILED to processing_event (when ready)
-    pass
-
-
-class ObservationReportCreateJSON:
-    pass
+    def attach_diagnostic_report_id(
+        self, core_payload: dict[str, Any], diagnostic_report_id: uuid.UUID
+    ) -> dict[str, Any]:
+        out = dict(core_payload)
+        out["diagnostic_report_id"] = diagnostic_report_id
+        return out
 
 
-"""
-From chatbot. Use for structure guidance:
+@dataclass(frozen=True)
+class JsonBuildFailure:
+    resource_type: str  # "Observation" or "DiagnosticReport"
+    resource_id: str  # UUID string observation_id or diagnostic_report_id
+    panel_id: str  # provenance and grouping only
+    message: str
+    type: str
 
-# Coordinator entry point
+
 class NormalizationJob:
-    def __init__(self, session_factory, dr_norm, obs_norm, fhir_serializer, event_writer, clock):
-        self.session_factory = session_factory
-        self.dr_norm = dr_norm
-        self.obs_norm = obs_norm
-        self.fhir_serializer = fhir_serializer
-        self.event_writer = event_writer
-        self.clock = clock
+    """
+    Orchestrates normalization in two phases:
 
-    def run(self, ingestion_id: UUID) -> None:
-        # ---- Phase 0: job start event
-        with self.session_factory() as session:
-            self.event_writer.log(
-                session,
-                event_type="NORMALIZATION_STARTED",
-                ingestion_id=ingestion_id,
-                target_type="INGESTION",
-                details={"started_at": self.clock.now_iso()}
+    Phase 1:
+    - Build normalized rows for DiagnosticReport and Observation and commit.
+    - If any normalization errors exist, rollback and persist nothing.
+
+    Phase 2:
+    - Build FHIR JSON and persist into resource_json.
+    - If JSON creation/persistence fails, leave that resource_json as None.
+    """
+
+    def __init__(self, session: Session):
+        self.session = session
+        self.panel_repo = PanelRepository(session)
+        self.test_repo = TestRepository(session)
+        self.dr_repo = DiagnosticReportRepository(session)
+        self.obs_repo = ObservationRepository(session)
+
+        self.dr_norm = DiagnosticReportNormalization()
+        self.obs_norm = ObservationNormalization()
+
+        self.serializer = R4ObsDrV1Serializer()
+
+    def run_for_ingestion_id(
+        self, ingestion_id: uuid.UUID
+    ) -> tuple[bool, list[NormalizationError], list[JsonBuildFailure]]:
+        """
+        Runs normalization phases. Returns (ok, normalization_errors, json_failures)
+
+        - Phase 1. If `ok` is `False`, Phase 1 failed. Nothing persisted for normalized tables.
+        - Phase 2. In case of json_failures, Phase 1 stays committed, but resource_json remains None for any failed resource_json.
+        """
+        ok, norm_errors = self._phase1_normalize_and_persist(ingestion_id)
+        if not ok:
+            return False, norm_errors, []
+
+        json_failures = self._phase2_persist_fhir_json(ingestion_id)
+        return True, [], json_failures
+
+    # Phase 1: Normalize to FHIR-shaped rows, commit to db
+    def _phase1_normalize_and_persist(
+        self, ingestion_id: uuid.UUID
+    ) -> tuple[bool, list[NormalizationError]]:
+        """
+        1. Validates data from Panel or Test
+        2. If no validation errors, persists normalized rows, and commits.
+           Uuid's generated at db side.
+        3. If validation errors present, nothing is persisted.
+        """
+        panels = self.panel_repo.get_by_ingestion_id(ingestion_id)
+
+        # Validate and build payloads
+        errors: list[NormalizationError] = []
+        dr_payload_by_panel_id: dict[uuid.UUID, dict[str, Any]] = {}
+        obs_core_by_test_id: dict[uuid.UUID, dict[str, Any]] = {}
+
+        for panel in panels:
+            dr_payload, dr_errors = (
+                self.dr_norm.build_diagnostic_report_payload(panel)
             )
-            session.commit()
+            errors.extend(dr_errors)
+            if dr_payload is not None:
+                dr_payload_by_panel_id[panel.panel_id] = dr_payload
 
-        # ---- Phase 1: relational upserts
-        try:
-            phase1_stats = self._phase1_relational(ingestion_id)
-        except Exception as e:
-            with self.session_factory() as session:
-                self.event_writer.log(
-                    session,
-                    event_type="NORMALIZATION_PHASE1_FAILED",
-                    ingestion_id=ingestion_id,
-                    target_type="INGESTION",
-                    details={"error": repr(e)}
+            tests = self.test_repo.get_by_panel_id(panel.panel_id)
+            for test in tests:
+                core_payload, obs_errors = (
+                    self.obs_norm.build_observation_payload_core(
+                        panel=panel, test=test
+                    )
                 )
-                session.commit()
+                errors.extend(obs_errors)
+                if core_payload is not None:
+                    obs_core_by_test_id[test.test_id] = core_payload
+
+        if errors:
+            self.session.rollback()
+            return False, errors
+
+        # Persist normalized payloads. First, DiagnosticReport with flush().
+        # Then Observation, including diagnostic_report_id.
+        try:
+            now = datetime.now(timezone.utc)
+            for panel in panels:
+                dr = self.dr_repo.get_by_panel_id(panel.panel_id)
+                if dr is None:
+                    dr_payload = dict(dr_payload_by_panel_id[panel.panel_id])
+                    dr_payload["normalized_at"] = now
+
+                    dr = DiagnosticReport(**dr_payload)
+                    self.dr_repo.create(dr)  # flushes in repo
+                    self.session.flush()  # ensure dr.diagnostic_report_id is populated
+
+                tests = self.test_repo.get_by_panel_id(panel.panel_id)
+                for test in tests:
+                    existing_ob = self.obs_repo.get_by_test_id(test.test_id)
+                    if existing_ob is not None:
+                        continue
+
+                    core = obs_core_by_test_id[test.test_id]
+                    obs_payload = self.obs_norm.attach_diagnostic_report_id(
+                        core, dr.diagnostic_report_id
+                    )
+                    obs_payload = dict(obs_payload)
+                    obs_payload["normalized_at"] = now
+
+                    ob = Observation(**obs_payload)
+                    self.obs_repo.create(ob)
+
+            self.session.commit()
+            return True, []
+
+        except SQLAlchemyError:
+            self.session.rollback()
+            raise
+        except Exception:
+            self.session.rollback()
             raise
 
-        with self.session_factory() as session:
-            self.event_writer.log(
-                session,
-                event_type="NORMALIZATION_PHASE1_SUCCEEDED",
-                ingestion_id=ingestion_id,
-                target_type="INGESTION",
-                details=phase1_stats
-            )
-            session.commit()
+    # Phase build JSON for resources and persist the ones that don't have errors.
+    def _phase2_persist_fhir_json(
+        self, ingestion_id: uuid.UUID
+    ) -> list[JsonBuildFailure]:
+        failures: list[JsonBuildFailure] = []
+        panels = self.panel_repo.get_by_ingestion_id(ingestion_id)
 
-        # ---- Phase 2: FHIR JSON projection
-        try:
-            phase2_stats = self._phase2_generate_json(ingestion_id)
-        except Exception as e:
-            with self.session_factory() as session:
-                self.event_writer.log(
-                    session,
-                    event_type="FHIR_JSON_PHASE2_FAILED",
-                    ingestion_id=ingestion_id,
-                    target_type="INGESTION",
-                    details={"error": repr(e)}
+        for panel in panels:
+            # DiagnosticReport JSON (isolated)
+            dr = self.dr_repo.get_by_panel_id(panel.panel_id)
+            if dr is None:
+                failures.append(
+                    JsonBuildFailure(
+                        resource_type="DiagnosticReport",
+                        resource_id="",
+                        panel_id=str(panel.panel_id),
+                        message=f"missing DiagnosticReport for panel_id={panel.panel_id}",
+                        type="MissingRow",
+                    )
                 )
-                session.commit()
-            # NOTE: do NOT raise if you want pipeline to continue; or raise if JSON is mandatory
-            return
-
-        with self.session_factory() as session:
-            self.event_writer.log(
-                session,
-                event_type="FHIR_JSON_PHASE2_SUCCEEDED",
-                ingestion_id=ingestion_id,
-                target_type="INGESTION",
-                details=phase2_stats
-            )
-            session.commit()
-
-# PHASE 1 Call both normalization classes inside one transaction
-    def _phase1_relational(self, ingestion_id: UUID) -> dict:
-        normalized_at = self.clock.now_utc()
-
-        with self.session_factory() as session:
-            # Optional: lock ingestion row or ensure status is VALIDATED
-            # Optional: write per-phase START event here instead of Phase 0
-
-            dr_count = self.dr_norm.upsert_for_ingestion(
-                session=session,
-                ingestion_id=ingestion_id,
-                normalized_at=normalized_at,
-            )
-
-            obs_count = self.obs_norm.upsert_for_ingestion(
-                session=session,
-                ingestion_id=ingestion_id,
-                normalized_at=normalized_at,
-            )
-
-            # Integrity check example (cheap + valuable):
-            # - Ensure all observations belong to DRs of same ingestion_id, etc.
-
-            session.commit()
-
-        return {
-            "normalized_at": normalized_at.isoformat(),
-            "diagnostic_reports_upserted": dr_count,
-            "observations_upserted": obs_count,
-        }
-
-# PHASE 2:generate and persist resource_json via SELECT → serialize → UPDATE
-
-    def _phase2_generate_json(self, ingestion_id: UUID) -> dict:
-        generated_at = self.clock.now_utc()
-        serializer_version = self.fhir_serializer.version
-
-        with self.session_factory() as session:
-            # 1) Load normalized DR + Obs rows for ingestion_id
-            diagnostic_reports = self.dr_norm.fetch_for_ingestion(session, ingestion_id)
-            observations_by_dr = self.obs_norm.fetch_grouped_by_report(session, ingestion_id)
-
-            # 2) Serialize DR resources
-            dr_success = 0
-            dr_fail = 0
-            for dr in diagnostic_reports:
+            else:
                 try:
-                    obs = observations_by_dr.get(dr.diagnostic_report_id, [])
-                    resource = self.fhir_serializer.make_diagnostic_report(dr, obs)
-                    resource_json = self.fhir_serializer.to_json(resource)
+                    # Build list of `observation_id`'s for DR serializer
+                    tests = self.test_repo.get_by_panel_id(panel.panel_id)
+                    observations: list[uuid.UUID] = []
+                    for test in tests:
+                        ob = self.obs_repo.get_by_test_id(test.test_id)
+                        if ob is not None:
+                            observations.append(ob.ingestion_id)
 
-                    self.dr_norm.update_resource_json(
-                        session=session,
-                        diagnostic_report_id=dr.diagnostic_report_id,
-                        resource_json=resource_json,
-                        serializer_version=serializer_version,
-                        generated_at=generated_at,
-                    )
-                    dr_success += 1
+                    with self.session.begin_nested():  # SAVEPOINT
+                        dr_json_dict = self.serializer.make_diagnostic_report(
+                            dr, observations
+                        )
+                        self.dr_repo.update_resource_json(
+                            dr.diagnostic_report_id, dr_json_dict
+                        )
                 except Exception as e:
-                    dr_fail += 1
-                    self.event_writer.log(
-                        session,
-                        event_type="FHIR_JSON_RESOURCE_FAILED",
-                        ingestion_id=ingestion_id,
-                        target_type="DIAGNOSTIC_REPORT",
-                        target_id=str(dr.diagnostic_report_id),
-                        details={"error": repr(e), "serializer_version": serializer_version},
+                    failures.append(
+                        JsonBuildFailure(
+                            resource_type="DiagnosticReport",
+                            resource_id=str(dr.diagnostic_report_id),
+                            panel_id=str(panel.panel_id),
+                            message=str(e),
+                            type=type(e).__name__,
+                        )
                     )
 
-            # 3) Serialize each Observation (optional; depends if you store JSON at obs-level too)
-            obs_success = 0
-            obs_fail = 0
-            observations = self.obs_norm.fetch_for_ingestion(session, ingestion_id)
-            for ob in observations:
+            # Observation JSON (isolated per Observation)
+            tests = self.test_repo.get_by_panel_id(panel.panel_id)
+            for test in tests:
+                ob = self.obs_repo.get_by_test_id(test.test_id)
+                if ob is None:
+                    failures.append(
+                        JsonBuildFailure(
+                            resource_type="Observation",
+                            resource_id="",
+                            panel_id=str(panel.panel_id),
+                            message=f"missing Observation for test_id={test.test_id}",
+                            type="MissingRow",
+                        )
+                    )
+                    continue
+
                 try:
-                    resource = self.fhir_serializer.make_observation(ob)
-                    resource_json = self.fhir_serializer.to_json(resource)
-
-                    self.obs_norm.update_resource_json(
-                        session=session,
-                        observation_id=ob.observation_id,
-                        resource_json=resource_json,
-                        serializer_version=serializer_version,
-                        generated_at=generated_at,
-                    )
-                    obs_success += 1
+                    with self.session.begin_nested():  # SAVEPOINT
+                        ob_json_dict = self.serializer.make_observation(ob)
+                        self.obs_repo.update_resource_json(
+                            ob.observation_id, ob_json_dict
+                        )
                 except Exception as e:
-                    obs_fail += 1
-                    self.event_writer.log(
-                        session,
-                        event_type="FHIR_JSON_RESOURCE_FAILED",
-                        ingestion_id=ingestion_id,
-                        target_type="OBSERVATION",
-                        target_id=str(ob.observation_id),
-                        details={"error": repr(e), "serializer_version": serializer_version},
+                    failures.append(
+                        JsonBuildFailure(
+                            resource_type="Observation",
+                            resource_id=str(ob.observation_id),
+                            panel_id=str(panel.panel_id),
+                            message=str(e),
+                            type=type(e).__name__,
+                        )
                     )
 
-            session.commit()
+                # Commit all successful SAVEPOINT changes together
 
-        return {
-            "generated_at": generated_at.isoformat(),
-            "serializer_version": serializer_version,
-            "diagnostic_reports_json_ok": dr_success,
-            "diagnostic_reports_json_failed": dr_fail,
-            "observations_json_ok": obs_success,
-            "observations_json_failed": obs_fail,
-        }
+        # Commit all successful SAVEPOINT changes together
+        try:
+            self.session.commit()
+        except Exception:
+            self.session.rollback()
+            raise
 
-
-"""
+        return failures

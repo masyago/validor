@@ -1,5 +1,5 @@
 from sqlalchemy.orm import Session
-from sqlalchemy import select
+from sqlalchemy import select, update
 from uuid import UUID
 
 from app.persistence.models.normalization import Observation
@@ -52,3 +52,14 @@ class ObservationRepository:
         self.session.add(observation)
         self.session.flush()
         return observation
+
+    def update_resource_json(
+        self, observation_id: UUID, resource_json: dict | None
+    ):
+        stmt = (
+            update(Observation)
+            .where(Observation.observation_id == observation_id)
+            .values(resource_json=resource_json)
+            .execution_options(synchronize_session="fetch")
+        )
+        self.session.execute(stmt)

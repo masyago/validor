@@ -1,5 +1,5 @@
 from sqlalchemy.orm import Session
-from sqlalchemy import select
+from sqlalchemy import select, update
 from uuid import UUID
 
 from app.persistence.models.normalization import DiagnosticReport
@@ -46,3 +46,16 @@ class DiagnosticReportRepository:
         self.session.add(diagnostic_report)
         self.session.flush()
         return diagnostic_report
+
+    def update_resource_json(
+        self, diagnostic_report_id: UUID, resource_json: dict | None
+    ):
+        stmt = (
+            update(DiagnosticReport)
+            .where(
+                DiagnosticReport.diagnostic_report_id == diagnostic_report_id
+            )
+            .values(resource_json=resource_json)
+            .execution_options(synchronize_session="fetch")
+        )
+        self.session.execute(stmt)

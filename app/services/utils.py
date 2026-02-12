@@ -69,5 +69,12 @@ def require_aware_datetime(
         )
         return None
     if val.tzinfo is None:
-        return val.replace(tzinfo=timezone.utc)
+        errors.append(
+            NormalizationError(
+                model=model,
+                field=field,
+                message="datetime must be timezone-aware",
+            )
+        )
+        return None
     return val
