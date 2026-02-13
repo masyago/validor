@@ -3,11 +3,11 @@ from sqlalchemy.sql.sqltypes import TIMESTAMP
 from sqlalchemy.sql.expression import text
 from sqlalchemy import (
     CheckConstraint,
+    Enum as SqlEnum,
     Text,
     func,
     Uuid,
     ForeignKey,
-    UniqueConstraint,
     Index,
 )
 import uuid
@@ -29,14 +29,14 @@ class ProcessingEventType(enum.Enum):
     VALIDATION_SUCCEEDED = "VALIDATION_SUCCEEDED"
     VALIDATION_FAILED = "VALIDATION_FAILED"
     NORMALIZATION_STARTED = "NORMALIZATION_STARTED"
-    NORMALIZATION_RELATIONAL_SUCCEEDED = "NORMALIZATION_PHASE1_SUCCEEDED"
-    NORMALIZATION_RELATIONAL_FAILED = "NORMALIZATION_PHASE1_FAILED"
+    NORMALIZATION_RELATIONAL_SUCCEEDED = "NORMALIZATION_RELATIONAL_SUCCEEDED"
+    NORMALIZATION_RELATIONAL_FAILED = "NORMALIZATION_RELATIONAL_FAILED"
     FHIR_JSON_GENERATION_SUCCEEDED = "FHIR_JSON_GENERATION_SUCCEEDED"
     FHIR_JSON_GENERATION_FAILED = "FHIR_JSON_GENERATION_FAILED"
     FHIR_JSON_RESOURCE_FAILED = "FHIR_JSON_RESOURCE_FAILED"
-    NORMALIZATION_SUCCEEDED = (
-        "NORMALIZATION_SUCCEEDED"  # Both phase 1 and 2 succeeded
-    )
+
+    # Both phase 1 and 2 succeeded
+    NORMALIZATION_SUCCEEDED = "NORMALIZATION_SUCCEEDED"
     NORMALIZATION_FAILED = "NORMALIZATION_FAILED"
 
     AI_ENRICHMENT_STARTED = "AI_ENRICHMENT_STARTED"
@@ -45,33 +45,63 @@ class ProcessingEventType(enum.Enum):
     AI_ENRICHMENT_FAILED = "AI_ENRICHMENT_FAILED"
 
 
-PROCESSING_EVENT_TARGET_TYPES = (
-    "ingestion",
-    "panel",
-    "test",
-    "diagnostic_report",
-    "observation",
-    "ai_annotation",
+processing_event_type_enum = SqlEnum(
+    ProcessingEventType,
+    name="processing_event_type_enum",
+    native_enum=True,
+    create_type=True,
+    values_callable=lambda enum_cls: [e.value for e in enum_cls],
 )
 
-PROCESSING_EVENT_ACTORS = (
-    "ingestion-api",
-    "parser",
-    "validator",
-    "normalizer",
-    "ai-worker",
+
+class ProcessingEventTargetType(enum.Enum):
+    INGESTION = "ingestion"
+    PANEL = "panel"
+    TEST = "test"
+    DIAGNOSTIC_REPORT = "diagnostic_report"
+    OBSERVATION = "observation"
+    AI_ANNOTATION = "ai_annotation"
+
+
+processing_event_target_type_enum = SqlEnum(
+    ProcessingEventTargetType,
+    name="processing_event_target_type_enum",
+    native_enum=True,
+    create_type=True,
+    values_callable=lambda enum_cls: [e.value for e in enum_cls],
 )
 
-PROCESSING_EVENT_SEVERITIES = ("INFO", "WARN", "ERROR")
 
-PROCESSING_EVENT_TYPES = tuple(e.value for e in ProcessingEventType)
+class ProcessingEventActor(enum.Enum):
+    INGESTION_API = "ingestion-api"
+    PARSER = "parser"
+    VALIDATOR = "validator"
+    NORMALIZER = "normalizer"
+    AI_WORKER = "ai-worker"
 
 
-def _sql_in_list(values: tuple[str, ...]) -> str:
-    """
-    Convert to Postgres-accepted literal. Returns ('A', 'B', 'C')
-    """
-    return "(" + ", ".join(f"'{v}'" for v in values) + ")"
+processing_event_actor_enum = SqlEnum(
+    ProcessingEventActor,
+    name="processing_event_actor_enum",
+    native_enum=True,
+    create_type=True,
+    values_callable=lambda enum_cls: [e.value for e in enum_cls],
+)
+
+
+class ProcessingEventSeverity(enum.Enum):
+    INFO = "INFO"
+    WARN = "WARN"
+    ERROR = "ERROR"
+
+
+processing_event_severity_enum = SqlEnum(
+    ProcessingEventSeverity,
+    name="processing_event_severity_enum",
+    native_enum=True,
+    create_type=True,
+    values_callable=lambda enum_cls: [e.value for e in enum_cls],
+)
 
 
 class ProcessingEvent(Base):
@@ -99,27 +129,11 @@ class ProcessingEvent(Base):
             "occurred_at",
         ),
         CheckConstraint(
-            f"event_type IN {_sql_in_list(PROCESSING_EVENT_TYPES)}",
-            name="check_processing_event_event_type",
-        ),
-        CheckConstraint(
-            f"actor IN {_sql_in_list(PROCESSING_EVENT_ACTORS)}",
-            name="check_processing_event_actor",
-        ),
-        CheckConstraint(
-            f"severity IN {_sql_in_list(PROCESSING_EVENT_SEVERITIES)}",
-            name="check_processing_event_severity",
-        ),
-        CheckConstraint(
-            f"target_type IN {_sql_in_list(PROCESSING_EVENT_TARGET_TYPES)}",
-            name="check_processing_event_target_type",
-        ),
-        CheckConstraint(
             """
             (
-              (target_type = 'ingestion' AND target_id IS NULL)
+              (target_type = 'ingestion'::processing_event_target_type_enum AND target_id IS NULL)
               OR
-              (target_type <> 'ingestion' AND target_id IS NOT NULL)
+              (target_type <> 'ingestion'::processing_event_target_type_enum AND target_id IS NOT NULL)
             )
             """,
             name="ck_processing_event_target_consistency",
@@ -141,22 +155,30 @@ class ProcessingEvent(Base):
     dedupe_key: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
 
     # What the event is about
-    target_type: Mapped[str] = mapped_column(Text, nullable=False)
+    target_type: Mapped[ProcessingEventTargetType] = mapped_column(
+        processing_event_target_type_enum, nullable=False
+    )
     target_id: Mapped[Optional[uuid.UUID]] = mapped_column(Uuid, nullable=True)
 
     # When
-    event_type: Mapped[str] = mapped_column(Text, nullable=False)
+    event_type: Mapped[ProcessingEventType] = mapped_column(
+        processing_event_type_enum, nullable=False
+    )
     occurred_at: Mapped[datetime] = mapped_column(
         TIMESTAMP(timezone=True), nullable=False, server_default=func.now()
     )
 
     # Who
-    actor: Mapped[str] = mapped_column(Text, nullable=False)
+    actor: Mapped[ProcessingEventActor] = mapped_column(
+        processing_event_actor_enum, nullable=False
+    )
     actor_version: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
 
     # Explanation
-    severity: Mapped[str] = mapped_column(
-        Text, nullable=False, server_default=text("'INFO'")
+    severity: Mapped[ProcessingEventSeverity] = mapped_column(
+        processing_event_severity_enum,
+        nullable=False,
+        server_default=text("'INFO'::processing_event_severity_enum"),
     )
     message: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
     details: Mapped[Optional[dict]] = mapped_column(JSONB, nullable=True)
