@@ -1,117 +1,89 @@
-from sqlalchemy.orm import relationship, DeclarativeBase, mapped_column, Mapped
+from sqlalchemy.orm import mapped_column, Mapped
 from sqlalchemy.sql.sqltypes import TIMESTAMP
 from sqlalchemy.sql.expression import text
 from sqlalchemy import (
-    Column,
-    Integer,
-    String,
-    LargeBinary,
-    Integer,
+    CheckConstraint,
     Text,
-    BigInteger,
     func,
     Uuid,
-    text,
     ForeignKey,
-    Enum as SqlEnum,
-    Numeric,
     UniqueConstraint,
     Index,
 )
 import uuid
 from typing import Optional
-from sqlalchemy.dialects.postgresql import JSONB, ENUM
+from sqlalchemy.dialects.postgresql import JSONB
 import enum
 from datetime import datetime
-from pgvector.sqlalchemy import Vector
 from app.persistence.base import Base
 
 
-# Replace with CheckConstraint
-# Provenance: ProcessingEvent class and supporting classes
-# class ProcessingEventTargetType(enum.Enum):
-#     INGESTION = "ingestion"
-#     PANEL = "panel"
-#     TEST = "test"
-#     DIAGNOSTIC_REPORT = "diagnostic_report"
-#     OBSERVATION = "observation"
-#     AI_ANNOTATION = "ai_annotation"
+class ProcessingEventType(enum.Enum):
+    INGESTION_ACCEPTED = "INGESTION_ACCEPTED"
+    INGESTION_DEDUPED_IDENTICAL = "INGESTION_DEDUPED_IDENTICAL"
+    INGESTION_CONFLICT = "INGESTION_CONFLICT"
+    PARSE_STARTED = "PARSE_STARTED"
+    PARSE_SUCCEEDED = "PARSE_SUCCEEDED"
+    PARSE_FAILED = "PARSE_FAILED"
+    VALIDATION_STARTED = "VALIDATION_STARTED"
+    VALIDATION_SUCCEEDED = "VALIDATION_SUCCEEDED"
+    VALIDATION_FAILED = "VALIDATION_FAILED"
+    NORMALIZATION_STARTED = "NORMALIZATION_STARTED"
+    NORMALIZATION_RELATIONAL_SUCCEEDED = "NORMALIZATION_PHASE1_SUCCEEDED"
+    NORMALIZATION_RELATIONAL_FAILED = "NORMALIZATION_PHASE1_FAILED"
+    FHIR_JSON_GENERATION_SUCCEEDED = "FHIR_JSON_GENERATION_SUCCEEDED"
+    FHIR_JSON_GENERATION_FAILED = "FHIR_JSON_GENERATION_FAILED"
+    FHIR_JSON_RESOURCE_FAILED = "FHIR_JSON_RESOURCE_FAILED"
+    NORMALIZATION_SUCCEEDED = (
+        "NORMALIZATION_SUCCEEDED"  # Both phase 1 and 2 succeeded
+    )
+    NORMALIZATION_FAILED = "NORMALIZATION_FAILED"
+
+    AI_ENRICHMENT_STARTED = "AI_ENRICHMENT_STARTED"
+    AI_ENRICHMENT_SKIPPED = "AI_ENRICHMENT_SKIPPED"
+    AI_ENRICHMENT_SUCCEEDED = "AI_ENRICHMENT_SUCCEEDED"
+    AI_ENRICHMENT_FAILED = "AI_ENRICHMENT_FAILED"
 
 
-# processing_event_target_type_enum = SqlEnum(
-#     ProcessingEventTargetType,
-#     name="processing_event_target_type_enum",
-#     create_type=True,
-# )
+PROCESSING_EVENT_TARGET_TYPES = (
+    "ingestion",
+    "panel",
+    "test",
+    "diagnostic_report",
+    "observation",
+    "ai_annotation",
+)
+
+PROCESSING_EVENT_ACTORS = (
+    "ingestion-api",
+    "parser",
+    "validator",
+    "normalizer",
+    "ai-worker",
+)
+
+PROCESSING_EVENT_SEVERITIES = ("INFO", "WARN", "ERROR")
+
+PROCESSING_EVENT_TYPES = tuple(e.value for e in ProcessingEventType)
 
 
-# class ProcessingEventActor(enum.Enum):
-#     INGESTION_API = "ingestion-api"
-#     PARSER = "parser"
-#     VALIDATOR = "validator"
-#     NORMALIZER = "normalizer"
-#     AI_WORKER = "ai-worker"
-
-
-# processing_event_actor_enum = SqlEnum(
-#     ProcessingEventActor,
-#     name="processing_event_actor_enum",
-#     create_type=True,
-# )
-
-
-# class ProcessingEventSeverity(enum.Enum):
-#     INFO = "INFO"
-#     WARN = "WARN"
-#     ERROR = "ERROR"
-
-
-# processing_event_severity_enum = SqlEnum(
-#     ProcessingEventSeverity,
-#     name="processing_event_severity_enum",
-#     create_type=True,
-# )
-
-
-# class ProcessingEventType(enum.Enum):
-#     INGESTION_ACCEPTED = "INGESTION_ACCEPTED"
-#     INGESTION_DEDUPED_IDENTICAL = "INGESTION_DEDUPED_IDENTICAL"
-#     INGESTION_CONFLICT = "INGESTION_CONFLICT"
-#     PARSE_STARTED = "PARSE_STARTED"
-#     PARSE_SUCCEEDED = "PARSE_SUCCEEDED"
-#     PARSE_FAILED = "PARSE_FAILED"
-#     VALIDATION_STARTED = "VALIDATION_STARTED"
-#     VALIDATION_SUCCEEDED = "VALIDATION_SUCCEEDED"
-#     VALIDATION_FAILED = "VALIDATION_FAILED"
-#     NORMALIZATION_STARTED = "NORMALIZATION_STARTED"
-#     NORMALIZATION_SUCCEEDED = "NORMALIZATION_SUCCEEDED"
-#     NORMALIZATION_FAILED = "NORMALIZATION_FAILED"
-#     AI_ENRICHMENT_STARTED = "AI_ENRICHMENT_STARTED"
-#     AI_ENRICHMENT_SKIPPED = "AI_ENRICHMENT_SKIPPED"
-#     AI_ENRICHMENT_SUCCEEDED = "AI_ENRICHMENT_SUCCEEDED"
-#     AI_ENRICHMENT_FAILED = "AI_ENRICHMENT_FAILED"
-
-
-# processing_event_type_enum = SqlEnum(
-#     ProcessingEventType,
-#     name="processing_event_type_enum",
-#     create_type=True,
-# )
+def _sql_in_list(values: tuple[str, ...]) -> str:
+    """
+    Convert to Postgres-accepted literal. Returns ('A', 'B', 'C')
+    """
+    return "(" + ", ".join(f"'{v}'" for v in values) + ")"
 
 
 class ProcessingEvent(Base):
     __tablename__ = "processing_event"
     __table_args__ = (
-        UniqueConstraint(
+        Index(
+            "ux_processing_event_dedupe",
             "ingestion_id",
             "event_type",
             "dedupe_key",
-            name="unique_ingestion_event_dedupe",
-        ),
-        Index(
-            "ix_processing_event_ingestion_sequence",
-            "ingestion_id",
-            "sequence",
+            unique=True,
+            postgresql_where=text("dedupe_key IS NOT NULL"),
         ),
         Index(
             "ix_processing_event_ingestion_event_type",
@@ -120,6 +92,37 @@ class ProcessingEvent(Base):
         ),
         Index(
             "ix_processing_event_target_type_id", "target_type", "target_id"
+        ),
+        Index(
+            "ix_processing_event_ingestion_occurred_at",
+            "ingestion_id",
+            "occurred_at",
+        ),
+        CheckConstraint(
+            f"event_type IN {_sql_in_list(PROCESSING_EVENT_TYPES)}",
+            name="check_processing_event_event_type",
+        ),
+        CheckConstraint(
+            f"actor IN {_sql_in_list(PROCESSING_EVENT_ACTORS)}",
+            name="check_processing_event_actor",
+        ),
+        CheckConstraint(
+            f"severity IN {_sql_in_list(PROCESSING_EVENT_SEVERITIES)}",
+            name="check_processing_event_severity",
+        ),
+        CheckConstraint(
+            f"target_type IN {_sql_in_list(PROCESSING_EVENT_TARGET_TYPES)}",
+            name="check_processing_event_target_type",
+        ),
+        CheckConstraint(
+            """
+            (
+              (target_type = 'ingestion' AND target_id IS NULL)
+              OR
+              (target_type <> 'ingestion' AND target_id IS NOT NULL)
+            )
+            """,
+            name="ck_processing_event_target_consistency",
         ),
     )
 
@@ -130,37 +133,30 @@ class ProcessingEvent(Base):
     ingestion_id: Mapped[uuid.UUID] = mapped_column(
         Uuid, ForeignKey("ingestion.ingestion_id"), nullable=False
     )
-    sequence: Mapped[int] = mapped_column(
-        BigInteger, nullable=False, unique=True
-    )
+    execution_id: Mapped[uuid.UUID] = mapped_column(Uuid, nullable=False)
+
+    """
+    dedupe_key is assigned by runner/orchestrator. Format: "ingestion_id:execution_id:content_sha256"
+    """
     dedupe_key: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
 
     # What the event is about
-    target_type: Mapped[Optional[ProcessingEventTargetType]] = mapped_column(
-        processing_event_target_type_enum, nullable=True
-    )
+    target_type: Mapped[str] = mapped_column(Text, nullable=False)
     target_id: Mapped[Optional[uuid.UUID]] = mapped_column(Uuid, nullable=True)
 
     # When
-    event_type: Mapped[ProcessingEventType] = mapped_column(
-        processing_event_type_enum, nullable=False
-    )
+    event_type: Mapped[str] = mapped_column(Text, nullable=False)
     occurred_at: Mapped[datetime] = mapped_column(
-        TIMESTAMP(timezone=True), nullable=False
+        TIMESTAMP(timezone=True), nullable=False, server_default=func.now()
     )
 
     # Who
-    actor: Mapped[ProcessingEventActor] = mapped_column(
-        processing_event_actor_enum, nullable=False
-    )
+    actor: Mapped[str] = mapped_column(Text, nullable=False)
     actor_version: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
-    artifact_versions: Mapped[Optional[dict]] = mapped_column(
-        JSONB, nullable=True
-    )
 
     # Explanation
-    severity: Mapped[Optional[ProcessingEventSeverity]] = mapped_column(
-        processing_event_severity_enum, nullable=True
+    severity: Mapped[str] = mapped_column(
+        Text, nullable=False, server_default=text("'INFO'")
     )
     message: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
     details: Mapped[Optional[dict]] = mapped_column(JSONB, nullable=True)

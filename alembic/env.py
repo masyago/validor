@@ -16,6 +16,7 @@ from app.persistence.base import Base
 from app.persistence.models import core
 from app.persistence.models import parsing
 from app.persistence.models import normalization
+from app.persistence.models import provenance
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.

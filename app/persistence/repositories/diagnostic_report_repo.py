@@ -4,14 +4,6 @@ from uuid import UUID
 
 from app.persistence.models.normalization import DiagnosticReport
 
-"""
-Methods:
-- retrieve a row by diagnostic_report_id
-- retrieve rows (zero or more) by ingestion_id
-- retrieve a row by panel_id
-- add a new row
-"""
-
 
 class DiagnosticReportRepository:
     def __init__(self, session: Session):
