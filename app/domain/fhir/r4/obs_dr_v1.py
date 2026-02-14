@@ -148,8 +148,8 @@ class R4ObsDrV1Serializer:
         Maps normalized Observation row to an R4 Observation dict.
         """
 
-        valueQuantity: Optional[Quantity] = None
-        valueString: Optional[str] = None
+        value_quantity: Optional[Quantity] = None
+        value_string: Optional[str] = None
 
         if getattr(ob, "value_num") is not None:
             value_quantity = Quantity(

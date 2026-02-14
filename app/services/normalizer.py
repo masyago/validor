@@ -10,16 +10,26 @@ import uuid
 import json
 from dataclasses import dataclass
 from sqlalchemy.orm import Session
-from sqlalchemy.exc import SQLAlchemyError
+from sqlalchemy.exc import SQLAlchemyError, DBAPIError, OperationalError
 
 from app.persistence.models.parsing import Panel, Test
 from app.persistence.models.normalization import DiagnosticReport, Observation
+from app.persistence.models.provenance import (
+    ProcessingEventActor,
+    ProcessingEventSeverity,
+    ProcessingEventTargetType,
+    ProcessingEventType,
+)
 from app.persistence.repositories.panel_repo import PanelRepository
 from app.persistence.repositories.test_repo import TestRepository
 from app.persistence.repositories.diagnostic_report_repo import (
     DiagnosticReportRepository,
 )
+from app.persistence.repositories.processing_event_repo import (
+    ProcessingEventRepository,
+)
 from app.persistence.repositories.observation_repo import ObservationRepository
+from app.provenance.emmiter import EventContext, emit
 from app.services.utils import (
     NormalizationError,
     parse_str_to_num,
@@ -286,6 +296,54 @@ class JsonBuildFailure:
     type: str
 
 
+@dataclass(frozen=True)
+class Phase1Summary:
+    normalized_at: datetime
+    diagnostic_reports_created: int
+    observations_created: int
+    diagnostic_reports_existing: int
+    observations_existing: int
+
+def _is_retryable_phase1_exception(exc: Exception) -> bool:
+    """
+    Conservative retry policy for Phase 1:
+    - Retry transient DB connectivity / transaction failures.
+    - Do NOT retry deterministic data errors (those should surface as ok=False + norm_errors).
+    """
+    # SQLAlchemy wraps many driver errors in DBAPIError/OperationalError.
+    if isinstance(exc, (OperationalError,)):
+        return True
+
+    if isinstance(exc, DBAPIError):
+        # connection_invalidated is a strong signal of transient disconnect
+        if getattr(exc, "connection_invalidated", False):
+            return True
+
+        # Some DBAPIErrors can be retryable; keep conservative unless you want to parse pgcode.
+        # Example extension (optional): retry deadlocks/serialization failures by inspecting exc.orig.pgcode
+        return True
+
+    return False
+
+def _is_retryable_phase2_exception(exc: Exception) -> bool:
+    """
+    Conservative retry policy for Phase 2:
+    - Retry transient DB connectivity / transaction failures.
+    - Do NOT retry per-resource JSON build failures (those should be returned
+      as json_failures, not raised as exceptions).
+    """
+    if isinstance(exc, (OperationalError,)):
+        return True
+
+    if isinstance(exc, DBAPIError):
+        if getattr(exc, "connection_invalidated", False):
+            return True
+        # Keep conservative unless you want to parse pgcode.
+        return True
+
+    return False
+
+
 class NormalizationJob:
     """
     Orchestrates normalization in two phases:
@@ -305,6 +363,7 @@ class NormalizationJob:
         self.test_repo = TestRepository(session)
         self.dr_repo = DiagnosticReportRepository(session)
         self.obs_repo = ObservationRepository(session)
+        self.pe_repo = ProcessingEventRepository(session)
 
         self.dr_norm = DiagnosticReportNormalization()
         self.obs_norm = ObservationNormalization()
@@ -317,26 +376,132 @@ class NormalizationJob:
         """
         Runs normalization phases. Returns (ok, normalization_errors, json_failures)
 
-        - Phase 1. If `ok` is `False`, Phase 1 failed. Nothing persisted for normalized tables.
-        - Phase 2. In case of json_failures, Phase 1 stays committed, but resource_json remains None for any failed resource_json.
+        - Phase 1. If `ok` is `False`, Phase 1 failed. Nothing persisted for
+          normalized tables.
+        - Phase 2. In case of json_failures, Phase 1 stays committed, but
+          resource_json remains None for any failed resource_json.
         """
-        ok, norm_errors = self._phase1_normalize_and_persist(ingestion_id)
+        # Emit NORMALIZATION_STARTED (target = ingestion)
+
+        # retry loop for phase 1 starts
+        max_attempts = 3
+        attempt = 0
+        ok: bool = False
+        norm_errors: list[NormalizationError] = []
+        phase1_summary: Phase1Summary | None = None
+
+        while attempt < max_attempts:
+            attempt += 1
+            try:
+                ok, norm_errors, phase1_summary = (
+                    self._phase1_normalize_and_persist(ingestion_id)
+                )
+
+                # ok=False is assumed to be deterministic/data-related (non-retryable) because Phase 1 returns explicit normalization errors.
+                if not ok:
+                    break
+
+                # Phase 1 succeeded; exit retry loop
+                break
+
+            except Exception as exc:
+                # Any partial work in the transaction must be rolled back before retrying.
+                self.session.rollback()
+
+                if not _is_retryable_phase1_exception(exc) or attempt >= max_attempts:
+                    # Convert exception to a normalization error (or re-raise if you prefer).
+                    norm_errors = [
+                        NormalizationError(
+                            model="NormalizationJob",
+                            field="phase1",
+                            message=str(exc),
+                        )
+                    ]
+                    ok = False
+                    break
+
+            # Retryable exception and attempts remain: loop continues.
+            continue
+
         if not ok:
+            # Emit NORMALIZATION_RELATIONAL_FAILED (target = ingestion, severity=ERROR, include error summary)
+
+            # Emit NORMALIZATION_FAILED (aggregate, target = ingestion, severity=ERROR, include failed_phase="phase1")
+
+            # commit
             return False, norm_errors, []
+        
+        # Emit NORMALIZATION_RELATIONAL_SUCCEEDED (target = ingestion)
+        # Include: counts (e.g., diagnostic_reports_upserted, observations_upserted, normalized_at)
 
-        json_failures = self._phase2_persist_fhir_json(ingestion_id)
+        # commit phase 1
+
+        # retry loop for phase 2 starts
+        # Phase 2 retry loop only retries exceptions (DB/system issues),
+        #  not json_failures returned from the function.
+        max_attempts = 3
+        attempt = 0
+        json_failures: list[JsonBuildFailure] = []
+
+
+        while attempt < max_attempts:
+            attempt += 1
+            try:
+                json_failures = self._phase2_persist_fhir_json(ingestion_id)
+                # json_failures is a data/serialization outcome (non-exception),
+                # not something to retry in-process. Exit loop either way.
+                break
+            except Exception as exc:
+                # Phase 2 runs in its own transaction scope; reset session before retry.
+                self.session.rollback()
+
+                if not _is_retryable_phase2_exception(exc) or attempt >= max_attempts:
+                    # If Phase 2 cannot run at all (systemic), surface it as a failure.
+                    # You can either:
+                    #  - re-raise, OR
+                    #  - convert to a synthetic JsonBuildFailure (shown here).
+                    json_failures = [JsonBuildFailure(message=str(exc))]  # type: ignore[name-defined]
+                    break
+
+            # Retryable exception and attempts remain: loop continues.
+            continue
+        if not json_failures:
+            # FHIR_JSON_GENERATION_FAILED
+
+            # Target: ingestion
+
+            # Severity: WARN (or ERROR if you treat any JSON failure as hard)
+
+            # Include: counts (e.g., failed_count, succeeded_count, serializer version)
+            # NORMALIZATION_SUCCEEDED_WITH_WARNINGS (aggregate), target:
+            # ingestion, severity: WARN 
+
+            # commit phase 2
+
+        # FHIR_JSON_GENERATION_SUCCEEDED. Target: ingestion. Severity: INFO
+        # Include: counts + serializer version
+
+        # emit NORMALIZATION_SUCCEEDED, include counts
+        # commit phase 2
         return True, [], json_failures
+    
 
+    '''
+    Phase 1 and Phase 2 methods don't emit processing_event records. 
+    Instead, they track structured outcomes (counts, errors, failures) and 
+    return them to the runner.
+    '''
     # Phase 1: Normalize to FHIR-shaped rows, commit to db
     def _phase1_normalize_and_persist(
         self, ingestion_id: uuid.UUID
-    ) -> tuple[bool, list[NormalizationError]]:
+    ) -> tuple[bool, list[NormalizationError], Phase1Summary | None]:
         """
         1. Validates data from Panel or Test
         2. If no validation errors, persists normalized rows, and commits.
            Uuid's generated at db side.
         3. If validation errors present, nothing is persisted.
         """
+
         panels = self.panel_repo.get_by_ingestion_id(ingestion_id)
 
         # Validate and build payloads
@@ -364,8 +529,9 @@ class NormalizationJob:
                     obs_core_by_test_id[test.test_id] = core_payload
 
         if errors:
+            # emit and commit() NORMALIZATION_RELATIONAL_FAILED
             self.session.rollback()
-            return False, errors
+            return False, errors, None
 
         # Persist normalized payloads. First, DiagnosticReport with flush().
         # Then Observation, including diagnostic_report_id.
@@ -398,12 +564,15 @@ class NormalizationJob:
                     self.obs_repo.create(ob)
 
             self.session.commit()
+            # emit and commit() NORMALIZATION_RELATIONAL_SUCCEEDED
             return True, []
 
         except SQLAlchemyError:
+            # emit and commit() NORMALIZATION_RELATIONAL_FAILED
             self.session.rollback()
             raise
         except Exception:
+            # emit and commit() NORMALIZATION_RELATIONAL_FAILED
             self.session.rollback()
             raise
 
@@ -427,6 +596,7 @@ class NormalizationJob:
                         type="MissingRow",
                     )
                 )
+                # emit and commit() FHIR_JSON_GENERATION_FAILED
             else:
                 try:
                     # Build list of `observation_id`'s for DR serializer
@@ -444,6 +614,8 @@ class NormalizationJob:
                         self.dr_repo.update_resource_json(
                             dr.diagnostic_report_id, dr_json_dict
                         )
+                        # emit and commit() FHIR_JSON_GENERATION_SUCCEEDED for DR
+                        # process_event row per DR
                 except Exception as e:
                     failures.append(
                         JsonBuildFailure(
@@ -454,6 +626,7 @@ class NormalizationJob:
                             type=type(e).__name__,
                         )
                     )
+                    # emit and commit() FHIR_JSON_GENERATION_FAILED
 
             # Observation JSON (isolated per Observation)
             tests = self.test_repo.get_by_panel_id(panel.panel_id)
@@ -469,6 +642,7 @@ class NormalizationJob:
                             type="MissingRow",
                         )
                     )
+                    # emit and commit() FHIR_JSON_GENERATION_FAILED
                     continue
 
                 try:
@@ -477,6 +651,8 @@ class NormalizationJob:
                         self.obs_repo.update_resource_json(
                             ob.observation_id, ob_json_dict
                         )
+                        # emit and commit() FHIR_JSON_GENERATION_SUCCEEDED for
+                        # Obs process_event row per Obs
                 except Exception as e:
                     failures.append(
                         JsonBuildFailure(
@@ -487,6 +663,7 @@ class NormalizationJob:
                             type=type(e).__name__,
                         )
                     )
+                    # emit and commit() FHIR_JSON_GENERATION_FAILED
 
                 # Commit all successful SAVEPOINT changes together
 

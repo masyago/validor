@@ -4,7 +4,11 @@ from sqlalchemy import select, desc, asc
 from uuid import UUID
 from typing import Optional
 
-from app.persistence.models.provenance import ProcessingEvent
+from app.persistence.models.provenance import (
+    ProcessingEvent,
+    ProcessingEventType,
+    ProcessingEventTargetType,
+)
 from sqlalchemy.dialects.postgresql import insert as pg_insert
 from sqlalchemy.sql import text
 
@@ -84,7 +88,7 @@ class ProcessingEventRepository:
         return list(self.session.scalars(stmt).all())
 
     def list_by_ingestion_id_and_event_type(
-        self, ingestion_id: UUID, event_type: str
+        self, ingestion_id: UUID, event_type: ProcessingEventType
     ) -> list[ProcessingEvent]:
         stmt = (
             select(ProcessingEvent)
@@ -99,7 +103,7 @@ class ProcessingEventRepository:
         return list(self.session.scalars(stmt).all())
 
     def list_by_target(
-        self, target_type: str, target_id: UUID | None
+        self, target_type: ProcessingEventTargetType, target_id: UUID | None
     ) -> list[ProcessingEvent]:
         stmt = (
             select(ProcessingEvent)
@@ -115,7 +119,9 @@ class ProcessingEventRepository:
 
     # Get latest record for the ingestion and (if provided) for event type
     def get_latest_for_ingestion(
-        self, ingestion_id: UUID, event_type: Optional[str] = None
+        self,
+        ingestion_id: UUID,
+        event_type: Optional[ProcessingEventType] = None,
     ) -> ProcessingEvent | None:
         stmt = select(ProcessingEvent).where(
             ProcessingEvent.ingestion_id == ingestion_id

@@ -35,8 +35,15 @@ class ProcessingEventType(enum.Enum):
     FHIR_JSON_GENERATION_FAILED = "FHIR_JSON_GENERATION_FAILED"
     FHIR_JSON_RESOURCE_FAILED = "FHIR_JSON_RESOURCE_FAILED"
 
-    # Both phase 1 and 2 succeeded
+    # Both phases succeeded
     NORMALIZATION_SUCCEEDED = "NORMALIZATION_SUCCEEDED"
+
+    # Only phase 1 successful, phase 2 failed
+    NORMALIZATION_SUCCEEDED_WITH_WARNINGS = (
+        "NORMALIZATION_SUCCEEDED_WITH_WARNINGS"
+    )
+
+    # Phase 1 failed
     NORMALIZATION_FAILED = "NORMALIZATION_FAILED"
 
     AI_ENRICHMENT_STARTED = "AI_ENRICHMENT_STARTED"
@@ -147,14 +154,18 @@ class ProcessingEvent(Base):
     ingestion_id: Mapped[uuid.UUID] = mapped_column(
         Uuid, ForeignKey("ingestion.ingestion_id"), nullable=False
     )
+    # Generated once at the start of a job invocation
     execution_id: Mapped[uuid.UUID] = mapped_column(Uuid, nullable=False)
 
     """
-    dedupe_key is assigned by runner/orchestrator. Format: "ingestion_id:execution_id:content_sha256"
+    dedupe_key is assigned by runner/orchestrator. Example format: 
+    "ingestion_id:execution_id:content_sha256".
+    for resource-level failure: "serializer_version:target_id:error_code"
+    for stage-level: "actor:event_type:execution_id"
     """
     dedupe_key: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
 
-    # What the event is about
+    # What entity the event is about
     target_type: Mapped[ProcessingEventTargetType] = mapped_column(
         processing_event_target_type_enum, nullable=False
     )
