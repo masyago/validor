@@ -7,7 +7,6 @@ from __future__ import annotations
 from typing import Any, Optional
 from datetime import datetime, timezone
 import uuid
-import json
 from dataclasses import dataclass
 from sqlalchemy.orm import Session
 from sqlalchemy.exc import SQLAlchemyError, DBAPIError, OperationalError
@@ -29,7 +28,7 @@ from app.persistence.repositories.processing_event_repo import (
     ProcessingEventRepository,
 )
 from app.persistence.repositories.observation_repo import ObservationRepository
-from app.provenance.emmiter import (
+from app.provenance.emitter import (
     EventContext,
     emit,
     emit_started,
@@ -45,8 +44,6 @@ from app.services.utils import (
 )
 from app.domain.fhir.r4.obs_dr_v1 import (
     R4ObsDrV1Serializer,
-    ObservationR4,
-    DiagnosticReportR4,
 )
 
 ALLOWED_COMPARATORS = {"<", "<=", ">", ">=", "="}
@@ -67,6 +64,7 @@ class DiagnosticReportNormalization:
         self, panel: Panel
     ) -> tuple[Optional[dict[str, Any]], list[NormalizationError]]:
         errors: list[NormalizationError] = []
+        # Probably need to append errors
 
         ingestion_id = require_non_null(
             model="Panel",
@@ -306,11 +304,16 @@ class Phase1Summary:
     normalized_at: datetime
     diagnostic_reports_created: int
     observations_created: int
-    diagnostic_reports_existing: int  # why do we need that?
-    observations_existing: int  # why do we need that?
+    discrepancy_details: list[dict[str, Any]] | None
 
 
-def _is_retryable_phase1_exception(exc: Exception) -> bool:
+@dataclass(frozen=True)
+class Phase2Summary:
+    diagnostic_reports_json_written: int
+    observations_json_written: int
+
+
+def _is_retryable_exception(exc: Exception) -> bool:
     """
     Conservative retry policy for Phase 1:
     - Retry transient DB connectivity / transaction failures.
@@ -323,26 +326,6 @@ def _is_retryable_phase1_exception(exc: Exception) -> bool:
         # connection_invalidated is a strong signal of transient disconnect
         if getattr(exc, "connection_invalidated", False):
             return True
-
-        return True
-
-    return False
-
-
-def _is_retryable_phase2_exception(exc: Exception) -> bool:
-    """
-    Conservative retry policy for Phase 2:
-    - Retry transient DB connectivity / transaction failures.
-    - Do NOT retry per-resource JSON build failures (those should be returned
-      as json_failures, not raised as exceptions).
-    """
-    if isinstance(exc, (OperationalError,)):
-        return True
-
-    if isinstance(exc, DBAPIError):
-        if getattr(exc, "connection_invalidated", False):
-            return True
-        return True
 
     return False
 
@@ -408,6 +391,7 @@ class NormalizationJob:
             dedupe_key=_dedupe_key(ProcessingEventType.NORMALIZATION_STARTED),
         )
 
+        # Why do we commit here?
         self.session.commit()
 
         # retry loop for phase 1 starts
@@ -416,16 +400,14 @@ class NormalizationJob:
         ok: bool = False
         norm_errors: list[NormalizationError] = []
         phase1_summary: Phase1Summary | None = None
+        phase1_exc: Exception | None = None
 
         while attempt < max_attempts:
             attempt += 1
             try:
-                # TODO: review and update phase1 method. add summary?
                 ok, norm_errors, phase1_summary = (
-                    self._phase1_normalize_and_persist(ingestion_id)
+                    self._phase1_normalize_and_persist(ingestion_id, ctx=ctx)
                 )
-
-                # ok=False is assumed to be deterministic/data-related (non-retryable) because Phase 1 returns explicit normalization errors.
                 if not ok:
                     break
 
@@ -433,13 +415,12 @@ class NormalizationJob:
                 break
 
             except Exception as exc:
-                # Any partial work in the transaction must be rolled back before retrying.
+                # Any partial work in the transaction must be rolled back
+                # before retrying.
+                phase1_exc = exc
                 self.session.rollback()
 
-                if (
-                    not _is_retryable_phase1_exception(exc)
-                    or attempt >= max_attempts
-                ):
+                if not _is_retryable_exception(exc) or attempt >= max_attempts:
                     # Convert exception to a normalization error
                     norm_errors = [
                         NormalizationError(
@@ -455,7 +436,6 @@ class NormalizationJob:
             continue
 
         if not ok:
-            # Emit NORMALIZATION_RELATIONAL_FAILED (target = ingestion, severity=ERROR, include error summary)
             err = phase1_exc or Exception(
                 "Phase 1 (relational) normalization failed"
             )
@@ -465,7 +445,6 @@ class NormalizationJob:
                 event_type=ProcessingEventType.NORMALIZATION_RELATIONAL_FAILED,
                 error=err,
                 message="Phase 1 (relational) normalization failed",
-                # TODO: Figure out how norm errors are passed from relational
                 details={
                     "failed_phase": "phase1",
                     "attempts": attempt,
@@ -478,7 +457,6 @@ class NormalizationJob:
                 },
             )
 
-            # Emit NORMALIZATION_FAILED (aggregate, target = ingestion, severity=ERROR, include failed_phase="phase1")
             emit_failed(
                 self.pe_repo,
                 ctx,
@@ -495,8 +473,22 @@ class NormalizationJob:
             self.session.commit()
             return False, norm_errors, []
 
-        # Emit NORMALIZATION_RELATIONAL_SUCCEEDED (target = ingestion)
         # Include: counts (e.g., diagnostic_reports_upserted, observations_upserted, normalized_at)
+        discrepancy_count = (
+            len(phase1_summary.discrepancy_details)
+            if (phase1_summary and phase1_summary.discrepancy_details)
+            else 0
+        )
+
+        # Avoid bloating ProcessingEvent.details; store up to N items (tune as needed).
+        max_discrepancies_to_store = 50
+        discrepancy_details_payload = (
+            (phase1_summary.discrepancy_details or [])[
+                :max_discrepancies_to_store
+            ]
+            if phase1_summary is not None
+            else []
+        )
         emit(
             self.pe_repo,
             ctx,
@@ -521,15 +513,10 @@ class NormalizationJob:
                     if phase1_summary is not None
                     else None
                 ),
-                "diagnostic_reports_existing": (
-                    phase1_summary.diagnostic_reports_existing
-                    if phase1_summary is not None
-                    else None
-                ),
-                "observations_existing": (
-                    phase1_summary.observations_existing
-                    if phase1_summary is not None
-                    else None
+                "discrepancy_count": discrepancy_count,
+                "discrepancy_details": discrepancy_details_payload,
+                "discrepancy_details_truncated": (
+                    discrepancy_count > max_discrepancies_to_store
                 ),
             },
             dedupe_key=_dedupe_key(
@@ -549,28 +536,39 @@ class NormalizationJob:
         max_attempts = 3
         attempt = 0
         json_failures: list[JsonBuildFailure] = []
+        phase2_summary: Phase2Summary | None = None
         phase2_exc: Exception | None = None
 
         while attempt < max_attempts:
             attempt += 1
             try:
-                json_failures = self._phase2_persist_fhir_json(ingestion_id)
-                # json_failures is a data/serialization outcome (non-exception),
-                # not something to retry in-process. Exit loop either way.
+                json_failures, phase2_summary = self._phase2_persist_fhir_json(
+                    ingestion_id
+                )
                 break
             except Exception as exc:
                 # Phase 2 runs in its own transaction scope; reset session before retry.
+                phase2_exc = exc
                 self.session.rollback()
 
-                if (
-                    not _is_retryable_phase2_exception(exc)
-                    or attempt >= max_attempts
-                ):
+                if not _is_retryable_exception(exc) or attempt >= max_attempts:
                     # If Phase 2 cannot run at all (systemic), surface it as a failure.
                     # You can either:
                     #  - re-raise, OR
                     #  - convert to a synthetic JsonBuildFailure (shown here).
-                    json_failures = [JsonBuildFailure(message=str(exc))]  # type: ignore[name-defined]
+                    json_failures = [
+                        JsonBuildFailure(
+                            resource_type="Phase2",
+                            resource_id="",
+                            panel_id="",
+                            message=str(exc),
+                            type=type(exc).__name__,
+                        )
+                    ]
+                    phase2_summary = Phase2Summary(
+                        diagnostic_reports_json_written=0,
+                        observations_json_written=0,
+                    )
                     break
 
             # Retryable exception and attempts remain: loop continues.
@@ -615,8 +613,6 @@ class NormalizationJob:
                 deduped=True,
             )
 
-            # NORMALIZATION_SUCCEEDED_WITH_WARNINGS (aggregate), target:
-            # ingestion, severity: WARN
             emit(
                 self.pe_repo,
                 ctx,
@@ -629,6 +625,11 @@ class NormalizationJob:
                     "serializer_version": getattr(
                         self.serializer, "full_version", None
                     ),
+                    "discrepancy_count": discrepancy_count,
+                    "discrepancy_details": discrepancy_details_payload,
+                    "discrepancy_details_truncated": (
+                        discrepancy_count > max_discrepancies_to_store
+                    ),
                 },
                 dedupe_key=_dedupe_key(
                     ProcessingEventType.NORMALIZATION_SUCCEEDED_WITH_WARNINGS
@@ -638,7 +639,6 @@ class NormalizationJob:
                 deduped=True,
             )
 
-            # commit phase 2
             self.session.commit()
             return True, [], json_failures
 
@@ -654,6 +654,16 @@ class NormalizationJob:
                 "attempts": attempt,
                 "max_attempts": max_attempts,
                 "failed_count": 0,
+                "diagnostic_reports_json_written": (
+                    phase2_summary.diagnostic_reports_json_written
+                    if phase2_summary is not None
+                    else None
+                ),
+                "observations_json_written": (
+                    phase2_summary.observations_json_written
+                    if phase2_summary is not None
+                    else None
+                ),
                 "serializer_version": getattr(
                     self.serializer, "full_version", None
                 ),
@@ -675,8 +685,16 @@ class NormalizationJob:
             message="Normalization succeeded",
             details={
                 "serializer_full_version": getattr(
-                    self.serializer, "full_version", None
-                )
+                    self.serializer,
+                    "full_version",
+                    None,
+                    # additionally, include counts for dr, obs rows
+                ),
+                "discrepancy_count": discrepancy_count,
+                "discrepancy_details": discrepancy_details_payload,
+                "discrepancy_details_truncated": (
+                    discrepancy_count > max_discrepancies_to_store
+                ),
             },
             dedupe_key=_dedupe_key(
                 ProcessingEventType.NORMALIZATION_SUCCEEDED
@@ -698,7 +716,7 @@ class NormalizationJob:
 
     # Phase 1: Normalize to FHIR-shaped rows, commit to db
     def _phase1_normalize_and_persist(
-        self, ingestion_id: uuid.UUID
+        self, ingestion_id: uuid.UUID, *, ctx: EventContext
     ) -> tuple[bool, list[NormalizationError], Phase1Summary | None]:
         """
         1. Validates data from Panel or Test
@@ -713,6 +731,8 @@ class NormalizationJob:
         errors: list[NormalizationError] = []
         dr_payload_by_panel_id: dict[uuid.UUID, dict[str, Any]] = {}
         obs_core_by_test_id: dict[uuid.UUID, dict[str, Any]] = {}
+
+        discrepancy_details: list[dict[str, Any]] = []
 
         for panel in panels:
             dr_payload, dr_errors = (
@@ -741,15 +761,18 @@ class NormalizationJob:
         # Then Observation, including diagnostic_report_id.
         try:
             now = datetime.now(timezone.utc)
+            dr_created = 0
+            ob_created = 0
+
             for panel in panels:
                 dr = self.dr_repo.get_by_panel_id(panel.panel_id)
                 if dr is None:
                     dr_payload = dict(dr_payload_by_panel_id[panel.panel_id])
                     dr_payload["normalized_at"] = now
-
                     dr = DiagnosticReport(**dr_payload)
                     self.dr_repo.create(dr)  # flushes in repo
                     self.session.flush()  # ensure dr.diagnostic_report_id is populated
+                    dr_created += 1
 
                 tests = self.test_repo.get_by_panel_id(panel.panel_id)
                 for test in tests:
@@ -766,9 +789,37 @@ class NormalizationJob:
 
                     ob = Observation(**obs_payload)
                     self.obs_repo.create(ob)
+                    self.session.flush()
+                    ob_created += 1
+
+                    if getattr(ob, "discrepancy", None) is not None:
+                        details = {
+                            "observation_id": str(ob.observation_id),
+                            "code": ob.code,
+                            "discrepancy_text": getattr(ob, "discrepancy"),
+                            "flag_analyzer_interpretation": getattr(
+                                ob, "flag_analyzer_interpretation", None
+                            ),
+                            "flag_system_interpretation": getattr(
+                                ob, "flag_system_interpretation", None
+                            ),
+                        }
+
+                        discrepancy_details.append(details)
 
             self.session.commit()
-            return True, [], None
+            return (
+                True,
+                [],
+                Phase1Summary(
+                    normalized_at=now,
+                    diagnostic_reports_created=dr_created,
+                    observations_created=ob_created,
+                    discrepancy_details=(
+                        discrepancy_details if discrepancy_details else None
+                    ),
+                ),
+            )
 
         except SQLAlchemyError:
             self.session.rollback()
@@ -780,9 +831,12 @@ class NormalizationJob:
     # Phase build JSON for resources and persist the ones that don't have errors.
     def _phase2_persist_fhir_json(
         self, ingestion_id: uuid.UUID
-    ) -> list[JsonBuildFailure]:
+    ) -> tuple[list[JsonBuildFailure], Phase2Summary]:
         failures: list[JsonBuildFailure] = []
         panels = self.panel_repo.get_by_ingestion_id(ingestion_id)
+
+        dr_json_written = 0
+        ob_json_written = 0
 
         for panel in panels:
             # DiagnosticReport JSON (isolated)
@@ -797,7 +851,6 @@ class NormalizationJob:
                         type="MissingRow",
                     )
                 )
-                # emit and commit() FHIR_JSON_GENERATION_FAILED
             else:
                 try:
                     # Build list of `observation_id`'s for DR serializer
@@ -806,7 +859,7 @@ class NormalizationJob:
                     for test in tests:
                         ob = self.obs_repo.get_by_test_id(test.test_id)
                         if ob is not None:
-                            observations.append(ob.ingestion_id)
+                            observations.append(ob.observation_id)
 
                     with self.session.begin_nested():  # SAVEPOINT
                         dr_json_dict = self.serializer.make_diagnostic_report(
@@ -815,8 +868,7 @@ class NormalizationJob:
                         self.dr_repo.update_resource_json(
                             dr.diagnostic_report_id, dr_json_dict
                         )
-                        # emit and commit() FHIR_JSON_GENERATION_SUCCEEDED for DR
-                        # process_event row per DR
+                    dr_json_written += 1
                 except Exception as e:
                     failures.append(
                         JsonBuildFailure(
@@ -827,7 +879,6 @@ class NormalizationJob:
                             type=type(e).__name__,
                         )
                     )
-                    # emit and commit() FHIR_JSON_GENERATION_FAILED
 
             # Observation JSON (isolated per Observation)
             tests = self.test_repo.get_by_panel_id(panel.panel_id)
@@ -843,17 +894,16 @@ class NormalizationJob:
                             type="MissingRow",
                         )
                     )
-                    # emit and commit() FHIR_JSON_GENERATION_FAILED
                     continue
 
+            for ob in observations:
                 try:
-                    with self.session.begin_nested():  # SAVEPOINT
-                        ob_json_dict = self.serializer.make_observation(ob)
+                    with self.session.begin_nested():
+                        ob_json = self.serializer.make_observation(ob)
                         self.obs_repo.update_resource_json(
-                            ob.observation_id, ob_json_dict
+                            ob.observation_id, ob_json
                         )
-                        # emit and commit() FHIR_JSON_GENERATION_SUCCEEDED for
-                        # Obs process_event row per Obs
+                    ob_json_written += 1
                 except Exception as e:
                     failures.append(
                         JsonBuildFailure(
@@ -864,9 +914,9 @@ class NormalizationJob:
                             type=type(e).__name__,
                         )
                     )
-                    # emit and commit() FHIR_JSON_GENERATION_FAILED
 
                 # Commit all successful SAVEPOINT changes together
+                self.session.commit()
 
         # Commit all successful SAVEPOINT changes together
         try:
@@ -875,4 +925,7 @@ class NormalizationJob:
             self.session.rollback()
             raise
 
-        return failures
+        return failures, Phase2Summary(
+            diagnostic_reports_json_written=dr_json_written,
+            observations_json_written=ob_json_written,
+        )

@@ -82,6 +82,10 @@ def run_migrations_online() -> None:
     )
 
     with connectable.connect() as connection:
+        db = connection.exec_driver_sql(
+            "select current_database()"
+        ).scalar_one()
+        context.config.print_stdout(f"[alembic] connected to database={db}")
         context.configure(
             connection=connection, target_metadata=target_metadata
         )
