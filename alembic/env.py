@@ -1,31 +1,21 @@
 from logging.config import fileConfig
-import sys
-from pathlib import Path
-
-# Add project root to Python path
-sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
-
 
 from sqlalchemy import engine_from_config
 from sqlalchemy import pool
 
 from alembic import context
 
-
 from app.persistence.base import Base
 from app.persistence.models import core
 from app.persistence.models import parsing
+
 from app.persistence.models import normalization
+
 from app.persistence.models import provenance
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
 config = context.config
-
-# This should read from the appropriate section based on -n flag
-sqlalchemy_url = config.get_section(config.config_ini_section).get(
-    "sqlalchemy.url"
-)
 
 # Interpret the config file for Python logging.
 # This line sets up loggers basically.
@@ -82,10 +72,6 @@ def run_migrations_online() -> None:
     )
 
     with connectable.connect() as connection:
-        db = connection.exec_driver_sql(
-            "select current_database()"
-        ).scalar_one()
-        context.config.print_stdout(f"[alembic] connected to database={db}")
         context.configure(
             connection=connection, target_metadata=target_metadata
         )

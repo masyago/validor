@@ -1,8 +1,8 @@
-"""Initial core models
+"""initial migration
 
-Revision ID: 1369664a9b6b
+Revision ID: fd1eba23f905
 Revises: 
-Create Date: 2026-01-26 16:48:03.898060
+Create Date: 2026-02-16 10:48:33.695326
 
 """
 from typing import Sequence, Union
@@ -12,7 +12,7 @@ import sqlalchemy as sa
 from sqlalchemy.dialects import postgresql
 
 # revision identifiers, used by Alembic.
-revision: str = '1369664a9b6b'
+revision: str = 'fd1eba23f905'
 down_revision: Union[str, Sequence[str], None] = None
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
@@ -36,7 +36,7 @@ def upgrade() -> None:
     sa.Column('error_detail', postgresql.JSONB(astext_type=sa.Text()), nullable=True),
     sa.Column('source_filename', sa.Text(), nullable=False),
     sa.Column('ingestion_idempotency_disposition', sa.Text(), nullable=True),
-    sa.CheckConstraint("(ingestion_idempotency_disposition IS NULL OR ingestion_idempotency_disposition IN ('CREATED', 'DUPLICATE_IDENTICAL', 'CONFLICT'))", name='ck_ingestion_idempotency_disposition'),
+    sa.CheckConstraint("ingestion_idempotency_disposition IS NULL OR ingestion_idempotency_disposition IN ('CREATED', 'DUPLICATE_IDENTICAL', 'CONFLICT')", name='check_ingestion_idempotency_disposition'),
     sa.PrimaryKeyConstraint('ingestion_id'),
     sa.UniqueConstraint('instrument_id', 'run_id', name='unique_instrument_run')
     )
