@@ -1,4 +1,217 @@
 # ...existing code...
+
+
+class NormalizationJob:
+    # ...existing code...
+
+    def run_for_ingestion_id(
+        self, ingestion_id: uuid.UUID
+    ) -> tuple[bool, list[NormalizationError], list[JsonBuildFailure]]:
+        # ...existing code...
+
+        # Include: counts (e.g., diagnostic_reports_upserted, observations_upserted, normalized_at)
+        discrepancy_count = (
+            len(phase1_summary.discrepancy_details)
+            if (phase1_summary and phase1_summary.discrepancy_details)
+            else 0
+        )
+
+        # Avoid bloating ProcessingEvent.details; store up to N items (tune as needed).
+        max_discrepancies_to_store = 50
+        discrepancy_details_payload = (
+            (phase1_summary.discrepancy_details or [])[
+                :max_discrepancies_to_store
+            ]
+            if phase1_summary is not None
+            else []
+        )
+
+        emit(
+            self.pe_repo,
+            ctx,
+            event_type=ProcessingEventType.NORMALIZATION_RELATIONAL_SUCCEEDED,
+            severity=ProcessingEventSeverity.INFO,
+            message="Phase 1 (relational) normalization succeeded",
+            details={
+                "succeeded_phase": "phase1",
+                "attempts": attempt,
+                "normalized_at": (
+                    phase1_summary.normalized_at.isoformat()
+                    if phase1_summary is not None
+                    else None
+                ),
+                "diagnostic_reports_created": (
+                    phase1_summary.diagnostic_reports_created
+                    if phase1_summary is not None
+                    else None
+                ),
+                "observations_created": (
+                    phase1_summary.observations_created
+                    if phase1_summary is not None
+                    else None
+                ),
+                # NEW: ingestion-scoped discrepancy rollup
+                "discrepancy_count": discrepancy_count,
+                "discrepancy_details": discrepancy_details_payload,
+                "discrepancy_details_truncated": (
+                    discrepancy_count > max_discrepancies_to_store
+                ),
+            },
+            dedupe_key=_dedupe_key(
+                ProcessingEventType.NORMALIZATION_RELATIONAL_SUCCEEDED
+            ),
+            target_type=ProcessingEventTargetType.INGESTION,
+            target_id=None,
+            deduped=True,
+        )
+
+        # ...existing code...
+
+        if json_failures:
+            emit(
+                self.pe_repo,
+                ctx,
+                event_type=ProcessingEventType.NORMALIZATION_SUCCEEDED_WITH_WARNINGS,
+                severity=ProcessingEventSeverity.WARN,
+                message="Normalization succeeded with warnings (FHIR JSON failures)",
+                details={
+                    "failed_phase": "phase2",
+                    "fhir_json_failure_count": len(json_failures),
+                    "serializer_version": getattr(
+                        self.serializer, "full_version", None
+                    ),
+                    # NEW: carry discrepancy rollup forward (still run/ingestion-scoped)
+                    "discrepancy_count": discrepancy_count,
+                    "discrepancy_details": discrepancy_details_payload,
+                    "discrepancy_details_truncated": (
+                        discrepancy_count > max_discrepancies_to_store
+                    ),
+                },
+                dedupe_key=_dedupe_key(
+                    ProcessingEventType.NORMALIZATION_SUCCEEDED_WITH_WARNINGS
+                ),
+                target_type=ProcessingEventTargetType.INGESTION,
+                target_id=None,
+                deduped=True,
+            )
+
+            self.session.commit()
+            return True, [], json_failures
+
+        emit(
+            self.pe_repo,
+            ctx,
+            event_type=ProcessingEventType.NORMALIZATION_SUCCEEDED,
+            severity=ProcessingEventSeverity.INFO,
+            message="Normalization succeeded",
+            details={
+                "serializer_full_version": getattr(
+                    self.serializer,
+                    "full_version",
+                    None,
+                ),
+                # NEW: carry discrepancy rollup forward
+                "discrepancy_count": discrepancy_count,
+                "discrepancy_details": discrepancy_details_payload,
+                "discrepancy_details_truncated": (
+                    discrepancy_count > max_discrepancies_to_store
+                ),
+            },
+            dedupe_key=_dedupe_key(
+                ProcessingEventType.NORMALIZATION_SUCCEEDED
+            ),
+            target_type=ProcessingEventTargetType.INGESTION,
+            target_id=None,
+            deduped=True,
+        )
+
+        # ...existing code...
+
+    def _phase1_normalize_and_persist(
+        self, ingestion_id: uuid.UUID, *, ctx: EventContext
+    ) -> tuple[bool, list[NormalizationError], Phase1Summary | None]:
+        # ...existing code...
+
+        try:
+            now = datetime.now(timezone.utc)
+            dr_created = 0
+            ob_created = 0
+
+            # NEW: define once (prevents UnboundLocalError and prevents reset-per-observation)
+            discrepancy_details: list[dict[str, Any]] = []
+
+            for panel in panels:
+                dr = self.dr_repo.get_by_panel_id(panel.panel_id)
+                if dr is None:
+                    dr_payload = dict(dr_payload_by_panel_id[panel.panel_id])
+                    dr_payload["normalized_at"] = now
+                    dr = DiagnosticReport(**dr_payload)
+                    self.dr_repo.create(dr)  # flushes in repo
+                    self.session.flush()
+                    dr_created += 1
+
+                tests = self.test_repo.get_by_panel_id(panel.panel_id)
+                for test in tests:
+                    existing_ob = self.obs_repo.get_by_test_id(test.test_id)
+                    if existing_ob is not None:
+                        continue
+
+                    core = obs_core_by_test_id[test.test_id]
+                    obs_payload = self.obs_norm.attach_diagnostic_report_id(
+                        core, dr.diagnostic_report_id
+                    )
+                    obs_payload = dict(obs_payload)
+                    obs_payload["normalized_at"] = now
+
+                    ob = Observation(**obs_payload)
+                    self.obs_repo.create(ob)
+                    self.session.flush()
+                    ob_created += 1
+
+                    if getattr(ob, "discrepancy", None) is not None:
+                        # Ensure JSON-serializable values in ProcessingEvent.details
+                        discrepancy_details.append(
+                            {
+                                "observation_id": str(ob.observation_id),
+                                "test_id": str(ob.test_id),
+                                "panel_id": str(panel.panel_id),
+                                "code": ob.code,
+                                "discrepancy_text": getattr(ob, "discrepancy"),
+                                "flag_analyzer_interpretation": getattr(
+                                    ob, "flag_analyzer_interpretation", None
+                                ),
+                                "flag_system_interpretation": getattr(
+                                    ob, "flag_system_interpretation", None
+                                ),
+                            }
+                        )
+
+            self.session.commit()
+            return (
+                True,
+                [],
+                Phase1Summary(
+                    normalized_at=now,
+                    diagnostic_reports_created=dr_created,
+                    observations_created=ob_created,
+                    discrepancy_details=(
+                        discrepancy_details if discrepancy_details else None
+                    ),
+                ),
+            )
+
+        except SQLAlchemyError:
+            self.session.rollback()
+            raise
+        except Exception:
+            self.session.rollback()
+            raise
+
+
+# ...existing code...
+
+
+# ...existing code...
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from typing import Any, Optional
@@ -476,7 +689,7 @@ from app.persistence.models.provenance import (
     ProcessingEventTargetType,
     ProcessingEventType,
 )
-from app.provenance.emmiter import (
+from app.provenance.emitter import (
     EventContext,
     emit,
     emit_started,
@@ -946,7 +1159,7 @@ from app.persistence.models.provenance import (
     ProcessingEventTargetType,
     ProcessingEventType,
 )
-from app.provenance.emmiter import EventContext, emit, emit_failed
+from app.provenance.emitter import EventContext, emit, emit_failed
 
 # ...existing code...
 

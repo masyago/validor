@@ -1,6 +1,7 @@
 from sqlalchemy.orm import Session
 from sqlalchemy import select, update
 from uuid import UUID
+from sqlalchemy.dialects.postgresql import insert
 
 from app.persistence.models.normalization import Observation
 
@@ -52,6 +53,44 @@ class ObservationRepository:
         self.session.add(observation)
         self.session.flush()
         return observation
+
+    def upsert_from_payload(self, payload: dict) -> tuple[UUID, bool]:
+        """
+        Postgres insert-first idempotent write keyed by unique(test_id).
+
+        Returns: (observation_id, inserted)
+        - inserted=True if a new row was inserted
+        - inserted=False if the row already existed
+
+        NOTE: Does NOT overwrite resource_json (Phase 2 owns it).
+        """
+        insert_stmt = (
+            insert(Observation)
+            .values(**payload)
+            .on_conflict_do_nothing(
+                index_elements=[Observation.test_id],
+            )
+            .returning(Observation.observation_id)
+        )
+
+        inserted_id = self.session.execute(insert_stmt).scalar_one_or_none()
+        if inserted_id is not None:
+            return inserted_id, True
+
+        # Conflict path: row exists, fetch its id
+        existing_id = self.session.execute(
+            select(Observation.observation_id).where(
+                Observation.test_id == payload["test_id"]
+            )
+        ).scalar_one_or_none()
+
+        if existing_id is None:
+            # Extremely unlikely unless the row was deleted between statements.
+            raise RuntimeError(
+                f"Observation upsert failed to fetch existing row for test_id={payload.get('test_id')}"
+            )
+
+        return existing_id, False
 
     def update_resource_json(
         self, observation_id: UUID, resource_json: dict | None

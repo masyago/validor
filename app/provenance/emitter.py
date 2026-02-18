@@ -182,7 +182,7 @@ def emit_failed(
     ctx: EventContext,
     *,
     event_type: ProcessingEventType,
-    error: Exception,
+    error: Exception | None,
     message: Optional[str] = None,
     details: Optional[Dict[str, Any]] = None,
     target_type: Optional[
@@ -192,12 +192,13 @@ def emit_failed(
     dedupe_key: Optional[str] = None,
     deduped: bool = False,
 ) -> bool | ProcessingEvent:
-    err_details = {
-        "error_type": type(error).__name__,
-        "error_message": str(error),
-    }
-    merged = dict(details or {})
-    merged.update(err_details)
+    if error:
+        err_details = {
+            "error_type": type(error).__name__,
+            "error_message": str(error),
+        }
+        merged = dict(details or {})
+        merged.update(err_details)
 
     return emit(
         repo,

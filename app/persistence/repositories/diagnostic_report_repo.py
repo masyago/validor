@@ -1,6 +1,7 @@
 from sqlalchemy.orm import Session
 from sqlalchemy import select, update
 from uuid import UUID
+from sqlalchemy.dialects.postgresql import insert
 
 from app.persistence.models.normalization import DiagnosticReport
 
@@ -38,6 +39,38 @@ class DiagnosticReportRepository:
         self.session.add(diagnostic_report)
         self.session.flush()
         return diagnostic_report
+
+    def upsert_from_payload(self, payload: dict) -> tuple[UUID, bool]:
+        """
+        Postgres insert-first idempotent write keyed by unique(panel_id).
+
+        Returns: (diagnostic_report_id, inserted)
+        """
+        insert_stmt = (
+            insert(DiagnosticReport)
+            .values(**payload)
+            .on_conflict_do_nothing(
+                index_elements=[DiagnosticReport.panel_id],
+            )
+            .returning(DiagnosticReport.diagnostic_report_id)
+        )
+
+        inserted_id = self.session.execute(insert_stmt).scalar_one_or_none()
+        if inserted_id is not None:
+            return inserted_id, True
+
+        existing_id = self.session.execute(
+            select(DiagnosticReport.diagnostic_report_id).where(
+                DiagnosticReport.panel_id == payload["panel_id"]
+            )
+        ).scalar_one_or_none()
+
+        if existing_id is None:
+            raise RuntimeError(
+                f"DiagnosticReport upsert failed to fetch existing row for panel_id={payload.get('panel_id')}"
+            )
+
+        return existing_id, False
 
     def update_resource_json(
         self, diagnostic_report_id: UUID, resource_json: dict | None

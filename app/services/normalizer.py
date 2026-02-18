@@ -64,7 +64,6 @@ class DiagnosticReportNormalization:
         self, panel: Panel
     ) -> tuple[Optional[dict[str, Any]], list[NormalizationError]]:
         errors: list[NormalizationError] = []
-        # Probably need to append errors
 
         ingestion_id = require_non_null(
             model="Panel",
@@ -110,7 +109,7 @@ class DiagnosticReportNormalization:
             "patient_id": patient_id,
             "panel_code": panel_code,
             "effective_at": effective_at,
-            "normalized_at": None,  # set by the NormalizerJob
+            "normalized_at": None,  # set when Normalization is executed
             "resource_json": None,
             "status": "FINAL",
         }
@@ -134,7 +133,6 @@ class ObservationNormalization:
     - ref_low_raw (str) -> ref_low_num (float)
     - ref_high_raw (str) -> ref_high_num (float)
     - flag (str) -> flag_analyzer_interpretation (str)
-    )
     - [NEW] flag_system_interpretation (str)
     - [NEW] discrepancy (str)
 
@@ -203,15 +201,6 @@ class ObservationNormalization:
                 )
 
         comparator = optional(getattr(test, "result_comparator", None))
-        if comparator is not None and comparator not in ALLOWED_COMPARATORS:
-            errors.append(
-                NormalizationError(
-                    model="Test",
-                    field="result_comparator",
-                    message="invalid comparator",
-                )
-            )
-            comparator = None
 
         ref_low_num = optional(getattr(test, "ref_low_raw", None))
         ref_high_num = optional(getattr(test, "ref_high_raw", None))
@@ -288,6 +277,14 @@ class ObservationNormalization:
         out = dict(core_payload)
         out["diagnostic_report_id"] = diagnostic_report_id
         return out
+
+
+# Captures error details when runner executes Phases 1 & 2
+@dataclass(frozen=True)
+class PhaseExecutionError:
+    phase: str  # "Phase1: Relational" or "Phase2: JSON resources"
+    message: str  # error message
+    type: str
 
 
 @dataclass(frozen=True)
@@ -367,7 +364,12 @@ class NormalizationJob:
         - Phase 2. In case of json_failures, Phase 1 stays committed, but
           resource_json remains None for any failed resource_json.
         """
-        # Emit NORMALIZATION_STARTED (target = ingestion)
+
+        def _dedupe_key(event_type: ProcessingEventType) -> str:
+            # Stable within this job invocation; prevents duplicate rows on retries.
+            return f"{ctx.actor.value}:{event_type.value}:{ctx.execution_id}"
+
+        # Emit NORMALIZATION_STARTED
         ctx = EventContext(
             ingestion_id=ingestion_id,
             actor=ProcessingEventActor.NORMALIZER,
@@ -377,10 +379,6 @@ class NormalizationJob:
                 )
             },
         )
-
-        def _dedupe_key(event_type: ProcessingEventType) -> str:
-            # Stable within this job invocation; prevents duplicate rows on retries.
-            return f"{ctx.actor.value}:{event_type.value}:{ctx.execution_id}"
 
         emit_started(
             self.pe_repo,
@@ -398,15 +396,15 @@ class NormalizationJob:
         max_attempts = 3
         attempt = 0
         ok: bool = False
-        norm_errors: list[NormalizationError] = []
         phase1_summary: Phase1Summary | None = None
         phase1_exc: Exception | None = None
+        norm_errors: list[NormalizationError] = []
 
         while attempt < max_attempts:
             attempt += 1
             try:
                 ok, norm_errors, phase1_summary = (
-                    self._phase1_normalize_and_persist(ingestion_id, ctx=ctx)
+                    self._phase1_normalize_and_persist(ingestion_id)
                 )
                 if not ok:
                     break
@@ -421,14 +419,6 @@ class NormalizationJob:
                 self.session.rollback()
 
                 if not _is_retryable_exception(exc) or attempt >= max_attempts:
-                    # Convert exception to a normalization error
-                    norm_errors = [
-                        NormalizationError(
-                            model="NormalizationJob",
-                            field="phase1",
-                            message=str(exc),
-                        )
-                    ]
                     ok = False
                     break
 
@@ -436,9 +426,7 @@ class NormalizationJob:
             continue
 
         if not ok:
-            err = phase1_exc or Exception(
-                "Phase 1 (relational) normalization failed"
-            )
+            err = phase1_exc or Exception("Phase 1 normalization failed")
             emit_failed(
                 self.pe_repo,
                 ctx,
@@ -447,12 +435,12 @@ class NormalizationJob:
                 message="Phase 1 (relational) normalization failed",
                 details={
                     "failed_phase": "phase1",
-                    "attempts": attempt,
-                    "max_attempts": max_attempts,
+                    "retry_attempts": attempt,
+                    "max_retry_attempts": max_attempts,
                     "normalization_error_count": len(norm_errors),
                     "normalization_errors_sample": [
                         str(ne)
-                        for ne in (norm_errors[:10] if norm_errors else [])
+                        for ne in (norm_errors[:20] if norm_errors else [])
                     ],
                 },
             )
@@ -465,7 +453,7 @@ class NormalizationJob:
                 message="Normalization failed",
                 details={
                     "failed_phase": "phase1",
-                    "attempts": attempt,
+                    "retry_attempts": attempt,
                     "normalization_error_count": len(norm_errors),
                 },
             )
@@ -473,14 +461,15 @@ class NormalizationJob:
             self.session.commit()
             return False, norm_errors, []
 
-        # Include: counts (e.g., diagnostic_reports_upserted, observations_upserted, normalized_at)
+        # Observation: flags discrepancies
         discrepancy_count = (
             len(phase1_summary.discrepancy_details)
             if (phase1_summary and phase1_summary.discrepancy_details)
             else 0
         )
 
-        # Avoid bloating ProcessingEvent.details; store up to N items (tune as needed).
+        # Set max_discrepancies to store to avoid bloating
+        # ProcessingEvent.details
         max_discrepancies_to_store = 50
         discrepancy_details_payload = (
             (phase1_summary.discrepancy_details or [])[
@@ -497,7 +486,7 @@ class NormalizationJob:
             message="Phase 1 (relational) normalization succeeded",
             details={
                 "succeeded_phase": "phase1",
-                "attempts": attempt,
+                "retry_attempts": attempt,
                 "normalized_at": (
                     phase1_summary.normalized_at.isoformat()
                     if phase1_summary is not None
@@ -538,6 +527,7 @@ class NormalizationJob:
         json_failures: list[JsonBuildFailure] = []
         phase2_summary: Phase2Summary | None = None
         phase2_exc: Exception | None = None
+        phase2_failed_error: PhaseExecutionError | None = None
 
         while attempt < max_attempts:
             attempt += 1
@@ -552,19 +542,11 @@ class NormalizationJob:
                 self.session.rollback()
 
                 if not _is_retryable_exception(exc) or attempt >= max_attempts:
-                    # If Phase 2 cannot run at all (systemic), surface it as a failure.
-                    # You can either:
-                    #  - re-raise, OR
-                    #  - convert to a synthetic JsonBuildFailure (shown here).
-                    json_failures = [
-                        JsonBuildFailure(
-                            resource_type="Phase2",
-                            resource_id="",
-                            panel_id="",
-                            message=str(exc),
-                            type=type(exc).__name__,
-                        )
-                    ]
+                    phase2_failed_error = PhaseExecutionError(
+                        phase="Phase 2: JSON resources",
+                        message="Reached maximum number of retries or non-retryable error was raised.",
+                        type=type(phase2_exc).__name__,
+                    )
                     phase2_summary = Phase2Summary(
                         diagnostic_reports_json_written=0,
                         observations_json_written=0,
@@ -573,7 +555,7 @@ class NormalizationJob:
 
             # Retryable exception and attempts remain: loop continues.
             continue
-        if json_failures:
+        if json_failures or phase2_failed_error:
             # FHIR_JSON_GENERATION_FAILED. Target: ingestion. Severity: WARN
             # Include: counts (e.g., failed_count, succeeded_count, serializer version)
             emit(
@@ -586,7 +568,8 @@ class NormalizationJob:
                     "failed_phase": "phase2",
                     "attempts": attempt,
                     "max_attempts": max_attempts,
-                    "failed_count": len(json_failures),
+                    "execution_error": str(phase2_failed_error),
+                    "fhir_json_failure_count": len(json_failures),
                     "serializer_version": getattr(
                         self.serializer, "full_version", None
                     ),
@@ -600,10 +583,6 @@ class NormalizationJob:
                         }
                         for f in json_failures[:10]
                     ],
-                    "error_type": (
-                        type(phase2_exc).__name__ if phase2_exc else None
-                    ),
-                    "error_message": str(phase2_exc) if phase2_exc else None,
                 },
                 dedupe_key=_dedupe_key(
                     ProcessingEventType.FHIR_JSON_GENERATION_FAILED
@@ -621,6 +600,7 @@ class NormalizationJob:
                 message="Normalization succeeded with warnings (FHIR JSON failures)",
                 details={
                     "failed_phase": "phase2",
+                    "execution_error": str(phase2_failed_error),
                     "fhir_json_failure_count": len(json_failures),
                     "serializer_version": getattr(
                         self.serializer, "full_version", None
@@ -716,7 +696,7 @@ class NormalizationJob:
 
     # Phase 1: Normalize to FHIR-shaped rows, commit to db
     def _phase1_normalize_and_persist(
-        self, ingestion_id: uuid.UUID, *, ctx: EventContext
+        self, ingestion_id: uuid.UUID
     ) -> tuple[bool, list[NormalizationError], Phase1Summary | None]:
         """
         1. Validates data from Panel or Test
@@ -731,7 +711,6 @@ class NormalizationJob:
         errors: list[NormalizationError] = []
         dr_payload_by_panel_id: dict[uuid.UUID, dict[str, Any]] = {}
         obs_core_by_test_id: dict[uuid.UUID, dict[str, Any]] = {}
-
         discrepancy_details: list[dict[str, Any]] = []
 
         for panel in panels:
@@ -757,7 +736,7 @@ class NormalizationJob:
             self.session.rollback()
             return False, errors, None
 
-        # Persist normalized payloads. First, DiagnosticReport with flush().
+        # Persist normalized payloads. First, DiagnosticReport.
         # Then Observation, including diagnostic_report_id.
         try:
             now = datetime.now(timezone.utc)
@@ -765,47 +744,51 @@ class NormalizationJob:
             ob_created = 0
 
             for panel in panels:
-                dr = self.dr_repo.get_by_panel_id(panel.panel_id)
-                if dr is None:
-                    dr_payload = dict(dr_payload_by_panel_id[panel.panel_id])
-                    dr_payload["normalized_at"] = now
-                    dr = DiagnosticReport(**dr_payload)
-                    self.dr_repo.create(dr)  # flushes in repo
-                    self.session.flush()  # ensure dr.diagnostic_report_id is populated
+                # DiagnosticReport: atomic insert-first, fetch existing id on conflict
+                dr_payload = dict(dr_payload_by_panel_id[panel.panel_id])
+                dr_payload["normalized_at"] = now
+
+                dr_id, dr_inserted = self.dr_repo.upsert_from_payload(
+                    dr_payload
+                )
+                if dr_inserted:
                     dr_created += 1
 
                 tests = self.test_repo.get_by_panel_id(panel.panel_id)
                 for test in tests:
-                    existing_ob = self.obs_repo.get_by_test_id(test.test_id)
-                    if existing_ob is not None:
+                    core = obs_core_by_test_id.get(test.test_id)
+                    if core is None:
+                        # Shouldn't happen if Phase 1 validation succeeded, but keep it safe.
                         continue
 
-                    core = obs_core_by_test_id[test.test_id]
                     obs_payload = self.obs_norm.attach_diagnostic_report_id(
-                        core, dr.diagnostic_report_id
+                        core, dr_id
                     )
                     obs_payload = dict(obs_payload)
                     obs_payload["normalized_at"] = now
 
-                    ob = Observation(**obs_payload)
-                    self.obs_repo.create(ob)
-                    self.session.flush()
-                    ob_created += 1
+                    ob_id, ob_inserted = self.obs_repo.upsert_from_payload(
+                        obs_payload
+                    )
+                    if ob_inserted:
+                        ob_created += 1
 
-                    if getattr(ob, "discrepancy", None) is not None:
-                        details = {
-                            "observation_id": str(ob.observation_id),
-                            "code": ob.code,
-                            "discrepancy_text": getattr(ob, "discrepancy"),
-                            "flag_analyzer_interpretation": getattr(
-                                ob, "flag_analyzer_interpretation", None
-                            ),
-                            "flag_system_interpretation": getattr(
-                                ob, "flag_system_interpretation", None
-                            ),
-                        }
-
-                        discrepancy_details.append(details)
+                        if obs_payload.get("discrepancy") is not None:
+                            discrepancy_details.append(
+                                {
+                                    "observation_id": str(ob_id),
+                                    "code": obs_payload.get("code"),
+                                    "discrepancy_text": obs_payload.get(
+                                        "discrepancy"
+                                    ),
+                                    "flag_analyzer_interpretation": obs_payload.get(
+                                        "flag_analyzer_interpretation"
+                                    ),
+                                    "flag_system_interpretation": obs_payload.get(
+                                        "flag_system_interpretation"
+                                    ),
+                                }
+                            )
 
             self.session.commit()
             return (
@@ -853,17 +836,17 @@ class NormalizationJob:
                 )
             else:
                 try:
-                    # Build list of `observation_id`'s for DR serializer
+                    # Build list of Observation instances for DR serializer
                     tests = self.test_repo.get_by_panel_id(panel.panel_id)
-                    observations: list[uuid.UUID] = []
+                    ob_list: list[Observation] = []
                     for test in tests:
                         ob = self.obs_repo.get_by_test_id(test.test_id)
                         if ob is not None:
-                            observations.append(ob.observation_id)
+                            ob_list.append(ob)
 
                     with self.session.begin_nested():  # SAVEPOINT
                         dr_json_dict = self.serializer.make_diagnostic_report(
-                            dr, observations
+                            dr, ob_list
                         )
                         self.dr_repo.update_resource_json(
                             dr.diagnostic_report_id, dr_json_dict
@@ -882,6 +865,7 @@ class NormalizationJob:
 
             # Observation JSON (isolated per Observation)
             tests = self.test_repo.get_by_panel_id(panel.panel_id)
+            observations: list[Observation] = []
             for test in tests:
                 ob = self.obs_repo.get_by_test_id(test.test_id)
                 if ob is None:
@@ -895,6 +879,7 @@ class NormalizationJob:
                         )
                     )
                     continue
+                observations.append(ob)
 
             for ob in observations:
                 try:
@@ -914,9 +899,6 @@ class NormalizationJob:
                             type=type(e).__name__,
                         )
                     )
-
-                # Commit all successful SAVEPOINT changes together
-                self.session.commit()
 
         # Commit all successful SAVEPOINT changes together
         try:

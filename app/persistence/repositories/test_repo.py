@@ -21,7 +21,11 @@ class TestRepository:
         return self.session.scalars(stmt).one_or_none()
 
     def get_by_panel_id(self, panel_id: UUID) -> list[Test]:
-        stmt = select(Test).where(Test.panel_id == panel_id)
+        stmt = (
+            select(Test)
+            .where(Test.panel_id == panel_id)
+            .order_by(Test.test_id)
+        )
         return list(self.session.scalars(stmt).all())
 
     def create(self, test: Test) -> Test:
