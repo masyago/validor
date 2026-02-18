@@ -389,7 +389,6 @@ class NormalizationJob:
             dedupe_key=_dedupe_key(ProcessingEventType.NORMALIZATION_STARTED),
         )
 
-        # Why do we commit here?
         self.session.commit()
 
         # retry loop for phase 1 starts
@@ -704,11 +703,21 @@ class NormalizationJob:
            Uuid's generated at db side.
         3. If validation errors present, nothing is persisted.
         """
+        errors: list[NormalizationError] = []
 
         panels = self.panel_repo.get_by_ingestion_id(ingestion_id)
+        if not panels:
+            panels_missing = NormalizationError(
+                model="Panel",
+                field="all fields",
+                message=f"Panel rows with ingestion_id={ingestion_id} not found.",
+            )
+            errors.append(panels_missing)
+
+            return False, errors, None
 
         # Validate and build payloads
-        errors: list[NormalizationError] = []
+
         dr_payload_by_panel_id: dict[uuid.UUID, dict[str, Any]] = {}
         obs_core_by_test_id: dict[uuid.UUID, dict[str, Any]] = {}
         discrepancy_details: list[dict[str, Any]] = []

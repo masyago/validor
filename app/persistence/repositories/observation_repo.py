@@ -44,8 +44,10 @@ class ObservationRepository:
 
     # Returns zero or multiple rows. If zero rows, returns an empty list
     def get_by_ingestion_id(self, ingestion_id: UUID) -> list[Observation]:
-        stmt = select(Observation).where(
-            Observation.ingestion_id == ingestion_id
+        stmt = (
+            select(Observation)
+            .where(Observation.ingestion_id == ingestion_id)
+            .order_by(Observation.test_id)
         )
         return list(self.session.scalars(stmt).all())
 
