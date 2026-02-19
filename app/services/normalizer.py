@@ -7,6 +7,7 @@ from __future__ import annotations
 from typing import Any, Optional
 from datetime import datetime, timezone
 import uuid
+from decimal import Decimal
 from dataclasses import dataclass
 from sqlalchemy.orm import Session
 from sqlalchemy.exc import SQLAlchemyError, DBAPIError, OperationalError
@@ -230,21 +231,29 @@ class ObservationNormalization:
         flag_system_interpretation = "UNKNOWN"
         discrepancy = None
 
-        if (
-            isinstance(value_num, (int, float))
-            and isinstance(ref_low_num, (int, float))
-            and isinstance(ref_high_num, (int, float))
-            and ref_low_num < ref_high_num
-        ):
-            if value_num > ref_high_num:
-                flag_system_interpretation = "HIGH"
-            elif value_num < ref_low_num:
-                flag_system_interpretation = "LOW"
-            else:
-                flag_system_interpretation = "NORMAL"
-            if analyzer_flag_norm in {"low", "high", "normal"}:
-                if analyzer_flag_norm != flag_system_interpretation.casefold():
-                    discrepancy = "analyzer and system flag mismatch"
+        if ref_low_num is not None and ref_high_num is not None:
+            try:
+                value_num_f = (
+                    float(value_num)
+                    if isinstance(value_num, (int, float, Decimal))
+                    else None
+                )
+            except (TypeError, ValueError):
+                value_num_f = None
+
+            if value_num_f is not None and ref_low_num < ref_high_num:
+                if value_num_f > ref_high_num:
+                    flag_system_interpretation = "HIGH"
+                elif value_num_f < ref_low_num:
+                    flag_system_interpretation = "LOW"
+                else:
+                    flag_system_interpretation = "NORMAL"
+                if analyzer_flag_norm in {"low", "high", "normal"}:
+                    if (
+                        analyzer_flag_norm
+                        != flag_system_interpretation.casefold()
+                    ):
+                        discrepancy = "analyzer and system flag mismatch"
 
         # TODO: If provided and computed flags differ, add a note to processing_event
 

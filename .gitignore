@@ -31,3 +31,6 @@ PROJECT_CONTEXT.md
 
 # Alembic cache
 alembic/versions/__pycache__/
+
+# Chatbot history
+copilot_outputs/

@@ -18,16 +18,28 @@ def test_db():
 
 @pytest.fixture
 def db_session(test_db):
-    """Provide a clean database session for each test with transaction rollback."""
+    """
+    Provide a clean database session for each test with transaction rollback.
+
+    Notes:
+    - Some services (e.g., normalization) call `session.commit()` internally.
+      To keep tests isolated, we wrap each test in an outer transaction and
+      use a nested SAVEPOINT that is restarted after each internal commit.
+    """
+
     connection = test_db.connect()
-    transaction = connection.begin()
-    session = Session(bind=connection)
+    outer_transaction = connection.begin()
+    # Each Session transaction becomes a SAVEPOINT, so code under test can call
+    # `session.commit()` without committing the outer transaction.
+    # This is also compatible with application code using `session.begin_nested()`.
+    session = Session(bind=connection, join_transaction_mode="create_savepoint")
 
-    yield session
-
-    session.close()
-    transaction.rollback()  # Undo any changes made during the test
-    connection.close()
+    try:
+        yield session
+    finally:
+        session.close()
+        outer_transaction.rollback()  # Undo any changes made during the test
+        connection.close()
 
 
 @pytest.fixture(scope="session")

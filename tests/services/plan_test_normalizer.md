@@ -1,4 +1,4 @@
-Shared pytest fixtures:
+DONE - Shared pytest fixtures:
 - [already in parent conftest] db_session (Postgres test_cla): begin transaction per test + rollback.
 - seed_ingestion(), seed_panel(), seed_test() helpers.
 - freeze_time (e.g., freezegun) so normalized_at is stable.
@@ -6,7 +6,7 @@ Shared pytest fixtures:
 Optional: monkeypatch_serializer to force Phase 2 failures deterministically.
 
 Phase 1 (relational) tests
-P1.1 Happy path (1 panel, N tests) & (2 panels, N tests - use multi-panel case only for happy path)
+DONE - P1.1 Happy path (1 panel, N tests) & (2 panels, N tests - use multi-panel case only for happy path)
 Given: - ingestion with 1 panel + e.g. 3 tests
        - add variant with 2 panels with 3 tests each
 
@@ -20,7 +20,7 @@ diagnostic_report row exists for the panel with correct mappings and resource_js
 observation rows exist for tests with correct mappings and diagnostic_report_id populated
 Phase 1 event emitted: NORMALIZATION_STARTED, NORMALIZATION_RELATIONAL_SUCCEEDED
 
-P1.2 All-or-nothing validation failure (missing required field)
+DONE -  P1.2 All-or-nothing validation failure (missing required field)
 Given: at least 1 panel/test missing a required field (e.g., panel.patient_id is None)
 When: run job
 Then:
@@ -29,7 +29,7 @@ no rows inserted into diagnostic_report/observation for that ingestion
 events include: NORMALIZATION_STARTED, NORMALIZATION_RELATIONAL_FAILED, NORMALIZATION_FAILED
 
 
-P1.3 Empty ingestion (no panels) - TODO: decide expected behavior
+DONE - P1.3 Empty ingestion (no panels)
 Given: ingestion_id exists (or not) but panel_repo.get_by_ingestion_id returns empty
 When: run job
 Then: 

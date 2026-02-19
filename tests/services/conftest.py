@@ -100,6 +100,29 @@ from datetime import datetime, timezone
 from sqlalchemy import text
 
 
+@pytest.fixture(scope="session")
+def server_sha256() -> str:
+    # 64 hex chars; content itself doesn't matter for normalization tests.
+    return "0" * 64
+
+
+@pytest.fixture(scope="session")
+def status() -> str:
+    # Ingestion.status is a plain Text field in the DB.
+    return "RECEIVED"
+
+
+@pytest.fixture(scope="session")
+def source_filename() -> str:
+    return "fixture.csv"
+
+
+@pytest.fixture
+def row_number() -> int:
+    # Default row_number used by seed_test if not overridden.
+    return 1
+
+
 @pytest.fixture
 def frozen_now() -> datetime:
     """Canonical 'now' used by normalization tests (aware UTC)."""
