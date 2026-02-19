@@ -698,6 +698,7 @@ def test_phase1_concurrency_two_sessions_no_duplicates_and_total_created_counts_
 ### PHASE 2 FHIR JSON ###
 
 
+# Happy path: Phase 2 should populate resource_json and emit success events
 def test_phase2_happy_path_writes_json_to_both_tables_and_emits_events(
     db_session,
     fetch_events,
@@ -705,7 +706,6 @@ def test_phase2_happy_path_writes_json_to_both_tables_and_emits_events(
     seed_panel,
     seed_test,
 ):
-    """P2.1: Phase 2 should populate resource_json and emit success events."""
 
     ingestion = seed_ingestion()
     panel = seed_panel(
@@ -789,6 +789,7 @@ def test_phase2_happy_path_writes_json_to_both_tables_and_emits_events(
     assert "NORMALIZATION_SUCCEEDED_WITH_WARNINGS" not in event_types
 
 
+# One Observation JSON failure yields ok=True with json_failures and WARN events
 def test_phase2_partial_json_failure_returns_ok_with_warnings_and_leaves_one_resource_json_null(
     db_session,
     fetch_events,
@@ -797,8 +798,6 @@ def test_phase2_partial_json_failure_returns_ok_with_warnings_and_leaves_one_res
     seed_test,
     monkeypatch,
 ):
-    """P2.2: One Observation JSON failure yields ok=True with json_failures + WARN events."""
-
     ingestion = seed_ingestion()
     panel = seed_panel(
         ingestion_id=ingestion.ingestion_id,
@@ -864,7 +863,8 @@ def test_phase2_partial_json_failure_returns_ok_with_warnings_and_leaves_one_res
     assert len(json_failures) == 1
     assert getattr(json_failures[0], "resource_type", None) == "Observation"
 
-    # DR JSON should be written; one Observation JSON should remain NULL.
+    # DiagnosticReport JSON should be written; one Observation JSON should
+    # remain NULL
     dr = (
         db_session.execute(
             select(DiagnosticReport).where(
@@ -911,6 +911,7 @@ def test_phase2_partial_json_failure_returns_ok_with_warnings_and_leaves_one_res
     assert all(e.get("severity") == "WARN" for e in warn_events)
 
 
+# With frozen time, Phase 2 JSON should be semantically identical across reruns
 def test_phase2_json_semantic_determinism_rerun_same_ingestion_with_frozen_time(
     db_session,
     freeze_time,
@@ -918,7 +919,6 @@ def test_phase2_json_semantic_determinism_rerun_same_ingestion_with_frozen_time(
     seed_panel,
     seed_test,
 ):
-    """P2.3: With frozen time, Phase 2 JSON should be semantically identical across reruns."""
 
     ingestion = seed_ingestion()
     panel = seed_panel(
@@ -1031,6 +1031,8 @@ def _transient_operational_error() -> OperationalError:
     return OperationalError("SELECT 1", {}, Exception("transient db error"))
 
 
+# Phase 1 should retry on retryable database errors. Use OperationalError for
+# the test
 def test_phase1_retries_on_retryable_db_error_and_emits_retry_attempts_gt_1(
     db_session,
     fetch_events,
@@ -1039,8 +1041,6 @@ def test_phase1_retries_on_retryable_db_error_and_emits_retry_attempts_gt_1(
     seed_test,
     monkeypatch,
 ):
-    """R1: Phase 1 should retry on retryable DB errors (e.g., OperationalError)."""
-
     ingestion = seed_ingestion()
     panel = seed_panel(
         ingestion_id=ingestion.ingestion_id,
@@ -1090,9 +1090,11 @@ def test_phase1_retries_on_retryable_db_error_and_emits_retry_attempts_gt_1(
     ]
     assert len(phase1_success) == 1
     details = phase1_success[0].get("details") or {}
-    assert (details.get("retry_attempts") or 0) > 1
+    retry_attempts = details.get("retry_attempts")
+    assert retry_attempts is not None and retry_attempts > 1
 
 
+# Phase 2 should retry on retryable DB errors and still succeed
 def test_phase2_retries_on_retryable_db_error_and_emits_attempts_gt_1(
     db_session,
     fetch_events,
@@ -1101,7 +1103,6 @@ def test_phase2_retries_on_retryable_db_error_and_emits_attempts_gt_1(
     seed_test,
     monkeypatch,
 ):
-    """R2: Phase 2 should retry on retryable DB errors and still succeed."""
 
     ingestion = seed_ingestion()
     panel = seed_panel(
@@ -1156,4 +1157,5 @@ def test_phase2_retries_on_retryable_db_error_and_emits_attempts_gt_1(
     ]
     assert len(phase2_success) == 1
     details = phase2_success[0].get("details") or {}
-    assert (details.get("attempts") or 0) > 1
+    attempts = details.get("attempts")
+    assert attempts is not None and attempts > 1

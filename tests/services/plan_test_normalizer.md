@@ -38,7 +38,7 @@ no rows inserted into diagnostic_report/observation for that ingestion
 events include: NORMALIZATION_STARTED, NORMALIZATION_RELATIONAL_FAILED, NORMALIZATION_FAILED
 
 
-P1.4 Idempotency (re-run same ingestion)
+DONE - P1.4 Idempotency (re-run same ingestion)
 Given: successful first run
 When: run job again for same ingestion_id
 Then:
@@ -46,7 +46,7 @@ counts in diagnostic_report and observation unchanged (no duplicates)
 verify Phase 1 “created” counts (from event details) are 0 on second run
 resource_json behavior: should remain stable
 
-P1.5 Concurrency safety (UPSERT race)
+DONE - P1.5 Concurrency safety (UPSERT race)
 Given: one ingestion seeded
 When: run run_for_ingestion_id concurrently in two separate sessions (threads/processes)
 Then:

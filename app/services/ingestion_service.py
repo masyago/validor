@@ -188,12 +188,9 @@ class IngestionService:
                 return
 
             # Next pipeline steps:
-            # TODO(provenance): log event "normalization_started"
-            # TODO: normalize to FHIR
-            # TODO(provenance): log event "normalization_finished"
-            # TODO(provenance): log event "ai_augmentation_started"
-            # TODO: AI augmentation
-            # TODO(provenance): log event "ai_augmentation_finished"
+            # run normalizer. It emits the processing events.
+            # do we need to check for status of the ingestion before picking up
+            # ingestion_id rows to normalize?
             # Eventually:
             # TODO: self.ingestion_repo.mark_completed(ingestion_id)
 
