@@ -20,6 +20,7 @@ from app.persistence.repositories.test_repo import (
 )
 from app.services.ingestion_service import IngestionService
 from app.services.validator import RowValidationError
+from app.services.utils import NormalizationError
 
 CSV_DIR = Path(__file__).resolve().parents[1] / "fixtures" / "csv"
 
@@ -133,7 +134,7 @@ class TestIngestionServiceUnit:
     def test_errors_to_json_converts_row_validation_errors(
         self, db_session, ingestion_service
     ):
-        """Three data types used in errors: RowValidationError, dict, error
+        """Three data types used in errors: RowValidationError, NormalizationError, dict, error
         message. Data type converted into JSON dicts without errors.
         """
         errors: list[Any] = [
@@ -141,6 +142,11 @@ class TestIngestionServiceUnit:
                 row_number=3,
                 field="test_code",
                 message="required field missing",
+            ),
+            NormalizationError(
+                model="Test",
+                field="result_raw",
+                message="expected numeric",
             ),
             {"row_number": 4, "field": "result", "message": "already a dict"},
             ValueError("unexpected error"),
@@ -154,6 +160,11 @@ class TestIngestionServiceUnit:
                 "field": "test_code",
                 "message": "required field missing",
             },
+            {
+                "model": "Test",
+                "field": "result_raw",
+                "message": "expected numeric",
+            },
             {"row_number": 4, "field": "result", "message": "already a dict"},
             {"message": "unexpected error"},
         ]
@@ -161,10 +172,150 @@ class TestIngestionServiceUnit:
 
 class TestIngestionServiceIntegration:
 
+    def test_process_ingestion_missing_raw_data_marks_failed(
+        self,
+        db_session,
+        ingestion_service,
+        fetch_events,
+        uploader_id,
+        spec_version,
+        instrument_id,
+        run_id,
+    ):
+        ingestion_id = uuid.uuid4()
+        now = datetime.now(timezone.utc)
+
+        # Seed ingestion row only (no RawData)
+        db_session.add(
+            Ingestion(
+                ingestion_id=ingestion_id,
+                instrument_id=instrument_id,
+                run_id=run_id,
+                uploader_id=uploader_id,
+                spec_version=spec_version,
+                uploader_received_at=now,
+                api_received_at=now,
+                submitted_sha256=None,
+                server_sha256="0" * 64,
+                status=IngestionStatus.RECEIVED,
+                error_code=None,
+                error_detail=None,
+                source_filename="missing_raw.csv",
+                ingestion_idempotency_disposition=None,
+            )
+        )
+        db_session.flush()
+
+        ingestion_service.process_ingestion(ingestion_id)
+
+        ingestion = db_session.scalars(
+            select(Ingestion).where(Ingestion.ingestion_id == ingestion_id)
+        ).one()
+        assert ingestion.status == IngestionStatus.FAILED
+        assert ingestion.error_code == "raw_data_not_found"
+        assert ingestion.error_detail is not None
+
+        events = fetch_events(ingestion_id)
+        types = [e["event_type"] for e in events]
+        assert "PARSE_STARTED" in types
+        assert "PARSE_FAILED" in types
+        parse_failed = [
+            e for e in events if e["event_type"] == "PARSE_FAILED"
+        ][-1]
+        assert (parse_failed.get("details") or {}).get(
+            "error_code"
+        ) == "raw_data_not_found"
+
+    def test_process_ingestion_empty_csv_marks_failed_validation(
+        self,
+        db_session,
+        ingestion_service,
+        fetch_events,
+        uploader_id,
+        spec_version,
+        instrument_id,
+        run_id,
+    ):
+        ingestion_id = uuid.uuid4()
+        csv_bytes = b""
+
+        _seed_ingestion_and_raw_data(
+            db_session,
+            ingestion_id=ingestion_id,
+            csv_bytes=csv_bytes,
+            uploader_id=uploader_id,
+            spec_version=spec_version,
+            instrument_id=instrument_id,
+            run_id=run_id,
+            source_filename="empty.csv",
+        )
+
+        ingestion_service.process_ingestion(ingestion_id)
+
+        ingestion = db_session.scalars(
+            select(Ingestion).where(Ingestion.ingestion_id == ingestion_id)
+        ).one()
+        assert ingestion.status == IngestionStatus.FAILED_VALIDATION
+        assert ingestion.error_code == "empty_csv"
+        assert ingestion.error_detail is not None
+
+        events = fetch_events(ingestion_id)
+        types = [e["event_type"] for e in events]
+        assert "PARSE_STARTED" in types
+        assert "PARSE_FAILED" in types
+        parse_failed = [
+            e for e in events if e["event_type"] == "PARSE_FAILED"
+        ][-1]
+        assert (parse_failed.get("details") or {}).get(
+            "error_code"
+        ) == "empty_csv"
+
+    def test_process_ingestion_invalid_utf8_marks_failed_validation(
+        self,
+        db_session,
+        ingestion_service,
+        fetch_events,
+        uploader_id,
+        spec_version,
+        instrument_id,
+        run_id,
+    ):
+        ingestion_id = uuid.uuid4()
+        csv_bytes = b"\xff\xfe\xfa"  # invalid utf-8
+
+        _seed_ingestion_and_raw_data(
+            db_session,
+            ingestion_id=ingestion_id,
+            csv_bytes=csv_bytes,
+            uploader_id=uploader_id,
+            spec_version=spec_version,
+            instrument_id=instrument_id,
+            run_id=run_id,
+            source_filename="bad_encoding.csv",
+        )
+
+        ingestion_service.process_ingestion(ingestion_id)
+
+        ingestion = db_session.scalars(
+            select(Ingestion).where(Ingestion.ingestion_id == ingestion_id)
+        ).one()
+        assert ingestion.status == IngestionStatus.FAILED_VALIDATION
+        assert ingestion.error_code == "csv_decode_error"
+        assert ingestion.error_detail is not None
+
+        events = fetch_events(ingestion_id)
+        parse_failed = [
+            e for e in events if e["event_type"] == "PARSE_FAILED"
+        ][-1]
+        assert (parse_failed.get("details") or {}).get(
+            "error_code"
+        ) == "csv_decode_error"
+
     def test_process_ingestion_happy_path_data_persists(
         self,
         db_session,
         ingestion_service,
+        fetch_events,
         uploader_id,
         spec_version,
         instrument_id,
@@ -192,6 +343,13 @@ class TestIngestionServiceIntegration:
 
         ingestion_service.process_ingestion(ingestion_id)
 
+        events = fetch_events(ingestion_id)
+        types = [e["event_type"] for e in events]
+        assert "PARSE_STARTED" in types
+        assert "PARSE_SUCCEEDED" in types
+        assert "VALIDATION_STARTED" in types
+        assert "VALIDATION_SUCCEEDED" in types
+
         # Panels persisted
         panels = PanelRepository(db_session).get_by_ingestion_id(ingestion_id)
         assert len(panels) == len(expected_group_counts)
@@ -204,17 +362,18 @@ class TestIngestionServiceIntegration:
             actual_tests = list(test_repo.get_by_panel_id(p.panel_id))
             assert len(actual_tests) == expected_tests
 
-        # Ingestion remains PROCESSING (pipeline continues later)
+        # Ingestion is marked COMPLETED after normalization succeeds
         ingestion = db_session.scalars(
             select(Ingestion).where(Ingestion.ingestion_id == ingestion_id)
         ).one()
-        assert ingestion.status == IngestionStatus.PROCESSING
+        assert ingestion.status == IngestionStatus.COMPLETED
         assert ingestion.error_detail is None
 
     def test_process_ingestion_validation_failure_persists_nothing_and_marks_failed_validation(
         self,
         ingestion_service,
         db_session,
+        fetch_events,
         uploader_id,
         spec_version,
         instrument_id,
@@ -257,3 +416,10 @@ class TestIngestionServiceIntegration:
         assert isinstance(first, dict)
         assert "field" in first
         assert "message" in first
+
+        events = fetch_events(ingestion_id)
+        types = [e["event_type"] for e in events]
+        assert "PARSE_STARTED" in types
+        assert "PARSE_SUCCEEDED" in types
+        assert "VALIDATION_STARTED" in types
+        assert "VALIDATION_FAILED" in types

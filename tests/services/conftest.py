@@ -130,7 +130,6 @@ def frozen_now() -> datetime:
 
 
 @pytest.fixture
-# TODO: learn more about freezegun
 def freeze_time(frozen_now):
     """
     Freeze time so normalized_at and serializer timestamps are stable.

@@ -169,6 +169,9 @@ docker compose down
 
 
 ## Development Roadmap
+- Replace in-process  FAST API background tasks to more durable workers:
+ Celery and Redis
+- 
 
 ### Tech Enhancements
 

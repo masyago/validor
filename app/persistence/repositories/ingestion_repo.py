@@ -40,8 +40,6 @@ class IngestionRepository:
             return False
 
         ingestion.status = IngestionStatus.PROCESSING
-        # Think if I want to add it to table schema
-        # ingestion.processing_started_at = datetime.now(timezone.utc)
         self.session.flush()
         return True
 
@@ -74,5 +72,35 @@ class IngestionRepository:
         ingestion.error_detail = error_detail
         ingestion.status = IngestionStatus.FAILED
 
+        self.session.flush()
+        return True
+
+    def mark_completed(self, ingestion_id: UUID) -> bool:
+        stmt = select(Ingestion).where(Ingestion.ingestion_id == ingestion_id)
+        ingestion = self.session.scalars(stmt).one_or_none()
+        if not ingestion:
+            return False
+
+        ingestion.status = IngestionStatus.COMPLETED
+
+        self.session.flush()
+        return True
+
+    def requeue_processing(self, ingestion_id: UUID) -> bool:
+        """
+        Move an ingestion from PROCESSING back to RECEIVED so it can be retried.
+        Intended for recovery tools (e.g., reaper) when a worker crashed.
+        """
+        stmt = select(Ingestion).where(
+            Ingestion.ingestion_id == ingestion_id,
+            Ingestion.status == IngestionStatus.PROCESSING,
+        )
+        ingestion = self.session.scalars(stmt).one_or_none()
+        if not ingestion:
+            return False
+
+        ingestion.status = IngestionStatus.RECEIVED
+        ingestion.error_code = None
+        ingestion.error_detail = None
         self.session.flush()
         return True

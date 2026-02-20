@@ -22,7 +22,7 @@ from app.schemas.ingestion import (
     IngestionContentHashMismatchResponse,
 )
 from datetime import datetime
-import uuid
+from uuid import UUID, uuid4
 from app.core.ingestion_status_enums import IngestionStatus
 import hashlib
 import io
@@ -33,9 +33,21 @@ from sqlalchemy import select
 from app.persistence.models.core import RawData, Ingestion
 from app.api.routers.dependencies import get_session
 
-# from app.services.tasks.ingestion_tasks import process_ingestion_task
+from app.services.tasks.ingestion_tasks import process_ingestion_task
+from app.services.tasks.ingestion_tasks import reap_stuck_ingestions_task
 from app.persistence.repositories.ingestion_repo import IngestionRepository
 from app.persistence.repositories.raw_data_repo import RawDataRepository
+
+from app.services.ingestion_service import IngestionService
+from app.persistence.repositories.processing_event_repo import (
+    ProcessingEventRepository,
+)
+from app.provenance.emitter import EventContext, emit
+from app.persistence.models.provenance import (
+    ProcessingEventActor,
+    ProcessingEventType,
+    ProcessingEventSeverity,
+)
 
 router = APIRouter()
 
@@ -65,21 +77,6 @@ def calculate_sha256(file_content: bytes):
     hasher = hashlib.sha256()
     hasher.update(file_content)
     return hasher.hexdigest()
-
-
-# def get_existing_ingestion(db: Session, instrument_id: str, run_id: str):
-#     """
-#     Search database for an existing record with specified instrument_id and run_id.
-#     If the record exists, retrieve and return its ingestion_id and server_sha256.
-#     Otherwise, return None for both.
-#     """
-#     query = select(Ingestion).where(
-#         Ingestion.instrument_id == instrument_id, Ingestion.run_id == run_id
-#     )
-#     existing_record = db.scalars(query).first()
-#     if existing_record:
-#         return existing_record.ingestion_id, existing_record.server_sha256
-#     return None, None
 
 
 @router.post(
@@ -212,7 +209,7 @@ async def create_ingestion(
             )
 
     # Create new records
-    new_ingestion_id = uuid.uuid4()
+    new_ingestion_id = uuid4()
     new_ingestion_api_received_at = datetime.now()
 
     # Create and add Ingestion and RawData objects
@@ -240,8 +237,26 @@ async def create_ingestion(
     RawDataRepository(db).create(new_raw_data_record)
     db.commit()
 
+    # Record acceptance in processing_event for traceability.
+    pe_repo = ProcessingEventRepository(db)
+    ctx = EventContext(
+        ingestion_id=new_ingestion_id,
+        actor=ProcessingEventActor.INGESTION_API,
+    )
+    emit(
+        pe_repo,
+        ctx,
+        event_type=ProcessingEventType.INGESTION_ACCEPTED,
+        severity=ProcessingEventSeverity.INFO,
+        message="Ingestion accepted and queued for processing",
+        details={"source_filename": file.filename},
+        dedupe_key=f"ingestion-accepted:{new_ingestion_id}",
+        deduped=True,
+    )
+    db.commit()
+
     # Enqueue CSV file processing
-    # background_tasks.add_task(process_ingestion_task, new_ingestion_id)
+    background_tasks.add_task(process_ingestion_task, new_ingestion_id)
 
     response.headers["Location"] = f"/v1/ingestions/{new_ingestion_id}"
     return IngestionAcceptedResponse(
@@ -252,16 +267,47 @@ async def create_ingestion(
     )
 
 
-# TODO: update when normalizer is ready
-# @router.post("/v1/ingestions/{ingestion_id}/process")
-# def process_ingestion(
-#     ingestion_id: UUID,
-#     session: Session = Depends(get_session),
-# ):
-#     svc = IngestionService(
-#         raw_repo=RawDataRepository(session),
-#         panel_repo=PanelRepository(session),
-#         test_repo=TestRepository(session),
-#     )
-#     result = svc.process_ingestion(ingestion_id)
-#     return result  # or status DTO
+@router.post(
+    "/ingestions/{ingestion_id}/process",
+    status_code=status.HTTP_202_ACCEPTED,
+    response_model=None,
+)
+def process_ingestion(
+    ingestion_id: UUID,
+    background_tasks: BackgroundTasks,
+    session: Session = Depends(get_session),
+):
+    # Command-style endpoint: kick off processing and return immediately.
+    ingestion = IngestionRepository(session).get_by_ingestion_id(ingestion_id)
+    if ingestion is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail={
+                "code": "INGESTION_NOT_FOUND",
+                "message": "No ingestion found for ingestion_id.",
+            },
+        )
+
+    background_tasks.add_task(process_ingestion_task, ingestion_id)
+
+    return Response(
+        status_code=status.HTTP_202_ACCEPTED,
+        headers={"Location": f"/v1/ingestions/{ingestion_id}"},
+    )
+
+
+@router.post(
+    "/admin/reap-stuck-ingestions",
+    status_code=status.HTTP_200_OK,
+)
+def reap_stuck_ingestions(
+    max_age_seconds: int = 15 * 60,
+    limit: int = 50,
+    dry_run: bool = False,
+):
+    """Manual ops hook: find and retry ingestions stuck in PROCESSING."""
+    return reap_stuck_ingestions_task(
+        max_age_seconds=max_age_seconds,
+        limit=limit,
+        dry_run=dry_run,
+    )
