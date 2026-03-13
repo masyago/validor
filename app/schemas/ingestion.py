@@ -1,8 +1,11 @@
-from typing import Annotated, Literal
+from typing import Annotated, Literal, Any
 from fastapi import Form
-from pydantic import BaseModel, Field, AfterValidator
+from pydantic import BaseModel, Field, AfterValidator, model_validator
 from datetime import datetime
 from app.core.ingestion_status_enums import IngestionStatus
+from uuid import UUID
+
+from app.schemas.identifiers import PatientId
 
 
 class IngestionMetadata(BaseModel):
@@ -84,3 +87,56 @@ class IngestionContentHashMismatchResponse(
     code: str
     retryable: bool
     message: str
+
+
+class PathResourceNotFoundResponse(BaseModel):  # 404 Not Found Error
+    ingestion_id: UUID | None = None
+    patient_id: str | None = None
+    detail: str
+
+    @model_validator(mode="after")
+    def _validate_has_identifier(self) -> "PathResourceNotFoundResponse":
+        if self.ingestion_id is None and self.patient_id is None:
+            raise ValueError(
+                "PathResourceNotFoundResponse must include ingestion_id or patient_id"
+            )
+        return self
+
+
+class ReadIngestionIdFoundOkResponse(BaseModel):
+    ingestion_id: UUID
+    status: IngestionStatus
+    api_received_at: datetime
+    error_code: str | None = None
+    error_detail: dict[str, Any] | None = None
+
+
+class ReadDiagnosticReportsByIngestionIdOkResponse(BaseModel):
+    diagnostic_report_id: UUID
+    patient_id: PatientId
+    panel_code: str
+    effective_at: datetime
+    normalized_at: datetime
+    resource_json: dict[str, Any] | None = None
+    status: Literal["final"]
+
+
+class ReadObservationsByIngestionIdOkResponse(BaseModel):
+    observation_id: UUID
+    diagnostic_report_id: UUID
+    patient_id: PatientId
+    code: str
+    display: str | None = None
+    effective_at: datetime
+    normalized_at: datetime
+    value_num: float | None = None
+    value_text: str | None = None
+    comparator: str | None = None
+    unit: str | None = None
+    ref_low_num: float | None = None
+    ref_high_num: float | None = None
+    flag_analyzer_interpretation: str | None = None
+    flag_system_interpretation: str | None = None
+    discrepancy: str | None = None
+    resource_json: dict[str, Any] | None = None
+    status: Literal["final"]

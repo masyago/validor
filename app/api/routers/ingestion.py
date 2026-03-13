@@ -9,6 +9,7 @@ from fastapi import (
     Header,
     HTTPException,
     Response,
+    Query,
 )
 from typing import Annotated
 from app.schemas.ingestion import (
@@ -20,13 +21,17 @@ from app.schemas.ingestion import (
     ValidationErrorDetail,
     IngestionMissingFieldResponse,
     IngestionContentHashMismatchResponse,
+    ReadIngestionIdFoundOkResponse,
+    PathResourceNotFoundResponse,
+    ReadDiagnosticReportsByIngestionIdOkResponse,
+    ReadObservationsByIngestionIdOkResponse,
 )
 from datetime import datetime
 from uuid import UUID, uuid4
 from app.core.ingestion_status_enums import IngestionStatus
 import hashlib
 import io
-from typing import Union, Any
+from typing import Union, Any, Literal, cast
 
 from sqlalchemy.orm import Session
 from sqlalchemy import select
@@ -37,17 +42,23 @@ from app.services.tasks.ingestion_tasks import process_ingestion_task
 from app.services.tasks.ingestion_tasks import reap_stuck_ingestions_task
 from app.persistence.repositories.ingestion_repo import IngestionRepository
 from app.persistence.repositories.raw_data_repo import RawDataRepository
+from app.persistence.repositories.diagnostic_report_repo import (
+    DiagnosticReportRepository,
+)
+from app.persistence.repositories.observation_repo import ObservationRepository
 
 from app.services.ingestion_service import IngestionService
 from app.persistence.repositories.processing_event_repo import (
     ProcessingEventRepository,
 )
+
 from app.provenance.emitter import EventContext, emit
 from app.persistence.models.provenance import (
     ProcessingEventActor,
     ProcessingEventType,
     ProcessingEventSeverity,
 )
+from app.persistence.repositories.ingestion_repo import IngestionRepository
 
 router = APIRouter()
 
@@ -204,7 +215,7 @@ async def create_ingestion(
                         "existing": existing_ingestion.server_sha256,
                         "submitted": server_sha256_new,
                     },
-                    message="An ingestion already exists for the run (instrument_id, run_id) but server-produced hash differs.",
+                    message="""An ingestion already exists for the run (instrument_id, run_id) but server-produced hash differs.""",
                 ).model_dump(),
             )
 
@@ -311,3 +322,219 @@ def reap_stuck_ingestions(
         limit=limit,
         dry_run=dry_run,
     )
+
+
+@router.get(
+    "/ingestions/{ingestion_id}",
+    response_model=ReadIngestionIdFoundOkResponse,
+    responses={
+        status.HTTP_404_NOT_FOUND: {
+            "model": PathResourceNotFoundResponse,
+            "description": "Item not found",
+        },
+    },
+)
+def read_ingestion_id(
+    ingestion_id: UUID,
+    db: Session = Depends(get_session),
+):
+    ingestion_repo = IngestionRepository(db)
+    ingestion_row = ingestion_repo.get_by_ingestion_id(ingestion_id)
+    if ingestion_row is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=PathResourceNotFoundResponse(
+                ingestion_id=ingestion_id, detail="Item not found"
+            ).model_dump(exclude_none=True),
+        )
+
+    return ReadIngestionIdFoundOkResponse(
+        ingestion_id=ingestion_id,
+        status=IngestionStatus(ingestion_row.status),
+        api_received_at=ingestion_row.api_received_at,
+        error_code=ingestion_row.error_code,
+        error_detail=ingestion_row.error_detail,
+    )
+
+
+@router.get(
+    "/ingestions/{ingestion_id}/diagnostic-reports",
+    response_model=list[ReadDiagnosticReportsByIngestionIdOkResponse],
+    responses={
+        status.HTTP_404_NOT_FOUND: {
+            "model": PathResourceNotFoundResponse,
+            "description": "Item not found",
+        },
+    },
+)
+async def read_diagnostic_reports(
+    ingestion_id: UUID,
+    include_json: Annotated[
+        Literal[0, 1],
+        Query(
+            description=(
+                "Whether to include `resource_json` (0 = don't include JSON (default), 1 = include JSON)."
+            ),
+        ),
+    ] = 0,
+    db: Session = Depends(get_session),
+) -> list[ReadDiagnosticReportsByIngestionIdOkResponse]:
+    dr_repo = DiagnosticReportRepository(db)
+    dr_rows = dr_repo.get_by_ingestion_id(ingestion_id)
+
+    if not dr_rows:
+        ingestion_repo = IngestionRepository(db)
+        ingestion_row = ingestion_repo.get_by_ingestion_id(ingestion_id)
+        if ingestion_row is None:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=PathResourceNotFoundResponse(
+                    ingestion_id=ingestion_id,
+                    detail="Item not found",
+                ).model_dump(exclude_none=True),
+            )
+
+    want_json = include_json == 1
+
+    list_row_responses: list[ReadDiagnosticReportsByIngestionIdOkResponse] = []
+    for dr_row in dr_rows:
+        row_response = ReadDiagnosticReportsByIngestionIdOkResponse(
+            diagnostic_report_id=dr_row.diagnostic_report_id,
+            patient_id=dr_row.patient_id,
+            panel_code=dr_row.panel_code,
+            effective_at=dr_row.effective_at,
+            normalized_at=dr_row.normalized_at,
+            resource_json=dr_row.resource_json if want_json else None,
+            status=cast(Literal["final"], dr_row.status),
+        )
+        list_row_responses.append(row_response)
+
+    return list_row_responses
+
+
+@router.get(
+    "/ingestions/{ingestion_id}/observations",
+    response_model=list[ReadObservationsByIngestionIdOkResponse],
+    responses={
+        status.HTTP_404_NOT_FOUND: {
+            "model": PathResourceNotFoundResponse,
+            "description": "Item not found",
+        },
+    },
+)
+async def read_observations(
+    ingestion_id: UUID,
+    include_json: Annotated[
+        Literal[0, 1],
+        Query(
+            description=(
+                "Whether to include `resource_json` (0 = don't include JSON (default), 1 = include JSON)."
+            ),
+        ),
+    ] = 0,
+    limit: Annotated[
+        int,
+        Query(
+            description="Maximum number of observations to return.",
+            ge=1,
+        ),
+    ] = 10,
+    offset: Annotated[
+        int,
+        Query(
+            description="Number of observations to skip from the beginning of the result set.",
+            ge=0,
+        ),
+    ] = 0,
+    db: Session = Depends(get_session),
+) -> list[ReadObservationsByIngestionIdOkResponse]:
+    obs_repo = ObservationRepository(db)
+    obs_rows = obs_repo.get_by_ingestion_id(ingestion_id)
+
+    if not obs_rows:
+        ingestion_repo = IngestionRepository(db)
+        ingestion_row = ingestion_repo.get_by_ingestion_id(ingestion_id)
+        if ingestion_row is None:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=PathResourceNotFoundResponse(
+                    ingestion_id=ingestion_id,
+                    detail="Item not found",
+                ).model_dump(exclude_none=True),
+            )
+
+    want_json = include_json == 1
+    page_rows = obs_rows[offset : offset + limit]
+
+    list_row_responses: list[ReadObservationsByIngestionIdOkResponse] = []
+    for ob_row in page_rows:
+        row_response = ReadObservationsByIngestionIdOkResponse(
+            observation_id=ob_row.observation_id,
+            diagnostic_report_id=ob_row.diagnostic_report_id,
+            patient_id=ob_row.patient_id,
+            code=ob_row.code,
+            display=ob_row.display,
+            effective_at=ob_row.effective_at,
+            normalized_at=ob_row.normalized_at,
+            value_num=ob_row.value_num,
+            value_text=ob_row.value_text,
+            comparator=ob_row.comparator,
+            unit=ob_row.unit,
+            ref_low_num=ob_row.ref_low_num,
+            ref_high_num=ob_row.ref_high_num,
+            flag_analyzer_interpretation=ob_row.flag_analyzer_interpretation,
+            flag_system_interpretation=ob_row.flag_system_interpretation,
+            discrepancy=ob_row.discrepancy,
+            resource_json=ob_row.resource_json if want_json else None,
+            status="final",
+        )
+        list_row_responses.append(row_response)
+
+    return list_row_responses
+
+
+# for routes wtih limit and offset:
+# def read_...(include_json: int=0, #not sure, it's more a bool data type
+#                                    limit: int=10, offset: int=0,):
+#         while len(list_row_responses) < limit:
+
+# Get by patient_id. Response: paginated list of DR reports
+
+# @app.get("/items/{item_id}")
+# def read_item(item_id: int):
+#     # This will return a 200 OK response with the item data
+#     return {"item_id": item_id}
+# @app.get("/items/{item_id}")
+# def read_item(item_id: int):
+#     # Example function to fetch an item from a database
+#     item = fetch_item_from_db(item_id)
+
+#     if item is None:
+#         # Raise an HTTPException with status code 404
+#         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Item not found")
+
+#     return item
+
+
+# @app.get(
+#     "/items/{item_id}",
+#     response_model=SuccessResponse,  # Default (200 OK) response model
+#     responses={
+#         status.HTTP_404_NOT_FOUND: {"model": ErrorResponse, "description": "Item not found"},
+#         status.HTTP_400_BAD_REQUEST: {"model": ErrorResponse, "description": "Bad Request"}
+#     }
+# )
+# def read_item(item_id: str):
+#     """
+#     Retrieve an item by its ID.
+#     Raises 404 if not found, or 400 for other potential client errors.
+#     """
+#     if item_id not in items:
+#         # 3. Raise an HTTPException for errors
+#         raise HTTPException(
+#             status_code=status.HTTP_404_NOT_FOUND,
+#             detail="Item not found"
+#         )
+
+#     # 4. Return the data for a successful request
+#     return SuccessResponse(item_id=item_id, data=items[item_id])

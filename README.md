@@ -181,7 +181,7 @@ the ingestion service. They simulate external systems in the pipeline:
 - `csv_uploader/csv_generator.py`: a canonical analyzer producing CSV exports
 - `csv_uploader/csv_uploader.py`: a middleware uploader POSTing exports to the API
 
-### Run in three terminals (simple + explicit)
+### Run in three terminals
 
 1) Start the API:
 ```sh
