@@ -118,7 +118,7 @@ class ReadDiagnosticReportsOkResponse(BaseModel):
     effective_at: datetime
     normalized_at: datetime
     resource_json: dict[str, Any] | None = None
-    status: Literal["final"]
+    status: Literal["FINAL"]
 
 
 # Backwards-compatible alias (older name used earlier in the project)
@@ -143,7 +143,7 @@ class ReadObservationsOkResponse(BaseModel):
     flag_system_interpretation: str | None = None
     discrepancy: str | None = None
     resource_json: dict[str, Any] | None = None
-    status: Literal["final"]
+    status: Literal["FINAL"]
 
 
 # Backwards-compatible alias (older name used earlier in the project)

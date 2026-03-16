@@ -338,7 +338,7 @@ def read_ingestion_id(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=PathResourceNotFoundResponse(
                 ingestion_id=ingestion_id, detail="Item not found"
-            ).model_dump(exclude_none=True),
+            ).model_dump(mode="json", exclude_none=True),
         )
 
     return ReadIngestionIdFoundOkResponse(
@@ -363,11 +363,13 @@ def read_ingestion_id(
 async def read_diagnostic_reports_for_ingestion_id(
     ingestion_id: UUID,
     include_json: Annotated[
-        Literal[0, 1],
+        int,
         Query(
             description=(
                 "Whether to include `resource_json` (0 = don't include JSON (default), 1 = include JSON)."
             ),
+            ge=0,
+            le=1,
         ),
     ] = 0,
     db: Session = Depends(get_session),
@@ -384,7 +386,7 @@ async def read_diagnostic_reports_for_ingestion_id(
                 detail=PathResourceNotFoundResponse(
                     ingestion_id=ingestion_id,
                     detail="Item not found",
-                ).model_dump(exclude_none=True),
+                ).model_dump(mode="json", exclude_none=True),
             )
 
     want_json = include_json == 1
@@ -398,7 +400,7 @@ async def read_diagnostic_reports_for_ingestion_id(
             effective_at=dr_row.effective_at,
             normalized_at=dr_row.normalized_at,
             resource_json=dr_row.resource_json if want_json else None,
-            status="final",
+            status="FINAL",
         )
         list_row_responses.append(row_response)
 
@@ -418,11 +420,13 @@ async def read_diagnostic_reports_for_ingestion_id(
 async def read_observations_for_ingestion_id(
     ingestion_id: UUID,
     include_json: Annotated[
-        Literal[0, 1],
+        int,
         Query(
             description=(
                 "Whether to include `resource_json` (0 = don't include JSON (default), 1 = include JSON)."
             ),
+            ge=0,
+            le=1,
         ),
     ] = 0,
     limit: Annotated[
@@ -453,7 +457,7 @@ async def read_observations_for_ingestion_id(
                 detail=PathResourceNotFoundResponse(
                     ingestion_id=ingestion_id,
                     detail="Item not found",
-                ).model_dump(exclude_none=True),
+                ).model_dump(mode="json", exclude_none=True),
             )
 
     want_json = include_json == 1
@@ -479,7 +483,7 @@ async def read_observations_for_ingestion_id(
             flag_system_interpretation=ob_row.flag_system_interpretation,
             discrepancy=ob_row.discrepancy,
             resource_json=ob_row.resource_json if want_json else None,
-            status="final",
+            status="FINAL",
         )
         list_row_responses.append(row_response)
 
@@ -500,11 +504,13 @@ async def read_observations_for_ingestion_id(
 async def read_diagnostic_reports_for_patient_id(
     patient_id: PatientId,
     include_json: Annotated[
-        Literal[0, 1],
+        int,
         Query(
             description=(
                 "Whether to include `resource_json` (0 = don't include JSON (default), 1 = include JSON)."
             ),
+            ge=0,
+            le=1,
         ),
     ] = 0,
     limit: Annotated[
@@ -539,7 +545,7 @@ async def read_diagnostic_reports_for_patient_id(
                 detail=PathResourceNotFoundResponse(
                     patient_id=patient_id,
                     detail="Item not found",
-                ).model_dump(exclude_none=True),
+                ).model_dump(mode="json", exclude_none=True),
             )
 
     want_json = include_json == 1
@@ -554,7 +560,7 @@ async def read_diagnostic_reports_for_patient_id(
             effective_at=dr_row.effective_at,
             normalized_at=dr_row.normalized_at,
             resource_json=dr_row.resource_json if want_json else None,
-            status="final",
+            status="FINAL",
         )
         list_row_responses.append(row_response)
 
@@ -575,11 +581,13 @@ async def read_diagnostic_reports_for_patient_id(
 async def read_observations_for_patient_id(
     patient_id: PatientId,
     include_json: Annotated[
-        Literal[0, 1],
+        int,
         Query(
             description=(
                 "Whether to include `resource_json` (0 = don't include JSON (default), 1 = include JSON)."
             ),
+            ge=0,
+            le=1,
         ),
     ] = 0,
     limit: Annotated[
@@ -614,7 +622,7 @@ async def read_observations_for_patient_id(
                 detail=PathResourceNotFoundResponse(
                     patient_id=patient_id,
                     detail="Item not found",
-                ).model_dump(exclude_none=True),
+                ).model_dump(mode="json", exclude_none=True),
             )
 
     want_json = include_json == 1
@@ -640,7 +648,7 @@ async def read_observations_for_patient_id(
             flag_system_interpretation=ob_row.flag_system_interpretation,
             discrepancy=ob_row.discrepancy,
             resource_json=ob_row.resource_json if want_json else None,
-            status="final",
+            status="FINAL",
         )
         list_row_responses.append(row_response)
 

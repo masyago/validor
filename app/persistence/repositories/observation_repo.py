@@ -48,7 +48,7 @@ class ObservationRepository:
         stmt = (
             select(Observation)
             .where(Observation.ingestion_id == ingestion_id)
-            .order_by(Observation.test_id)
+            .order_by(asc(Observation.observation_id))
         )
         return list(self.session.scalars(stmt).all())
 

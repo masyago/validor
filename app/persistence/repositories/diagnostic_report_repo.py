@@ -24,8 +24,10 @@ class DiagnosticReportRepository:
     def get_by_ingestion_id(
         self, ingestion_id: UUID
     ) -> list[DiagnosticReport]:
-        stmt = select(DiagnosticReport).where(
-            DiagnosticReport.ingestion_id == ingestion_id
+        stmt = (
+            select(DiagnosticReport)
+            .where(DiagnosticReport.ingestion_id == ingestion_id)
+            .order_by(asc(DiagnosticReport.diagnostic_report_id))
         )
         return list(self.session.scalars(stmt).all())
 
