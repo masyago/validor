@@ -81,7 +81,7 @@ ingestion, timestamp when API received the raw data, and error details.
 ### Error responses
 See Common Error Responses (404, 422)
 
-## `GET /v1/ingestions/{ingestion_id}/diagnostic-reports?include_json=1&limit=...&offset=...`
+## `GET /v1/ingestions/{ingestion_id}/diagnostic-reports?include_json=1`
 
 ### Description
 Retrieves metadata and (optional) resource JSON for diagnostic reports associated with specified `ingestion_id`.
@@ -93,10 +93,6 @@ Retrieves metadata and (optional) resource JSON for diagnostic reports associate
 `include_json` is an optional parameter. It indicates whether to include 
 DiagnosticReport resource JSON (`include_json=1`) or not (`include_json=0`, 
 default).
-
-`limit` and `offset` are optional parameters. `limit` specifies number of 
-results to display, while `offset` indicates number of records to skip from
-beginning of the results. Default values: `limit=10` and `offset=0`.
 
 ### Responses
 

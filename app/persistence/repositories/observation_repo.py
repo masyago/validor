@@ -1,9 +1,10 @@
 from sqlalchemy.orm import Session
-from sqlalchemy import select, update
+from sqlalchemy import select, update, desc, asc
 from uuid import UUID
 from sqlalchemy.dialects.postgresql import insert
 
 from app.persistence.models.normalization import Observation
+from app.schemas.identifiers import PatientId
 
 """
 Methods:
@@ -104,3 +105,18 @@ class ObservationRepository:
             .execution_options(synchronize_session="fetch")
         )
         self.session.execute(stmt)
+
+    def get_by_patient_id(self, patient_id: PatientId) -> list[Observation]:
+        """
+        Returns zero or multiple rows. If zero rows, returns an empty list.
+        Results are ordered by (1) effective_at datetime in descending order (new first). If datetime is the same, results are additionally ordered by observation_id to have reproducible order of the results.
+        """
+        stmt = (
+            select(Observation)
+            .where(Observation.patient_id == patient_id)
+            .order_by(
+                desc(Observation.effective_at),
+                asc(Observation.observation_id),
+            )
+        )
+        return list(self.session.scalars(stmt).all())

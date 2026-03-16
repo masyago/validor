@@ -27,19 +27,6 @@ from datetime import datetime
 from app.persistence.base import Base
 
 
-# class IngestionIdempotencyDisposition(enum.Enum):
-#     CREATED = "CREATED"
-#     DUPLICATE_IDENTICAL = "DUPLICATE_IDENTICAL"
-#     CONFLICT = "CONFLICT"
-
-
-# ingestion_idempotency_enum = SqlEnum(
-#     IngestionIdempotencyDisposition,
-#     name="ingestion_idempotency_disposition_enum",
-#     create_type=True,
-# )
-
-
 class Ingestion(Base):
     __tablename__ = "ingestion"
     __table_args__ = (

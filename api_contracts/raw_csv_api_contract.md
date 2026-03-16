@@ -41,7 +41,7 @@ Uniqueness of a run is defined as combination of instrument_id and run_id.
 | `uploader_received_at`    | string | Yes      | The ISO 8601 timestamp (UTC) when the file was received by the uploader from the instrument's export location. | `2026-01-12T14:30:05Z`                   |
 
 Note on hash optional field `content_sha256`:
-* If content_sha256 is provided: API recomputes and returns 422 CONTENT_HASH_MISMATCH on mismatch.
+* If content_sha256 is provided: API recomputes and returns 400 CONTENT_HASH_MISMATCH on mismatch.
 * If content_sha256 is omitted: API skips comparison. Server still computes and stores
   a server generated hash sever_sha256.
 
@@ -83,6 +83,24 @@ processing.
   "status": "RECEIVED",
   "api_received_at": "2026-01-12T14:35:10.123Z",
   "message": "Ingestion request received and queued for processing."
+}
+```
+
+#### `400 Bad Request`
+
+Returned when the request is syntactically valid, but a semantic integrity check fails.
+
+**Content-Type:** `application/json`
+
+**Body:**
+
+Hash mismatch error
+
+```json
+{
+  "code": "CONTENT_HASH_MISMATCH",
+  "retryable": false,
+  "message": "Content integrity check failed."
 }
 ```
 
@@ -134,6 +152,8 @@ File exceeds size limit.
 }
 ```
 
+
+
 #### `415 Unsupported Media Type`
 
 Media type is not `multipart/form-data`
@@ -155,8 +175,7 @@ Media type is not `multipart/form-data`
 #### `422 Unprocessable Entity`
 
 Validation error. The error can occur due to incorrect or missing metadata 
-(missing required fields, incorrect data types, bad data formatting) or hash 
-mismatch (if hash provided).
+(missing required fields, incorrect data types, bad data formatting).
 CSV column/row validation errors will be available at
 `GET /v1/ingestions/{id}/errors`.
 
@@ -175,15 +194,6 @@ Missing field error
       { "field": "instrument_id", "message": "field required" }
       ],
   "message": "Validation error."
-}
-```
-Hash mismatch error
-
-```json
-{
-  "code": "CONTENT_HASH_MISMATCH",
-  "retryable": false,
-  "message": "Content integrity check failed."
 }
 ```
 

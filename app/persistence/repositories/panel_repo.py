@@ -3,6 +3,7 @@ from sqlalchemy import select
 from uuid import UUID
 
 from app.persistence.models.parsing import Panel
+from app.schemas.identifiers import PatientId
 
 
 class PanelRepository:
@@ -16,6 +17,11 @@ class PanelRepository:
     # Returns zero or multiple rows. If zero rows, returns an empty list
     def get_by_ingestion_id(self, ingestion_id: UUID) -> list[Panel]:
         stmt = select(Panel).where(Panel.ingestion_id == ingestion_id)
+        return list(self.session.scalars(stmt).all())
+
+    # Returns zero or multiple rows. If zero rows, returns an empty list
+    def get_by_patient_id(self, patient_id: PatientId) -> list[Panel]:
+        stmt = select(Panel).where(Panel.patient_id == patient_id)
         return list(self.session.scalars(stmt).all())
 
     def create(self, panel: Panel) -> Panel:

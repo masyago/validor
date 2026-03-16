@@ -111,7 +111,7 @@ class ReadIngestionIdFoundOkResponse(BaseModel):
     error_detail: dict[str, Any] | None = None
 
 
-class ReadDiagnosticReportsByIngestionIdOkResponse(BaseModel):
+class ReadDiagnosticReportsOkResponse(BaseModel):
     diagnostic_report_id: UUID
     patient_id: PatientId
     panel_code: str
@@ -121,7 +121,11 @@ class ReadDiagnosticReportsByIngestionIdOkResponse(BaseModel):
     status: Literal["final"]
 
 
-class ReadObservationsByIngestionIdOkResponse(BaseModel):
+# Backwards-compatible alias (older name used earlier in the project)
+ReadDiagnosticReportsByIngestionIdOkResponse = ReadDiagnosticReportsOkResponse
+
+
+class ReadObservationsOkResponse(BaseModel):
     observation_id: UUID
     diagnostic_report_id: UUID
     patient_id: PatientId
@@ -140,3 +144,7 @@ class ReadObservationsByIngestionIdOkResponse(BaseModel):
     discrepancy: str | None = None
     resource_json: dict[str, Any] | None = None
     status: Literal["final"]
+
+
+# Backwards-compatible alias (older name used earlier in the project)
+ReadObservationsByIngestionIdOkResponse = ReadObservationsOkResponse

@@ -23,9 +23,12 @@ from app.schemas.ingestion import (
     IngestionContentHashMismatchResponse,
     ReadIngestionIdFoundOkResponse,
     PathResourceNotFoundResponse,
-    ReadDiagnosticReportsByIngestionIdOkResponse,
-    ReadObservationsByIngestionIdOkResponse,
+    ReadDiagnosticReportsOkResponse,
+    ReadObservationsOkResponse,
 )
+
+from app.schemas.identifiers import PatientId
+
 from datetime import datetime
 from uuid import UUID, uuid4
 from app.core.ingestion_status_enums import IngestionStatus
@@ -42,6 +45,7 @@ from app.services.tasks.ingestion_tasks import process_ingestion_task
 from app.services.tasks.ingestion_tasks import reap_stuck_ingestions_task
 from app.persistence.repositories.ingestion_repo import IngestionRepository
 from app.persistence.repositories.raw_data_repo import RawDataRepository
+from app.persistence.repositories.panel_repo import PanelRepository
 from app.persistence.repositories.diagnostic_report_repo import (
     DiagnosticReportRepository,
 )
@@ -111,26 +115,17 @@ def calculate_sha256(file_content: bytes):
             "model": IngestionPayloadTooLargeResponse,
             "description": "File exceeds size limit.",
         },
+        status.HTTP_400_BAD_REQUEST: {
+            "model": IngestionContentHashMismatchResponse,
+            "description": "Content hash mismatch.",
+        },
         status.HTTP_422_UNPROCESSABLE_CONTENT: {
-            "description": "Validation error, see response for details.",
-            "content": {
-                "application/json": {
-                    # "schema": _merge_schemas(
-                    #     IngestionMissingFieldResponse,
-                    #     IngestionContentHashMismatchResponse,)
-                    "schema": {
-                        "oneOf": [
-                            IngestionMissingFieldResponse.model_json_schema(),
-                            IngestionContentHashMismatchResponse.model_json_schema(),
-                        ]
-                    },
-                },
-            },
+            "model": IngestionMissingFieldResponse,
+            "description": "Validation error: incorrect or missing metadata.",
         },
     },
     dependencies=[
         Depends(check_content_length),
-        # Depends(_include_ingestion_models),
     ],
 )
 async def create_ingestion(
@@ -139,8 +134,6 @@ async def create_ingestion(
     file: Annotated[UploadFile, File()],
     metadata: IngestionMetadata = Depends(IngestionMetadata.as_form),
     db: Session = Depends(get_session),
-    # _include1: Any = Depends(lambda: IngestionMissingFieldResponse),
-    # _include2: Any = Depends(lambda: IngestionContentHashMismatchResponse),
     # Uncomment when background tasks and database implemented:
     # background_tasks: BackgroundTasks,
 ):
@@ -150,12 +143,12 @@ async def create_ingestion(
        Check media type. If not multipart/form-data:
         - return code 415
     - [Can be handled by FastAPI automatically btu it won't use custom model.
-       Need to write code to overwrite default behavour.]. Check that all required fields present. If not,   return 422 - Missing field
+       Need to write code to overwrite default behavior.]. Check that all required fields present. If not,   return 422 - Missing field
         - [DONE] if file size exceeds limit, return 413
         - [DONE] generate content hash server_sha256
             - if content_sha256 provided
                 - if content_sha256 != server_sha256:
-                    - return 422 Content hahs mismatch
+                                        - return 400 Content hash mismatch
         - check if combination of instrument_id and run_id present in database
           already. if yes, retrieve server_sha256.
             - compare server_sha256_new to server_sha256.
@@ -175,7 +168,7 @@ async def create_ingestion(
     if metadata.content_sha256:
         if metadata.content_sha256 != server_sha256_new:
             raise HTTPException(
-                status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
+                status_code=status.HTTP_400_BAD_REQUEST,
                 detail=IngestionContentHashMismatchResponse(
                     code="CONTENT_HASH_MISMATCH",
                     retryable=False,
@@ -359,7 +352,7 @@ def read_ingestion_id(
 
 @router.get(
     "/ingestions/{ingestion_id}/diagnostic-reports",
-    response_model=list[ReadDiagnosticReportsByIngestionIdOkResponse],
+    response_model=list[ReadDiagnosticReportsOkResponse],
     responses={
         status.HTTP_404_NOT_FOUND: {
             "model": PathResourceNotFoundResponse,
@@ -367,7 +360,7 @@ def read_ingestion_id(
         },
     },
 )
-async def read_diagnostic_reports(
+async def read_diagnostic_reports_for_ingestion_id(
     ingestion_id: UUID,
     include_json: Annotated[
         Literal[0, 1],
@@ -378,7 +371,7 @@ async def read_diagnostic_reports(
         ),
     ] = 0,
     db: Session = Depends(get_session),
-) -> list[ReadDiagnosticReportsByIngestionIdOkResponse]:
+) -> list[ReadDiagnosticReportsOkResponse]:
     dr_repo = DiagnosticReportRepository(db)
     dr_rows = dr_repo.get_by_ingestion_id(ingestion_id)
 
@@ -396,16 +389,16 @@ async def read_diagnostic_reports(
 
     want_json = include_json == 1
 
-    list_row_responses: list[ReadDiagnosticReportsByIngestionIdOkResponse] = []
+    list_row_responses: list[ReadDiagnosticReportsOkResponse] = []
     for dr_row in dr_rows:
-        row_response = ReadDiagnosticReportsByIngestionIdOkResponse(
+        row_response = ReadDiagnosticReportsOkResponse(
             diagnostic_report_id=dr_row.diagnostic_report_id,
             patient_id=dr_row.patient_id,
             panel_code=dr_row.panel_code,
             effective_at=dr_row.effective_at,
             normalized_at=dr_row.normalized_at,
             resource_json=dr_row.resource_json if want_json else None,
-            status=cast(Literal["final"], dr_row.status),
+            status="final",
         )
         list_row_responses.append(row_response)
 
@@ -414,7 +407,7 @@ async def read_diagnostic_reports(
 
 @router.get(
     "/ingestions/{ingestion_id}/observations",
-    response_model=list[ReadObservationsByIngestionIdOkResponse],
+    response_model=list[ReadObservationsOkResponse],
     responses={
         status.HTTP_404_NOT_FOUND: {
             "model": PathResourceNotFoundResponse,
@@ -422,7 +415,7 @@ async def read_diagnostic_reports(
         },
     },
 )
-async def read_observations(
+async def read_observations_for_ingestion_id(
     ingestion_id: UUID,
     include_json: Annotated[
         Literal[0, 1],
@@ -447,7 +440,7 @@ async def read_observations(
         ),
     ] = 0,
     db: Session = Depends(get_session),
-) -> list[ReadObservationsByIngestionIdOkResponse]:
+) -> list[ReadObservationsOkResponse]:
     obs_repo = ObservationRepository(db)
     obs_rows = obs_repo.get_by_ingestion_id(ingestion_id)
 
@@ -466,9 +459,9 @@ async def read_observations(
     want_json = include_json == 1
     page_rows = obs_rows[offset : offset + limit]
 
-    list_row_responses: list[ReadObservationsByIngestionIdOkResponse] = []
+    list_row_responses: list[ReadObservationsOkResponse] = []
     for ob_row in page_rows:
-        row_response = ReadObservationsByIngestionIdOkResponse(
+        row_response = ReadObservationsOkResponse(
             observation_id=ob_row.observation_id,
             diagnostic_report_id=ob_row.diagnostic_report_id,
             patient_id=ob_row.patient_id,
@@ -493,48 +486,162 @@ async def read_observations(
     return list_row_responses
 
 
-# for routes wtih limit and offset:
-# def read_...(include_json: int=0, #not sure, it's more a bool data type
-#                                    limit: int=10, offset: int=0,):
-#         while len(list_row_responses) < limit:
+# `GET /v1/patients/{patient_id}/diagnostic-reports?include_json=1&limit=...&offset=...`
+@router.get(
+    "/patients/{patient_id}/diagnostic-reports",
+    response_model=list[ReadDiagnosticReportsOkResponse],
+    responses={
+        status.HTTP_404_NOT_FOUND: {
+            "model": PathResourceNotFoundResponse,
+            "description": "Item not found",
+        },
+    },
+)
+async def read_diagnostic_reports_for_patient_id(
+    patient_id: PatientId,
+    include_json: Annotated[
+        Literal[0, 1],
+        Query(
+            description=(
+                "Whether to include `resource_json` (0 = don't include JSON (default), 1 = include JSON)."
+            ),
+        ),
+    ] = 0,
+    limit: Annotated[
+        int,
+        Query(
+            description="Maximum number of observations to return.",
+            ge=1,
+        ),
+    ] = 10,
+    offset: Annotated[
+        int,
+        Query(
+            description="Number of observations to skip from the beginning of the result set.",
+            ge=0,
+        ),
+    ] = 0,
+    db: Session = Depends(get_session),
+) -> list[ReadDiagnosticReportsOkResponse]:
+    dr_repo = DiagnosticReportRepository(db)
+    dr_rows = dr_repo.get_by_patient_id(patient_id)
 
-# Get by patient_id. Response: paginated list of DR reports
+    """
+    Check if patient_id exists in panel_repo as Panel is the first table
+    where patient_id's are extracted from CSV
+    """
+    if not dr_rows:
+        panel_repo = PanelRepository(db)
+        panel_rows = panel_repo.get_by_patient_id(patient_id)
+        if not panel_rows:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=PathResourceNotFoundResponse(
+                    patient_id=patient_id,
+                    detail="Item not found",
+                ).model_dump(exclude_none=True),
+            )
 
-# @app.get("/items/{item_id}")
-# def read_item(item_id: int):
-#     # This will return a 200 OK response with the item data
-#     return {"item_id": item_id}
-# @app.get("/items/{item_id}")
-# def read_item(item_id: int):
-#     # Example function to fetch an item from a database
-#     item = fetch_item_from_db(item_id)
+    want_json = include_json == 1
+    page_rows = dr_rows[offset : offset + limit]
 
-#     if item is None:
-#         # Raise an HTTPException with status code 404
-#         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Item not found")
+    list_row_responses: list[ReadDiagnosticReportsOkResponse] = []
+    for dr_row in page_rows:
+        row_response = ReadDiagnosticReportsOkResponse(
+            diagnostic_report_id=dr_row.diagnostic_report_id,
+            patient_id=dr_row.patient_id,
+            panel_code=dr_row.panel_code,
+            effective_at=dr_row.effective_at,
+            normalized_at=dr_row.normalized_at,
+            resource_json=dr_row.resource_json if want_json else None,
+            status="final",
+        )
+        list_row_responses.append(row_response)
 
-#     return item
+    return list_row_responses
 
 
-# @app.get(
-#     "/items/{item_id}",
-#     response_model=SuccessResponse,  # Default (200 OK) response model
-#     responses={
-#         status.HTTP_404_NOT_FOUND: {"model": ErrorResponse, "description": "Item not found"},
-#         status.HTTP_400_BAD_REQUEST: {"model": ErrorResponse, "description": "Bad Request"}
-#     }
-# )
-# def read_item(item_id: str):
-#     """
-#     Retrieve an item by its ID.
-#     Raises 404 if not found, or 400 for other potential client errors.
-#     """
-#     if item_id not in items:
-#         # 3. Raise an HTTPException for errors
-#         raise HTTPException(
-#             status_code=status.HTTP_404_NOT_FOUND,
-#             detail="Item not found"
-#         )
+# `GET /v1/patients/{patient_id}/observations?include_json=1&limit=...&offset=...`
+@router.get(
+    "/patients/{patient_id}/observations",
+    response_model=list[ReadObservationsOkResponse],
+    responses={
+        status.HTTP_404_NOT_FOUND: {
+            "model": PathResourceNotFoundResponse,
+            "description": "Item not found",
+        },
+    },
+)
+async def read_observations_for_patient_id(
+    patient_id: PatientId,
+    include_json: Annotated[
+        Literal[0, 1],
+        Query(
+            description=(
+                "Whether to include `resource_json` (0 = don't include JSON (default), 1 = include JSON)."
+            ),
+        ),
+    ] = 0,
+    limit: Annotated[
+        int,
+        Query(
+            description="Maximum number of observations to return.",
+            ge=1,
+        ),
+    ] = 10,
+    offset: Annotated[
+        int,
+        Query(
+            description="Number of observations to skip from the beginning of the result set.",
+            ge=0,
+        ),
+    ] = 0,
+    db: Session = Depends(get_session),
+) -> list[ReadObservationsOkResponse]:
+    obs_repo = ObservationRepository(db)
+    obs_rows = obs_repo.get_by_patient_id(patient_id)
 
-#     # 4. Return the data for a successful request
-#     return SuccessResponse(item_id=item_id, data=items[item_id])
+    """
+    Check if patient_id exists in panel_repo as Panel is the first table
+    where patient_id's are extracted from CSV
+    """
+    if not obs_rows:
+        panel_repo = PanelRepository(db)
+        panel_rows = panel_repo.get_by_patient_id(patient_id)
+        if not panel_rows:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=PathResourceNotFoundResponse(
+                    patient_id=patient_id,
+                    detail="Item not found",
+                ).model_dump(exclude_none=True),
+            )
+
+    want_json = include_json == 1
+    page_rows = obs_rows[offset : offset + limit]
+
+    list_row_responses: list[ReadObservationsOkResponse] = []
+    for ob_row in page_rows:
+        row_response = ReadObservationsOkResponse(
+            observation_id=ob_row.observation_id,
+            diagnostic_report_id=ob_row.diagnostic_report_id,
+            patient_id=ob_row.patient_id,
+            code=ob_row.code,
+            display=ob_row.display,
+            effective_at=ob_row.effective_at,
+            normalized_at=ob_row.normalized_at,
+            value_num=ob_row.value_num,
+            value_text=ob_row.value_text,
+            comparator=ob_row.comparator,
+            unit=ob_row.unit,
+            ref_low_num=ob_row.ref_low_num,
+            ref_high_num=ob_row.ref_high_num,
+            flag_analyzer_interpretation=ob_row.flag_analyzer_interpretation,
+            flag_system_interpretation=ob_row.flag_system_interpretation,
+            discrepancy=ob_row.discrepancy,
+            resource_json=ob_row.resource_json if want_json else None,
+            status="final",
+        )
+        list_row_responses.append(row_response)
+
+    return list_row_responses

@@ -1,9 +1,10 @@
 from sqlalchemy.orm import Session
-from sqlalchemy import select, update
+from sqlalchemy import select, update, desc, asc
 from uuid import UUID
 from sqlalchemy.dialects.postgresql import insert
 
 from app.persistence.models.normalization import DiagnosticReport
+from app.schemas.identifiers import PatientId
 
 
 class DiagnosticReportRepository:
@@ -84,3 +85,20 @@ class DiagnosticReportRepository:
             .execution_options(synchronize_session="fetch")
         )
         self.session.execute(stmt)
+
+    def get_by_patient_id(
+        self, patient_id: PatientId
+    ) -> list[DiagnosticReport]:
+        """
+        Returns zero or multiple rows. If zero rows, returns an empty list.
+        Results are ordered by (1) effective_at datetime in descending order (new first). If datetime the same, they're additionally ordered by diagnostic_report_id (to preserve order of results).
+        """
+        stmt = (
+            select(DiagnosticReport)
+            .where(DiagnosticReport.patient_id == patient_id)
+            .order_by(
+                desc(DiagnosticReport.effective_at),
+                asc(DiagnosticReport.diagnostic_report_id),
+            )
+        )
+        return list(self.session.scalars(stmt).all())
