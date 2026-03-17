@@ -619,7 +619,7 @@ def test_get_diagnostic_reports_by_ingestion_include_json(
     if include_json == 1:
         assert rows[0]["resource_json"]["resourceType"] == "DiagnosticReport"
     else:
-        assert rows[0]["resource_json"] is None
+        assert "resource_json" not in rows[0]
 
 
 def test_get_diagnostic_reports_by_ingestion_include_json_invalid_422(
@@ -671,7 +671,7 @@ def test_get_observations_by_ingestion_pagination_and_include_json(
     if include_json == 1:
         assert rows[0]["resource_json"]["resourceType"] == "Observation"
     else:
-        assert rows[0]["resource_json"] is None
+        assert "resource_json" not in rows[0]
 
     # limit and offset query parameters provided
     response2 = client.get(
@@ -767,7 +767,7 @@ def test_get_diagnostic_reports_by_patient_pagination_and_include_json(
     if include_json == 1:
         assert rows[0]["resource_json"]["resourceType"] == "DiagnosticReport"
     else:
-        assert rows[0]["resource_json"] is None
+        assert "resource_json" not in rows[0]
 
     # Limit and offset query parameters provided
     response2 = client.get(
@@ -844,7 +844,7 @@ def test_get_observations_by_patient_pagination_and_include_json(
     if include_json == 1:
         assert rows[0]["resource_json"]["resourceType"] == "Observation"
     else:
-        assert rows[0]["resource_json"] is None
+        assert "resource_json" not in rows[0]
 
     response2 = client.get(
         f"/patients/{patient_id}/observations?include_json={include_json}&limit=1&offset=1"

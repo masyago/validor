@@ -353,6 +353,7 @@ def read_ingestion_id(
 @router.get(
     "/ingestions/{ingestion_id}/diagnostic-reports",
     response_model=list[ReadDiagnosticReportsOkResponse],
+    response_model_exclude_unset=True,
     responses={
         status.HTTP_404_NOT_FOUND: {
             "model": PathResourceNotFoundResponse,
@@ -393,15 +394,18 @@ async def read_diagnostic_reports_for_ingestion_id(
 
     list_row_responses: list[ReadDiagnosticReportsOkResponse] = []
     for dr_row in dr_rows:
-        row_response = ReadDiagnosticReportsOkResponse(
-            diagnostic_report_id=dr_row.diagnostic_report_id,
-            patient_id=dr_row.patient_id,
-            panel_code=dr_row.panel_code,
-            effective_at=dr_row.effective_at,
-            normalized_at=dr_row.normalized_at,
-            resource_json=dr_row.resource_json if want_json else None,
-            status="FINAL",
-        )
+        row_kwargs: dict[str, Any] = {
+            "diagnostic_report_id": dr_row.diagnostic_report_id,
+            "patient_id": dr_row.patient_id,
+            "panel_code": dr_row.panel_code,
+            "effective_at": dr_row.effective_at,
+            "normalized_at": dr_row.normalized_at,
+            "status": "FINAL",
+        }
+        if want_json:
+            row_kwargs["resource_json"] = dr_row.resource_json
+
+        row_response = ReadDiagnosticReportsOkResponse(**row_kwargs)
         list_row_responses.append(row_response)
 
     return list_row_responses
@@ -410,6 +414,7 @@ async def read_diagnostic_reports_for_ingestion_id(
 @router.get(
     "/ingestions/{ingestion_id}/observations",
     response_model=list[ReadObservationsOkResponse],
+    response_model_exclude_unset=True,
     responses={
         status.HTTP_404_NOT_FOUND: {
             "model": PathResourceNotFoundResponse,
@@ -465,26 +470,29 @@ async def read_observations_for_ingestion_id(
 
     list_row_responses: list[ReadObservationsOkResponse] = []
     for ob_row in page_rows:
-        row_response = ReadObservationsOkResponse(
-            observation_id=ob_row.observation_id,
-            diagnostic_report_id=ob_row.diagnostic_report_id,
-            patient_id=ob_row.patient_id,
-            code=ob_row.code,
-            display=ob_row.display,
-            effective_at=ob_row.effective_at,
-            normalized_at=ob_row.normalized_at,
-            value_num=ob_row.value_num,
-            value_text=ob_row.value_text,
-            comparator=ob_row.comparator,
-            unit=ob_row.unit,
-            ref_low_num=ob_row.ref_low_num,
-            ref_high_num=ob_row.ref_high_num,
-            flag_analyzer_interpretation=ob_row.flag_analyzer_interpretation,
-            flag_system_interpretation=ob_row.flag_system_interpretation,
-            discrepancy=ob_row.discrepancy,
-            resource_json=ob_row.resource_json if want_json else None,
-            status="FINAL",
-        )
+        row_kwargs: dict[str, Any] = {
+            "observation_id": ob_row.observation_id,
+            "diagnostic_report_id": ob_row.diagnostic_report_id,
+            "patient_id": ob_row.patient_id,
+            "code": ob_row.code,
+            "display": ob_row.display,
+            "effective_at": ob_row.effective_at,
+            "normalized_at": ob_row.normalized_at,
+            "value_num": ob_row.value_num,
+            "value_text": ob_row.value_text,
+            "comparator": ob_row.comparator,
+            "unit": ob_row.unit,
+            "ref_low_num": ob_row.ref_low_num,
+            "ref_high_num": ob_row.ref_high_num,
+            "flag_analyzer_interpretation": ob_row.flag_analyzer_interpretation,
+            "flag_system_interpretation": ob_row.flag_system_interpretation,
+            "discrepancy": ob_row.discrepancy,
+            "status": "FINAL",
+        }
+        if want_json:
+            row_kwargs["resource_json"] = ob_row.resource_json
+
+        row_response = ReadObservationsOkResponse(**row_kwargs)
         list_row_responses.append(row_response)
 
     return list_row_responses
@@ -494,6 +502,7 @@ async def read_observations_for_ingestion_id(
 @router.get(
     "/patients/{patient_id}/diagnostic-reports",
     response_model=list[ReadDiagnosticReportsOkResponse],
+    response_model_exclude_unset=True,
     responses={
         status.HTTP_404_NOT_FOUND: {
             "model": PathResourceNotFoundResponse,
@@ -553,15 +562,18 @@ async def read_diagnostic_reports_for_patient_id(
 
     list_row_responses: list[ReadDiagnosticReportsOkResponse] = []
     for dr_row in page_rows:
-        row_response = ReadDiagnosticReportsOkResponse(
-            diagnostic_report_id=dr_row.diagnostic_report_id,
-            patient_id=dr_row.patient_id,
-            panel_code=dr_row.panel_code,
-            effective_at=dr_row.effective_at,
-            normalized_at=dr_row.normalized_at,
-            resource_json=dr_row.resource_json if want_json else None,
-            status="FINAL",
-        )
+        row_kwargs: dict[str, Any] = {
+            "diagnostic_report_id": dr_row.diagnostic_report_id,
+            "patient_id": dr_row.patient_id,
+            "panel_code": dr_row.panel_code,
+            "effective_at": dr_row.effective_at,
+            "normalized_at": dr_row.normalized_at,
+            "status": "FINAL",
+        }
+        if want_json:
+            row_kwargs["resource_json"] = dr_row.resource_json
+
+        row_response = ReadDiagnosticReportsOkResponse(**row_kwargs)
         list_row_responses.append(row_response)
 
     return list_row_responses
@@ -571,6 +583,7 @@ async def read_diagnostic_reports_for_patient_id(
 @router.get(
     "/patients/{patient_id}/observations",
     response_model=list[ReadObservationsOkResponse],
+    response_model_exclude_unset=True,
     responses={
         status.HTTP_404_NOT_FOUND: {
             "model": PathResourceNotFoundResponse,
@@ -630,26 +643,29 @@ async def read_observations_for_patient_id(
 
     list_row_responses: list[ReadObservationsOkResponse] = []
     for ob_row in page_rows:
-        row_response = ReadObservationsOkResponse(
-            observation_id=ob_row.observation_id,
-            diagnostic_report_id=ob_row.diagnostic_report_id,
-            patient_id=ob_row.patient_id,
-            code=ob_row.code,
-            display=ob_row.display,
-            effective_at=ob_row.effective_at,
-            normalized_at=ob_row.normalized_at,
-            value_num=ob_row.value_num,
-            value_text=ob_row.value_text,
-            comparator=ob_row.comparator,
-            unit=ob_row.unit,
-            ref_low_num=ob_row.ref_low_num,
-            ref_high_num=ob_row.ref_high_num,
-            flag_analyzer_interpretation=ob_row.flag_analyzer_interpretation,
-            flag_system_interpretation=ob_row.flag_system_interpretation,
-            discrepancy=ob_row.discrepancy,
-            resource_json=ob_row.resource_json if want_json else None,
-            status="FINAL",
-        )
+        row_kwargs: dict[str, Any] = {
+            "observation_id": ob_row.observation_id,
+            "diagnostic_report_id": ob_row.diagnostic_report_id,
+            "patient_id": ob_row.patient_id,
+            "code": ob_row.code,
+            "display": ob_row.display,
+            "effective_at": ob_row.effective_at,
+            "normalized_at": ob_row.normalized_at,
+            "value_num": ob_row.value_num,
+            "value_text": ob_row.value_text,
+            "comparator": ob_row.comparator,
+            "unit": ob_row.unit,
+            "ref_low_num": ob_row.ref_low_num,
+            "ref_high_num": ob_row.ref_high_num,
+            "flag_analyzer_interpretation": ob_row.flag_analyzer_interpretation,
+            "flag_system_interpretation": ob_row.flag_system_interpretation,
+            "discrepancy": ob_row.discrepancy,
+            "status": "FINAL",
+        }
+        if want_json:
+            row_kwargs["resource_json"] = ob_row.resource_json
+
+        row_response = ReadObservationsOkResponse(**row_kwargs)
         list_row_responses.append(row_response)
 
     return list_row_responses

@@ -203,7 +203,7 @@ def generate_csv_rows(
 
 def create_csv_in_folder(
     folder_path: Path, file_name: str, data: list[list]
-) -> None:
+) -> Path | None:
     try:
         # Create the directory if it doesn't exist
         folder_path.mkdir(parents=True, exist_ok=True)
@@ -218,12 +218,14 @@ def create_csv_in_folder(
             writer.writerows(data)
 
         print(f"Successfully created CSV file: {full_path}")
+        return full_path
 
     except IOError as e:
         print(f"Error writing to file {full_path}: {e}")
+        return None
 
 
-def main() -> None:
+def main() -> Path | None:
     """Generates a single simulated lab analyzer CSV file."""
     try:
         today_str = date.today().strftime("%Y%m%d")
@@ -237,11 +239,11 @@ def main() -> None:
 
         if not analytes:
             print("Error: No analytes found in analytes.yaml")
-            return
+            return None
 
         if not profiles:
             print("Error: No profiles found in generation_profiles.yaml")
-            return
+            return None
 
         # Select generation profile
         profile_name, profile_config = select_profile(profiles)
@@ -263,7 +265,9 @@ def main() -> None:
             collection_timestamp=collection_timestamp,
         )
 
-        create_csv_in_folder(TARGET_FOLDER, csv_filename, csv_data)
+        created_path = create_csv_in_folder(
+            TARGET_FOLDER, csv_filename, csv_data
+        )
 
         # Print generation summary
         print(f"Generated CSV using profile: {profile_name}")
@@ -276,12 +280,17 @@ def main() -> None:
             )
         print("DONE")
 
+        return created_path
+
     except FileNotFoundError:
         print(f"Error: Configuration file not found at {CONFIG_FILE_PATH}")
+        return None
     except KeyError as e:
         print(f"Error: Missing key {e} in the configuration file.")
+        return None
     except Exception as e:
         print(f"Unexpected error: {e}")
+        return None
 
 
 if __name__ == "__main__":

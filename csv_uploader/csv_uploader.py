@@ -13,6 +13,10 @@ from pathlib import Path
 from datetime import datetime
 import yaml
 
+from requests.exceptions import ConnectionError as RequestsConnectionError
+from requests.exceptions import Timeout as RequestsTimeout
+from requests.exceptions import RequestException
+
 WATCH_DIR = Path("csv_uploader/simulated_exports/pending")
 PROCESSED_DIR = Path("csv_uploader/simulated_exports/uploaded")
 FAILED_DIR = Path("csv_uploader/simulated_exports/failed")
@@ -22,6 +26,9 @@ STABILITY_DELAY_SECONDS = 10  # Time to wait for file to be stable
 POLL_INTERVAL_SECONDS = 20
 CSV_POST_API_ENDPOINT = "/v1/ingestions"
 UPLOADER_ID = "uploader_001"
+REQUEST_TIMEOUT_SECONDS = 30
+MAX_UPLOAD_RETRIES = 3
+RETRY_BACKOFF_SECONDS = 3
 
 
 def read_config() -> dict:
@@ -89,7 +96,37 @@ def process_file(csv_path: Path, config: dict) -> None:
 
             print(f"Uploading to {url}...")
 
-            response = requests.post(url, files=files, data=data)
+            response = None
+            for attempt in range(1, MAX_UPLOAD_RETRIES + 1):
+                try:
+                    response = requests.post(
+                        url,
+                        files=files,
+                        data=data,
+                        timeout=REQUEST_TIMEOUT_SECONDS,
+                    )
+                    break
+                except (RequestsConnectionError, RequestsTimeout) as e:
+                    print(
+                        f"Upload attempt {attempt}/{MAX_UPLOAD_RETRIES} failed: {e}"
+                    )
+                    if attempt < MAX_UPLOAD_RETRIES:
+                        time.sleep(RETRY_BACKOFF_SECONDS * attempt)
+                    else:
+                        # Keep the file in pending so it can be retried on the next poll.
+                        print(
+                            f"API not reachable; leaving {csv_path.name} in pending for retry."
+                        )
+                        return
+                except RequestException as e:
+                    # Non-connection related requests failures are treated as failures.
+                    print(f"Request failed: {e}")
+                    FAILED_DIR.mkdir(exist_ok=True)
+                    csv_path.rename(FAILED_DIR / csv_path.name)
+                    print(f"Moved to {FAILED_DIR}")
+                    return
+
+        assert response is not None
 
         print(f"API Response: {response.status_code}")
         # response.ok means that response code is < 400
