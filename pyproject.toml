@@ -9,6 +9,7 @@ dependencies = [
     "fastapi[standard]>=0.128.0",
     "freezegun>=1.5.5",
     "psycopg>=3.3.2",
+    "pytest-cov>=7.0.0",
     "pyyaml>=6.0.2",
     "requests>=2.32.4",
 ]

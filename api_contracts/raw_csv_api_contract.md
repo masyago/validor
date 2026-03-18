@@ -48,7 +48,7 @@ Note on hash optional field `content_sha256`:
 
 ### Responses
 
-### `200 OK`
+#### `200 OK`
 Indicates that the same run (combination of `instrument_id`and `run_id`) exists
 and has identical content.
 
