@@ -66,7 +66,7 @@ from app.persistence.repositories.ingestion_repo import IngestionRepository
 
 router = APIRouter()
 
-MAX_FILE_SIZE_BYTES = 1000000  # 1 MB
+MAX_FILE_SIZE_BYTES = 10000000  # 10 MB
 
 
 async def check_content_length(content_length: int | None = Header(None)):
