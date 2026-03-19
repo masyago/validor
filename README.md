@@ -16,7 +16,7 @@ database with full auditability.
 * Two FHIR resources:
     * Observation (individual analytes)
     * DiagnosticReport (panel-level grouping)
-* Use of AI for flagging anomalies.  
+
 
 
 ### Out of Scope
@@ -24,7 +24,7 @@ database with full auditability.
 * Processing output from a vendor-specific analyzer
 * Frontend dashboards
 * Real clinical workflows
-* Authentication beyond basic API keys
+* Authentication
 * Multi-tenant billing
 * Real device integrations
 * Real PHI
@@ -32,9 +32,8 @@ database with full auditability.
 ## Tech Stack
 
 * **Backend :** Python, FastAPI, Pydantic
-* **Database:** PostgreSQL, SQLAlchemy (ORM), pgvector
-* **AI Orchestration:** LangChain or LlamaIndex
-* **DevOps:** Docker, AWS Bedrock
+* **Database:** PostgreSQL, SQLAlchemy (ORM)
+* **DevOps:** Docker
 * **Healthcare Compliance:** FHIR (Observation and DiagnosticReport resources)
 * **Testing:** Pytest
 * **Environment & Dependency Management:** uv
@@ -82,22 +81,6 @@ AI is treated as a controlled, non-authoritative augmentation layer
    * Stores raw and normalized data, generated FHIR resources and 
      processing metadata
 
-5. AI Orchestration Layer: LLM and RAG
-   * Receives validated and normalized domain models with minimized or
-     non-identifying clinical context
-   * Retrieves semantic search results from vector store and invokes external 
-     LLM
-   * Passes only schema-enforced AI outputs to the service layer
-
-6. Vector Store
-   * Stores reference ranges, clinical interpretation guidelines, and
-     normalized or synthetic historical lab results summaries
-   * Provides semantic search results to the AI Orchestration layer
-
-7. External LLM API
-   * Treated as an untrusted external dependency
-   * All outputs are validated against pre-defined schemas within the AI 
-     Orchestration layer before further use
 
 ### Trade-offs
 Authentication and Trust Model
@@ -108,21 +91,17 @@ We deliberately don’t use a full FHIR object library. Instead, we emit a stric
 
 ## Metrics
 * Ingestion validation accuracy
-* LLM output reliability
-* Query performance 
-* FHIR standardization coverage
 * Performance optimization: Throughput increase
+    * Process measured between INGESTION_ACCEPTED and (NORMALIZATION_SUCCEEDED or NORMALIZATION_SUCCEEDED_WITH_WARNINGS or NORMALIZATION_FAILED = "NORMALIZATION_FAILED")
+    * either ingestions per minute or row/second
 * Test coverage
+* (Maybe) Query N+1 optimization
 
 ## Database
 Data pipeline: raw ingest - parsed relations - validated and normalized FHIR artifacts
 
 
-## Vector Store Content Disclaimer
-The vector store contains high-level, educational summaries derived from 
-publicly available sources. Content is paraphrased, non-exhaustive, and used 
-solely to ground AI-generated explanations. It does not provide diagnostic or
- treatment guidance.
+
 
 ## Features
 
@@ -132,10 +111,7 @@ The service works with 2 resources: DiagnosticReport and Observation.
 DiagnosticReport resource groups Observation resources and provides clinical 
 context. Observation resource contains individual test result.
 
-### Note on AI Use
 
-* AI never modifies core clinical data
-* AI produces schema-validated annotations and explanations
 
 ## Installation & Setup
 

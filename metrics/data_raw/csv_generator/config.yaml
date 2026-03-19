@@ -1,0 +1,3 @@
+instrument_id: CANONICAL_CHEM_ANALYZER_V1
+spec_version: analyzer_csv_v1
+api_base_url: http://localhost:8000/
