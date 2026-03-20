@@ -58,11 +58,15 @@ This document outlines metrics and methodology for benchmarking.
     * Why: DB size/state affects performance; also, re-uploading the exact same `(instrument_id, run_id)` is idempotent and will return 200 duplicate (no re-processing), so you need fresh DB.
     * Reset commands (volume + migrations):
       * Stop the local API (Ctrl+C) to avoid pooled-connection weirdness during DB recreation.
-      * `docker compose down -v`
+      * `docker compose down -v` (deletes the `db-data` volume; all Postgres data is wiped)
       * `docker compose up -d db`
       * `DATABASE_URL=postgresql+psycopg://postgres:postgres@localhost:5432/cla uv run alembic upgrade head`
       * Restart the local API:
         * `DATABASE_URL=postgresql+psycopg://postgres:postgres@localhost:5432/cla CLA_QUERY_METRICS=1 CLA_BENCHMARK_RESULTS_CSV=metrics/benchmark_results.csv uv run uvicorn app.main:app --host 0.0.0.0 --port 8000`
+    * If you still get “already submitted” after a reset, you are almost certainly not talking to the DB you think you are.
+      * Confirm you ran `docker compose down -v` from the repo root (same Compose project).
+      * Confirm no other Postgres is listening on `localhost:5432` (e.g., a local/Homebrew Postgres). If one is, either stop it for the benchmark window or change Docker’s published port (e.g., `5433:5432`) and use that in `DATABASE_URL`.
+      * Confirm the uploader is pointing at the API you just restarted (base URL/port).
   * Warmup (cache/JIT priming):
     * Use a dedicated warmup CSV
     * To keep measured runs on a clean DB, do warmup immediately after bringing the stack up, then reset the DB once before starting measured runs.
