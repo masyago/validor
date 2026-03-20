@@ -34,30 +34,35 @@ This document outlines metrics and methodology for benchmarking.
     * checksum (hash)
 * Experimental controls:
     * The same fixed set of files used for the measurements.
-    * Consistency of system: docker image, warm up before measurements, database
-      reset between measurements
+    * Consistency of system: fixed Python env (deps), warm up before measurements, database
+      reset between measurements.
     * Correctness checks
 * Run protocol:
-  * Build images once per code version and keep them fixed during that measurement phase.
-    * For the entire “before” phase (one git SHA): build images once, then do 
-      NOT rebuild while collecting “before” data.
-      * Run command  `docker compose up --build -d` once at the beginning of “before”
-        measurements.
-    * For the “after” phase (different git SHA): rebuild once again, then keep fixed during “after”.
-    * Start the stack in a consistent mode (no auto-reload/dev tooling) and ensure no other load generators are running.
-    * Confirm migrations have completed and the API is ready to accept requests.
+  * Benchmark runtime mode: run the API locally, run Postgres in Docker.
+    * Why: avoids containerizing the API just for benchmarking, and ensures the results CSV is written to  host filesystem.
+    * Consistency: use a fixed git SHA + fixed dependency lockfile (`uv.lock`) for the full “before” phase, then repeat on a different SHA for “after”.
+      * At the start of each phase, run `uv sync --frozen` once and do not change dependencies during measurements.
+  * Start services (local API + docker DB):
+    * Start Postgres:
+      * `docker compose up -d db`
+    * Run migrations (locally, against the docker DB):
+      * `DATABASE_URL=postgresql+psycopg://postgres:postgres@localhost:5432/cla uv run alembic upgrade head`
+    * Start API (locally) in a consistent mode:
+      * `DATABASE_URL=postgresql+psycopg://postgres:postgres@localhost:5432/cla CLA_QUERY_METRICS=1 CLA_BENCHMARK_RESULTS_CSV=metrics/benchmark_results.csv uv run uvicorn app.main:app --host 0.0.0.0 --port 8000`
+    * Ensure no other load generators are running.
     * Record run metadata: git commit SHA, timestamp, dataset name (small/medium/large), and API base URL.
-        * record manually? need to create a google sheet for that
   * Definition: what counts as “one measured run”
     * For small/medium/large: one ingestion of that dataset into a fresh DB, measured end-to-end (upload accepted → processing terminal status).
     * For “50 small CSVs”: one run = ingest 50 distinct small CSVs into a fresh DB, then wait until all 50 reach terminal status.
   * Reset DB to a known baseline before each measured run (recommended for clean comparisons).
     * Why: DB size/state affects performance; also, re-uploading the exact same `(instrument_id, run_id)` is idempotent and will return 200 duplicate (no re-processing), so you need fresh DB.
     * Reset commands (volume + migrations):
+      * Stop the local API (Ctrl+C) to avoid pooled-connection weirdness during DB recreation.
       * `docker compose down -v`
       * `docker compose up -d db`
-      * `docker compose run --rm migrate`
-      * `docker compose up -d api`
+      * `DATABASE_URL=postgresql+psycopg://postgres:postgres@localhost:5432/cla uv run alembic upgrade head`
+      * Restart the local API:
+        * `DATABASE_URL=postgresql+psycopg://postgres:postgres@localhost:5432/cla CLA_QUERY_METRICS=1 CLA_BENCHMARK_RESULTS_CSV=metrics/benchmark_results.csv uv run uvicorn app.main:app --host 0.0.0.0 --port 8000`
   * Warmup (cache/JIT priming):
     * Use a dedicated warmup CSV
     * To keep measured runs on a clean DB, do warmup immediately after bringing the stack up, then reset the DB once before starting measured runs.
@@ -67,7 +72,7 @@ This document outlines metrics and methodology for benchmarking.
         * reset DB
         * run CSV file once
         * record metrics
-  * Between measured runs, do not change code, images, Compose settings, or host conditions.
+  * Between measured runs, do not change code, dependency versions (`uv.lock`), DB container image version, or host conditions.
     * Between dataset sizes (small, medium, large, 50x small), make sure to reset DB
     * Capture outputs for every run: wall-clock end-to-end latency, total SQL query count, total DB time, and query fingerprints (top statements by total time/count).
         * Need to be specific how it's implemented
@@ -79,7 +84,7 @@ This document outlines metrics and methodology for benchmarking.
       * If you want to stop the stack and free disk / guarantee no state carries over: run `docker compose down -v`.
         * This deletes the Postgres volume (all DB data).
       * If you want to stop the stack but keep the DB volume around temporarily: run `docker compose down` (without `-v`).
-      * Then switch to the “after” git SHA, rebuild once (`docker compose up --build -d`), and repeat the same protocol.
+      * Then switch to the “after” git SHA, run `uv sync --frozen` once, and repeat the same protocol.
     * After completing “before” measurements, apply the optimization(s) and rerun the exact same protocol for “after” measurements.
 * Correctness checks for every measured run:
         * ingestion status is "COMPLETED"
@@ -115,6 +120,7 @@ file (stable columns; includes query totals + top fingerprints).
 
 Set these environment variables when running the API:
 
+* `DATABASE_URL=postgresql+psycopg://postgres:postgres@localhost:5432/cla` — required when running the API locally against the dockerized DB.
 * `CLA_QUERY_METRICS=1` — enables query totals + fingerprint aggregation.
 * `CLA_BENCHMARK_RESULTS_CSV=metrics/benchmark_results.csv` — appends one CSV row per processed ingestion.
 * Optional: `CLA_GIT_SHA=$(git rev-parse HEAD)` — recorded into the results CSV.
