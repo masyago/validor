@@ -270,7 +270,7 @@ def test_413_content_too_large(client, valid_form_data, valid_csv_file):
         "/ingestions",
         data=valid_form_data,
         files=valid_csv_file,
-        headers={"Content-Length": "3000000"},  # 3 MB > 1 MB limit
+        headers={"Content-Length": "11000000"},  # 11 MB > 10 MB limit
     )
 
     response_data = response.json()
@@ -278,7 +278,7 @@ def test_413_content_too_large(client, valid_form_data, valid_csv_file):
     assert response.status_code == 413
     assert response_data["detail"]["code"] == "PAYLOAD_TOO_LARGE"
     assert "exceeds" in response_data["detail"]["message"].lower()
-    assert response_data["detail"]["max_bytes"] == 1000000
+    assert response_data["detail"]["max_bytes"] == 10000000
 
 
 """

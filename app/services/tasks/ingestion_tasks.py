@@ -1,6 +1,8 @@
 from __future__ import annotations
 
 import logging
+import os
+import time
 from uuid import UUID
 from datetime import datetime, timedelta, timezone
 
@@ -9,7 +11,7 @@ from sqlalchemy.orm import Session
 
 from app.core.ingestion_status_enums import IngestionStatus
 from app.persistence.db import engine
-from app.persistence.models.core import Ingestion
+from app.persistence.models.core import Ingestion, RawData
 from app.persistence.models.provenance import (
     ProcessingEvent,
     ProcessingEventType,
@@ -19,6 +21,13 @@ from app.services.ingestion_service import IngestionService
 
 
 logger = logging.getLogger("uvicorn.error")
+
+
+def _bool_env(name: str, default: bool = False) -> bool:
+    raw = os.getenv(name)
+    if raw is None:
+        return default
+    return raw.strip().lower() in {"1", "true", "t", "yes", "y", "on"}
 
 
 def process_ingestion_task(ingestion_id: UUID) -> None:
@@ -31,7 +40,9 @@ def process_ingestion_task(ingestion_id: UUID) -> None:
     )
     session = Session(engine)
     try:
-        ingestion = IngestionRepository(session).get_by_ingestion_id(ingestion_id)
+        ingestion = IngestionRepository(session).get_by_ingestion_id(
+            ingestion_id
+        )
         if ingestion is None:
             logger.error(
                 "process_ingestion_task cannot see ingestion row",
@@ -43,8 +54,128 @@ def process_ingestion_task(ingestion_id: UUID) -> None:
             return
 
         svc = IngestionService(session)
-        svc.process_ingestion(ingestion_id)
-        session.commit()
+
+        def _raw_content_size_bytes() -> int | None:
+            return session.execute(
+                select(RawData.content_size_bytes).where(
+                    RawData.ingestion_id == ingestion_id
+                )
+            ).scalar_one_or_none()
+
+        def _append_benchmark_row_if_enabled(
+            *,
+            measured_at_utc: datetime,
+            wall_time_s: float | None,
+            sql_query_count: int | None,
+            sql_total_db_time_s: float | None,
+            sql_top_by_total_time,
+            sql_top_by_count,
+        ) -> None:
+            csv_path = os.getenv("CLA_BENCHMARK_RESULTS_CSV")
+            if not csv_path:
+                return
+
+            try:
+                from app.metrics.benchmark_csv_reporter import (
+                    append_benchmark_row,
+                )
+
+                api_base_url = os.getenv("CLA_API_BASE_URL")
+                dataset = os.getenv("CLA_BENCHMARK_DATASET")
+                git_sha = os.getenv("CLA_GIT_SHA") or os.getenv("GIT_SHA")
+
+                api_received_at = getattr(ingestion, "api_received_at", None)
+                end_to_end_s = (
+                    None
+                    if api_received_at is None
+                    else (measured_at_utc - api_received_at).total_seconds()
+                )
+
+                append_benchmark_row(
+                    csv_path=csv_path,
+                    measured_at=measured_at_utc,
+                    git_sha=git_sha,
+                    api_base_url=api_base_url,
+                    dataset=dataset,
+                    source_filename=getattr(
+                        ingestion, "source_filename", None
+                    ),
+                    ingestion_id=str(ingestion_id),
+                    instrument_id=getattr(ingestion, "instrument_id", None),
+                    run_id=getattr(ingestion, "run_id", None),
+                    uploader_id=getattr(ingestion, "uploader_id", None),
+                    spec_version=getattr(ingestion, "spec_version", None),
+                    status=getattr(ingestion, "status", None),
+                    idempotency_disposition=getattr(
+                        ingestion, "ingestion_idempotency_disposition", None
+                    ),
+                    error_code=getattr(ingestion, "error_code", None),
+                    content_size_bytes=_raw_content_size_bytes(),
+                    server_sha256=getattr(ingestion, "server_sha256", None),
+                    submitted_sha256=getattr(
+                        ingestion, "submitted_sha256", None
+                    ),
+                    uploader_received_at=getattr(
+                        ingestion, "uploader_received_at", None
+                    ),
+                    api_received_at=api_received_at,
+                    end_to_end_s=end_to_end_s,
+                    wall_time_s=wall_time_s,
+                    sql_query_count=sql_query_count,
+                    sql_total_db_time_s=sql_total_db_time_s,
+                    sql_top_by_total_time=sql_top_by_total_time,
+                    sql_top_by_count=sql_top_by_count,
+                )
+            except Exception:
+                logger.exception(
+                    "benchmark_results_csv_append_failed",
+                    extra={"ingestion_id": str(ingestion_id)},
+                )
+
+        if _bool_env("CLA_QUERY_METRICS", False):
+            from app.metrics.sqlalchemy_query_metrics import collect_queries
+
+            wall_start = time.perf_counter()
+            with collect_queries() as qc:
+                svc.process_ingestion(ingestion_id)
+                session.commit()
+            wall_s = time.perf_counter() - wall_start
+
+            measured_at_utc = datetime.now(timezone.utc)
+
+            _append_benchmark_row_if_enabled(
+                measured_at_utc=measured_at_utc,
+                wall_time_s=wall_s,
+                sql_query_count=qc.query_count,
+                sql_total_db_time_s=qc.total_db_time_s,
+                sql_top_by_total_time=qc.top_by_total_time(10),
+                sql_top_by_count=qc.top_by_count(10),
+            )
+
+            logger.info(
+                "query_metrics",
+                extra={
+                    "ingestion_id": str(ingestion_id),
+                    "wall_time_s": wall_s,
+                    "sql_query_count": qc.query_count,
+                    "sql_total_db_time_s": qc.total_db_time_s,
+                    "sql_top_by_total_time": qc.top_by_total_time(10),
+                    "sql_top_by_count": qc.top_by_count(10),
+                },
+            )
+        else:
+            svc.process_ingestion(ingestion_id)
+            session.commit()
+
+            measured_at_utc = datetime.now(timezone.utc)
+            _append_benchmark_row_if_enabled(
+                measured_at_utc=measured_at_utc,
+                wall_time_s=None,
+                sql_query_count=None,
+                sql_total_db_time_s=None,
+                sql_top_by_total_time=None,
+                sql_top_by_count=None,
+            )
         logger.info(
             "process_ingestion_task finished",
             extra={"ingestion_id": str(ingestion_id)},

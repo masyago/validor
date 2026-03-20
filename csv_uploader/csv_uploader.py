@@ -34,8 +34,17 @@ def _parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
         description=(
             "Watch a folder for analyzer CSVs and upload them to the ingestion API. "
-            "Supports a one-shot mode for benchmarks."
+            "Supports one-shot and single-file modes for benchmarks."
         )
+    )
+    parser.add_argument(
+        "--file",
+        action="append",
+        default=None,
+        help=(
+            "Upload a specific CSV file path. Can be provided multiple times. "
+            "If set, the uploader will process only these file(s) once and exit."
+        ),
     )
     parser.add_argument(
         "--once",
@@ -124,7 +133,7 @@ def process_file(
     debug_request: bool,
     keep_files: bool,
 ) -> None:
-    """Processes a single CSV file: computes hash, uploads, and moves it."""
+    """Processes a single CSV file: computes hash, uploads, and optionally moves it."""
     print(f"Processing {csv_path.name}...")
 
     # Ensure file is stable
@@ -209,9 +218,12 @@ def process_file(
                 except RequestException as e:
                     # Non-connection related requests failures are treated as failures.
                     print(f"Request failed: {e}")
-                    failed_dir.mkdir(parents=True, exist_ok=True)
-                    csv_path.rename(failed_dir / csv_path.name)
-                    print(f"Moved to {failed_dir}")
+                    if keep_files:
+                        print("Keeping file in place (--keep-files).")
+                    else:
+                        failed_dir.mkdir(parents=True, exist_ok=True)
+                        csv_path.rename(failed_dir / csv_path.name)
+                        print(f"Moved to {failed_dir}")
                     return
 
         assert response is not None
@@ -257,6 +269,31 @@ def main() -> None:
 
         # Reuse connections across many uploads (important for batch benchmarks)
         session = requests.Session()
+
+        if args.file:
+            csv_files = [Path(p) for p in args.file]
+            missing = [str(p) for p in csv_files if not p.exists()]
+            if missing:
+                raise FileNotFoundError(
+                    "CSV file(s) not found: " + ", ".join(missing)
+                )
+
+            # Process explicit files once, then exit.
+            for csv_path in sorted(csv_files, key=lambda p: p.name):
+                process_file(
+                    csv_path=csv_path,
+                    config=config,
+                    session=session,
+                    processed_dir=processed_dir,
+                    failed_dir=failed_dir,
+                    stability_delay_seconds=args.stability_delay_seconds,
+                    request_timeout_seconds=args.timeout_seconds,
+                    max_upload_retries=args.max_upload_retries,
+                    retry_backoff_seconds=args.retry_backoff_seconds,
+                    debug_request=args.debug_request,
+                    keep_files=args.keep_files,
+                )
+            return
 
         print(f"Watching for new CSV files in {watch_dir}...")
 

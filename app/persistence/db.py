@@ -23,3 +23,10 @@ _default_echo = os.getenv("ENV") != "testing"
 engine = create_engine(
     DATABASE_URL, echo=_bool_env("SQLALCHEMY_ECHO", _default_echo)
 )
+
+# Optional query metrics (totals + fingerprints) for benchmark runs.
+# Enable with: CLA_QUERY_METRICS=1
+if _bool_env("CLA_QUERY_METRICS", False):
+    from app.metrics.sqlalchemy_query_metrics import install_listeners
+
+    install_listeners(engine)
