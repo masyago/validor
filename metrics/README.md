@@ -27,7 +27,9 @@ This document outlines metrics and methodology for benchmarking.
     - small: 108 rows (6 batches of 18 analytes)
     - medium: 1080 rows (60 batches of 18 analytes)
     - large: 10800 rows (600 batches of 18 analytes)
-    - set of 50 small CSVs: 50x108 rows
+    - set of 50 small CSVs: 50x108 rows. Note: 49 files have exactly 108 rows,
+      1 file has only 36 rows. Keeping the set stable for "before" and "after"
+      measurements.
 * Data provenance for the benchmark CSVs: - maybe set the files to read-only mode
     * file name
     * number of rows and batches
@@ -47,6 +49,7 @@ This document outlines metrics and methodology for benchmarking.
       * `docker compose up -d db`
     * Run migrations (locally, against the docker DB):
       * `DATABASE_URL=postgresql+psycopg://postgres:postgres@localhost:5432/cla uv run alembic upgrade head`
+    * Make sure tables were migrated: `docker compose exec -T db psql -U postgres -d cla -c "\\dt"`
     * Start API (locally) in a consistent mode:
       * `DATABASE_URL=postgresql+psycopg://postgres:postgres@localhost:5432/cla CLA_QUERY_METRICS=1 CLA_BENCHMARK_RESULTS_CSV=metrics/benchmark_results.csv uv run uvicorn app.main:app --host 0.0.0.0 --port 8000`
     * Ensure no other load generators are running.
@@ -61,6 +64,7 @@ This document outlines metrics and methodology for benchmarking.
       * `docker compose down -v` (deletes the `db-data` volume; all Postgres data is wiped)
       * `docker compose up -d db`
       * `DATABASE_URL=postgresql+psycopg://postgres:postgres@localhost:5432/cla uv run alembic upgrade head`
+      * Make sure tables were migrated: `docker compose exec -T db psql -U postgres -d cla -c "\\dt"`
       * Restart the local API:
         * `DATABASE_URL=postgresql+psycopg://postgres:postgres@localhost:5432/cla CLA_QUERY_METRICS=1 CLA_BENCHMARK_RESULTS_CSV=metrics/benchmark_results.csv uv run uvicorn app.main:app --host 0.0.0.0 --port 8000`
     * If you still get “already submitted” after a reset, you are almost certainly not talking to the DB you think you are.
