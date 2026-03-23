@@ -50,8 +50,11 @@ This document outlines metrics and methodology for benchmarking.
     * Run migrations (locally, against the docker DB):
       * `DATABASE_URL=postgresql+psycopg://postgres:postgres@localhost:5432/cla uv run alembic upgrade head`
     * Make sure tables were migrated: `docker compose exec -T db psql -U postgres -d cla -c "\\dt"`
-    * Start API (locally) in a consistent mode:
-      * `DATABASE_URL=postgresql+psycopg://postgres:postgres@localhost:5432/cla CLA_QUERY_METRICS=1 CLA_BENCHMARK_RESULTS_CSV=metrics/benchmark_results.csv uv run uvicorn app.main:app --host 0.0.0.0 --port 8000`
+    * Start API (locally) in a consistent mode.Include dataset type:
+        * small: `DATABASE_URL=postgresql+psycopg://postgres:postgres@localhost:5432/cla CLA_QUERY_METRICS=1 CLA_BENCHMARK_RESULTS_CSV=metrics/benchmark_results.csv CLA_BENCHMARK_DATASET=small uv run uvicorn app.main:app --host 0.0.0.0 --port 8000`
+          * medium: `DATABASE_URL=postgresql+psycopg://postgres:postgres@localhost:5432/cla CLA_QUERY_METRICS=1 CLA_BENCHMARK_RESULTS_CSV=metrics/benchmark_results.csv CLA_BENCHMARK_DATASET=medium uv run uvicorn app.main:app --host 0.0.0.0 --port 8000`
+          * large: `DATABASE_URL=postgresql+psycopg://postgres:postgres@localhost:5432/cla CLA_QUERY_METRICS=1 CLA_BENCHMARK_RESULTS_CSV=metrics/benchmark_results.csv CLA_BENCHMARK_DATASET=large uv run uvicorn app.main:app --host 0.0.0.0 --port 8000`
+          * set of 50: `DATABASE_URL=postgresql+psycopg://postgres:postgres@localhost:5432/cla CLA_QUERY_METRICS=1 CLA_BENCHMARK_RESULTS_CSV=metrics/benchmark_results.csv CLA_BENCHMARK_DATASET=set_of_50 uv run uvicorn app.main:app --host 0.0.0.0 --port 8000`
     * Ensure no other load generators are running.
     * Record run metadata: git commit SHA, timestamp, dataset name (small/medium/large), and API base URL.
   * Definition: what counts as “one measured run”
