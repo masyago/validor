@@ -29,7 +29,7 @@ from app.schemas.ingestion import (
 
 from app.schemas.identifiers import PatientId
 
-from datetime import datetime
+from datetime import datetime, timezone
 from uuid import UUID, uuid4
 from app.core.ingestion_status_enums import IngestionStatus
 import hashlib
@@ -214,7 +214,7 @@ async def create_ingestion(
 
     # Create new records
     new_ingestion_id = uuid4()
-    new_ingestion_api_received_at = datetime.now()
+    new_ingestion_api_received_at = datetime.now(timezone.utc)
 
     # Create and add Ingestion and RawData objects
     new_ingestion_record = Ingestion(
