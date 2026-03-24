@@ -837,13 +837,27 @@ class NormalizationJob:
 
         panels = self.panel_repo.get_by_ingestion_id(ingestion_id)
 
-        for panel in panels:
-            tests = self.test_repo.get_by_panel_id(panel.panel_id)
-            test_ids = [test.test_id for test in tests]
+        # Prefetch relational rows in (roughly) one query per table for this ingestion.
+        # This avoids N+1 SELECT patterns when building JSON resources.
+        panel_ids = [panel.panel_id for panel in panels]
 
-            # Fetch all observations for the panel in one query.
-            obs_rows = self.obs_repo.get_by_test_id_list(test_ids)
-            obs_by_test_id = {ob.test_id: ob for ob in obs_rows}
+        tests_all = self.test_repo.get_by_panel_ids(panel_ids)
+        tests_by_panel_id: dict[uuid.UUID, list[Test]] = {}
+        for test in tests_all:
+            tests_by_panel_id.setdefault(test.panel_id, []).append(test)
+
+        dr_all = self.dr_repo.get_by_ingestion_id(ingestion_id)
+        dr_by_panel_id: dict[uuid.UUID, DiagnosticReport] = {
+            dr.panel_id: dr for dr in dr_all
+        }
+
+        obs_all = self.obs_repo.get_by_ingestion_id(ingestion_id)
+        obs_by_test_id: dict[uuid.UUID, Observation] = {
+            ob.test_id: ob for ob in obs_all
+        }
+
+        for panel in panels:
+            tests = tests_by_panel_id.get(panel.panel_id, [])
 
             # Record missing observation rows (stable, one failure per missing test).
             for test in tests:
@@ -859,7 +873,7 @@ class NormalizationJob:
                     )
 
             # DiagnosticReport JSON (isolated)
-            dr = self.dr_repo.get_by_panel_id(panel.panel_id)
+            dr = dr_by_panel_id.get(panel.panel_id)
             if dr is None:
                 failures.append(
                     JsonBuildFailure(

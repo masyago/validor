@@ -28,6 +28,17 @@ class TestRepository:
         )
         return list(self.session.scalars(stmt).all())
 
+    def get_by_panel_ids(self, panel_ids: list[UUID]) -> list[Test]:
+        if not panel_ids:
+            return []
+
+        stmt = (
+            select(Test)
+            .where(Test.panel_id.in_(panel_ids))
+            .order_by(Test.panel_id, Test.test_id)
+        )
+        return list(self.session.scalars(stmt).all())
+
     def create(self, test: Test) -> Test:
         self.session.add(test)
         self.session.flush()
