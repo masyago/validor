@@ -51,10 +51,7 @@ This document outlines metrics and methodology for benchmarking.
       * `DATABASE_URL=postgresql+psycopg://postgres:postgres@localhost:5432/cla uv run alembic upgrade head`
     * Make sure tables were migrated: `docker compose exec -T db psql -U postgres -d cla -c "\\dt"`
     * Start API (locally) in a consistent mode.Include dataset type:
-        * small: `DATABASE_URL=postgresql+psycopg://postgres:postgres@localhost:5432/cla CLA_QUERY_METRICS=1 CLA_BENCHMARK_RESULTS_CSV=metrics/benchmark_results.csv CLA_BENCHMARK_DATASET=small uv run uvicorn app.main:app --host 0.0.0.0 --port 8000`
-          * medium: `DATABASE_URL=postgresql+psycopg://postgres:postgres@localhost:5432/cla CLA_QUERY_METRICS=1 CLA_BENCHMARK_RESULTS_CSV=metrics/benchmark_results.csv CLA_BENCHMARK_DATASET=medium uv run uvicorn app.main:app --host 0.0.0.0 --port 8000`
-          * large: `DATABASE_URL=postgresql+psycopg://postgres:postgres@localhost:5432/cla CLA_QUERY_METRICS=1 CLA_BENCHMARK_RESULTS_CSV=metrics/benchmark_results.csv CLA_BENCHMARK_DATASET=large uv run uvicorn app.main:app --host 0.0.0.0 --port 8000`
-          * set of 50: `DATABASE_URL=postgresql+psycopg://postgres:postgres@localhost:5432/cla CLA_QUERY_METRICS=1 CLA_BENCHMARK_RESULTS_CSV=metrics/benchmark_results.csv CLA_BENCHMARK_DATASET=set_of_50 uv run uvicorn app.main:app --host 0.0.0.0 --port 8000`
+        * `DATABASE_URL=postgresql+psycopg://postgres:postgres@localhost:5432/cla CLA_QUERY_METRICS=1 CLA_BENCHMARK_RESULTS_CSV=metrics/benchmark_results.csv uv run uvicorn app.main:app --host 0.0.0.0 --port 8000`
     * Ensure no other load generators are running.
     * Record run metadata: git commit SHA, timestamp, dataset name (small/medium/large), and API base URL.
   * Definition: what counts as “one measured run”
@@ -70,6 +67,12 @@ This document outlines metrics and methodology for benchmarking.
       * Make sure tables were migrated: `docker compose exec -T db psql -U postgres -d cla -c "\\dt"`
       * Restart the local API:
         * `DATABASE_URL=postgresql+psycopg://postgres:postgres@localhost:5432/cla CLA_QUERY_METRICS=1 CLA_BENCHMARK_RESULTS_CSV=metrics/benchmark_results.csv uv run uvicorn app.main:app --host 0.0.0.0 --port 8000`
+        Include dataset type:
+        * small: `DATABASE_URL=postgresql+psycopg://postgres:postgres@localhost:5432/cla CLA_QUERY_METRICS=1 CLA_BENCHMARK_RESULTS_CSV=metrics/benchmark_results.csv CLA_BENCHMARK_DATASET=small uv run uvicorn app.main:app --host 0.0.0.0 --port 8000`
+          * medium: `DATABASE_URL=postgresql+psycopg://postgres:postgres@localhost:5432/cla CLA_QUERY_METRICS=1 CLA_BENCHMARK_RESULTS_CSV=metrics/benchmark_results.csv CLA_BENCHMARK_DATASET=medium uv run uvicorn app.main:app --host 0.0.0.0 --port 8000`
+          * large: `DATABASE_URL=postgresql+psycopg://postgres:postgres@localhost:5432/cla CLA_QUERY_METRICS=1 CLA_BENCHMARK_RESULTS_CSV=metrics/benchmark_results.csv CLA_BENCHMARK_DATASET=large uv run uvicorn app.main:app --host 0.0.0.0 --port 8000`
+          * set of 50: `DATABASE_URL=postgresql+psycopg://postgres:postgres@localhost:5432/cla CLA_QUERY_METRICS=1 CLA_BENCHMARK_RESULTS_CSV=metrics/benchmark_results.csv CLA_BENCHMARK_DATASET=set_of_50 uv run uvicorn app.main:app --host 0.0.0.0 --port 8000`
+    * Ensure no other load generators are running.
     * If you still get “already submitted” after a reset, you are almost certainly not talking to the DB you think you are.
       * Confirm you ran `docker compose down -v` from the repo root (same Compose project).
       * Confirm no other Postgres is listening on `localhost:5432` (e.g., a local/Homebrew Postgres). If one is, either stop it for the benchmark window or change Docker’s published port (e.g., `5433:5432`) and use that in `DATABASE_URL`.
@@ -99,7 +102,13 @@ This document outlines metrics and methodology for benchmarking.
     * After completing “before” measurements, apply the optimization(s) and rerun the exact same protocol for “after” measurements.
 * Correctness checks for every measured run:
         * ingestion status is "COMPLETED"
-        * diagnostic_report and observation counts match expected counts
+        * diagnostic_report and observation counts match expected counts. Commands:
+          * Diagnostic reports count: `docker compose exec -T db psql -U postgres -d cla -c "select count(*) from diagnostic_report;"`
+          * Observation count: `docker compose exec -T db psql -U postgres -d cla -c "select count(*) as observation_count from observation;"`
+          * Expected counts:
+            * small: DR - 18, Obs - 108
+            * medium: DR - 180, Obs - 1080
+            * large: DR - 1800, Obs - 10800
         * no unexpected validation failures
 * Data recorded:
     * number of executed queries
