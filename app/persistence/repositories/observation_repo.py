@@ -43,6 +43,14 @@ class ObservationRepository:
         stmt = select(Observation).where(Observation.test_id == test_id)
         return self.session.scalars(stmt).one_or_none()
 
+    def get_by_test_id_list(
+        self, test_ids: list[UUID]
+    ) -> list[Observation]:
+        if not test_ids:
+            return []
+        stmt = select(Observation).where(Observation.test_id.in_(test_ids))
+        return list(self.session.scalars(stmt).all())
+
     # Returns zero or multiple rows. If zero rows, returns an empty list
     def get_by_ingestion_id(self, ingestion_id: UUID) -> list[Observation]:
         stmt = (

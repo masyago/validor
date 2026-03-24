@@ -39,6 +39,17 @@ This document outlines metrics and methodology for benchmarking.
     * Consistency of system: fixed Python env (deps), warm up before measurements, database
       reset between measurements.
     * Correctness checks
+* Quick protocol (see details in 'Run protocol'):
+  * Commit all changes and lock dependencies
+  * Start services and run a warm up file
+  * Reset DB
+  * Run each fixed CSV file 5 times. For each run replicate:
+    * Post the file to API via uploader
+    * Copy `ingestion_id` from API response
+    * Perform correctness checks: no erorrs, status "COMPLETED" for the ingestion_id`,
+      number of DiagnosticReports and Observation rows in DB match expected
+    * Reset DB and restart services
+    
 * Run protocol:
   * Benchmark runtime mode: run the API locally, run Postgres in Docker.
     * Why: avoids containerizing the API just for benchmarking, and ensures the results CSV is written to  host filesystem.

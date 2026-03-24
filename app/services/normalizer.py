@@ -255,8 +255,6 @@ class ObservationNormalization:
                     ):
                         discrepancy = "analyzer and system flag mismatch"
 
-        # TODO: If provided and computed flags differ, add a note to processing_event
-
         payload: dict[str, Any] = {
             "test_id": test_id,
             "ingestion_id": ingestion_id,
@@ -834,12 +832,32 @@ class NormalizationJob:
         self, ingestion_id: uuid.UUID
     ) -> tuple[list[JsonBuildFailure], Phase2Summary]:
         failures: list[JsonBuildFailure] = []
-        panels = self.panel_repo.get_by_ingestion_id(ingestion_id)
-
         dr_json_written = 0
         ob_json_written = 0
 
+        panels = self.panel_repo.get_by_ingestion_id(ingestion_id)
+
         for panel in panels:
+            tests = self.test_repo.get_by_panel_id(panel.panel_id)
+            test_ids = [test.test_id for test in tests]
+
+            # Fetch all observations for the panel in one query.
+            obs_rows = self.obs_repo.get_by_test_id_list(test_ids)
+            obs_by_test_id = {ob.test_id: ob for ob in obs_rows}
+
+            # Record missing observation rows (stable, one failure per missing test).
+            for test in tests:
+                if test.test_id not in obs_by_test_id:
+                    failures.append(
+                        JsonBuildFailure(
+                            resource_type="Observation",
+                            resource_id="",
+                            panel_id=str(panel.panel_id),
+                            message=f"missing Observation for test_id={test.test_id}",
+                            type="MissingRow",
+                        )
+                    )
+
             # DiagnosticReport JSON (isolated)
             dr = self.dr_repo.get_by_panel_id(panel.panel_id)
             if dr is None:
@@ -855,12 +873,11 @@ class NormalizationJob:
             else:
                 try:
                     # Build list of Observation instances for DR serializer
-                    tests = self.test_repo.get_by_panel_id(panel.panel_id)
-                    ob_list: list[Observation] = []
-                    for test in tests:
-                        ob = self.obs_repo.get_by_test_id(test.test_id)
-                        if ob is not None:
-                            ob_list.append(ob)
+                    ob_list = [
+                        obs_by_test_id[t.test_id]
+                        for t in tests
+                        if t.test_id in obs_by_test_id
+                    ]
 
                     with self.session.begin_nested():  # SAVEPOINT
                         dr_json_dict = self.serializer.make_diagnostic_report(
@@ -882,24 +899,10 @@ class NormalizationJob:
                     )
 
             # Observation JSON (isolated per Observation)
-            tests = self.test_repo.get_by_panel_id(panel.panel_id)
-            observations: list[Observation] = []
             for test in tests:
-                ob = self.obs_repo.get_by_test_id(test.test_id)
+                ob = obs_by_test_id.get(test.test_id)
                 if ob is None:
-                    failures.append(
-                        JsonBuildFailure(
-                            resource_type="Observation",
-                            resource_id="",
-                            panel_id=str(panel.panel_id),
-                            message=f"missing Observation for test_id={test.test_id}",
-                            type="MissingRow",
-                        )
-                    )
                     continue
-                observations.append(ob)
-
-            for ob in observations:
                 try:
                     with self.session.begin_nested():
                         ob_json = self.serializer.make_observation(ob)

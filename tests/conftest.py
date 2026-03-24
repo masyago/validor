@@ -2,10 +2,14 @@ import pytest
 import io
 from datetime import datetime
 import hashlib
+import os
 from sqlalchemy import create_engine
 from sqlalchemy.orm import Session
 
-TEST_DATABASE_URL = "postgresql+psycopg://localhost:5432/test_cla"
+TEST_DATABASE_URL = os.getenv(
+    "TEST_DATABASE_URL",
+    "postgresql+psycopg://postgres:postgres@localhost:5432/test_cla",
+)
 
 
 @pytest.fixture(scope="session")
@@ -32,7 +36,9 @@ def db_session(test_db):
     # Each Session transaction becomes a SAVEPOINT, so code under test can call
     # `session.commit()` without committing the outer transaction.
     # This is also compatible with application code using `session.begin_nested()`.
-    session = Session(bind=connection, join_transaction_mode="create_savepoint")
+    session = Session(
+        bind=connection, join_transaction_mode="create_savepoint"
+    )
 
     try:
         yield session
