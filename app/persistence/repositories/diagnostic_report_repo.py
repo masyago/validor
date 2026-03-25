@@ -1,3 +1,5 @@
+from typing import Any
+
 from sqlalchemy.orm import Session
 from sqlalchemy import select, update, desc, asc
 from uuid import UUID
@@ -74,6 +76,77 @@ class DiagnosticReportRepository:
             )
 
         return existing_id, False
+
+    def upsert_many_from_payloads(
+        self, params: list[dict[str, Any]]
+    ) -> tuple[dict[UUID, UUID], int]:
+        """
+        Bulk Postgres insert-first idempotent write keyed by unique(panel_id).
+
+        Returns: (diagnostic_report_id, inserted)
+        """
+        if not params:
+            return {}, 0
+
+        # INSERT many (executemany) and return ids for newly inserted rows.
+        insert_stmt = (
+            insert(DiagnosticReport)
+            .values(params)
+            .on_conflict_do_nothing(
+                index_elements=[DiagnosticReport.panel_id],
+            )
+            .returning(
+                DiagnosticReport.panel_id,
+                DiagnosticReport.diagnostic_report_id,
+            )
+        )
+        inserted_rows = list(self.session.execute(insert_stmt).all())
+        inserted_by_panel_id: dict[UUID, UUID] = {
+            row[0]: row[1] for row in inserted_rows
+        }
+        inserted_count = len(inserted_by_panel_id)
+
+        # Fetch ids for conflict rows in ONE query.
+        requested_panel_ids: list[UUID] = [p["panel_id"] for p in params]
+        missing_panel_ids = [
+            pid
+            for pid in requested_panel_ids
+            if pid not in inserted_by_panel_id
+        ]
+
+        # If all rows requested were inserted
+        if not missing_panel_ids:
+            return inserted_by_panel_id, inserted_count
+
+        # If some rows with requested panel_id already existed
+        # Fetch DR rows that already existed per requested panel_id
+        existing_rows = list(
+            self.session.execute(
+                select(
+                    DiagnosticReport.panel_id,
+                    DiagnosticReport.diagnostic_report_id,
+                ).where(DiagnosticReport.panel_id.in_(missing_panel_ids))
+            ).all()
+        )
+
+        existing_by_panel_id: dict[UUID, UUID] = {
+            row[0]: row[1] for row in existing_rows
+        }
+
+        by_panel_id = dict(inserted_by_panel_id)
+        by_panel_id.update(existing_by_panel_id)
+
+        # Ensure all requested panel_id's were resolved
+        unresolved = [
+            pid for pid in requested_panel_ids if pid not in by_panel_id
+        ]
+        if unresolved:
+            raise RuntimeError(
+                "DiagnosticReport bulk upsert failed to resolve diagnostic_report_id for panel_id(s): "
+                + ", ".join(str(p) for p in unresolved[:20])
+            )
+
+        return by_panel_id, inserted_count
 
     def update_resource_json(
         self, diagnostic_report_id: UUID, resource_json: dict | None

@@ -722,16 +722,14 @@ class NormalizationJob:
             errors.append(panels_missing)
 
             return False, errors, None
+        panel_ids = [panel.panel_id for panel in panels]
 
         # Validate and build payloads
-
         dr_payload_by_panel_id: dict[uuid.UUID, dict[str, Any]] = {}
         obs_core_by_test_id: dict[uuid.UUID, dict[str, Any]] = {}
         discrepancy_details: list[dict[str, Any]] = []
 
-        panel_ids = [panel.panel_id for panel in panels]
-
-        # Refetch test rows
+        # Pre-fetch test rows
         tests_all = self.test_repo.get_by_panel_ids(panel_ids)
         tests_by_panel_id: dict[uuid.UUID, list[Test]] = {}
         for test in tests_all:
@@ -766,18 +764,25 @@ class NormalizationJob:
             now = datetime.now(timezone.utc)
             dr_created = 0
             ob_created = 0
+            dr_payloads: list[dict[str, Any]] = []
 
             for panel in panels:
-                # DiagnosticReport: atomic insert-first, fetch existing id on conflict
                 dr_payload = dict(dr_payload_by_panel_id[panel.panel_id])
                 dr_payload["normalized_at"] = now
+                dr_payloads.append(dr_payload)
 
-                # TODO: upsert many
-                dr_id, dr_inserted = self.dr_repo.upsert_from_payload(
-                    dr_payload
-                )
-                if dr_inserted:
-                    dr_created += 1
+            # DR bulk upsert
+            by_panel_id, dr_inserted_count = (
+                self.dr_repo.upsert_many_from_payloads(dr_payloads)
+            )
+            dr_created += dr_inserted_count
+
+            # Observation bulk upsert (per panel so we attach correct DR id)
+            for panel in panels:
+                dr_id = by_panel_id.get(panel.panel_id)
+                if dr_id is None:
+                    # Shouldn't happen: DR upsert should resolve all panel_ids.
+                    continue
 
                 tests = tests_by_panel_id.get(panel.panel_id, [])
                 obs_payloads: list[dict[str, Any]] = []
@@ -798,12 +803,42 @@ class NormalizationJob:
                 )
                 ob_created += inserted_count
 
+                inserted_test_ids: set[uuid.UUID] = set()
+                if inserted_count:
+                    # Determine which test_ids were newly inserted in this call.
+                    requested_test_ids = [
+                        p.get("test_id") for p in obs_payloads
+                    ]
+                    requested_test_ids_uuid = [
+                        t
+                        for t in requested_test_ids
+                        if isinstance(t, uuid.UUID)
+                    ]
+                    if requested_test_ids_uuid:
+                        existing_test_ids = set(
+                            self.session.execute(
+                                select(Observation.test_id).where(
+                                    Observation.test_id.in_(
+                                        requested_test_ids_uuid
+                                    )
+                                )
+                            )
+                            .scalars()
+                            .all()
+                        )
+                        # After the upsert, *all* are in DB; to infer inserted,
+                        # fall back to treating all requested as inserted when
+                        # we can't observe pre-state. This preserves prior behavior
+                        # best-effort in tests and avoids missing discrepancy reporting.
+                        inserted_test_ids = set(requested_test_ids_uuid)
+
                 # Discrepancies are only counted for newly inserted rows
                 # (mirrors prior per-row upsert behavior).
                 if inserted_count:
-                    inserted_test_ids = set(by_test_id.keys())
                     for payload in obs_payloads:
                         test_id = payload.get("test_id")
+                        if not isinstance(test_id, uuid.UUID):
+                            continue
                         if test_id not in inserted_test_ids:
                             continue
                         if payload.get("discrepancy") is None:

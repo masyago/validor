@@ -51,7 +51,9 @@ def test_upsert_many_from_payload_inserts_and_is_idempotent(db_session):
         run_id="RUN-1",
         uploader_id="uploader_001",
         spec_version="analyzer_csv_v1",
-        uploader_received_at=datetime(2026, 2, 15, 12, 0, 0, tzinfo=timezone.utc),
+        uploader_received_at=datetime(
+            2026, 2, 15, 12, 0, 0, tzinfo=timezone.utc
+        ),
         api_received_at=datetime(2026, 2, 15, 12, 10, 0, tzinfo=timezone.utc),
         server_sha256="0" * 64,
         status="RECEIVED",
@@ -66,7 +68,9 @@ def test_upsert_many_from_payload_inserts_and_is_idempotent(db_session):
         sample_id="SAM-1",
         patient_id="PAT-1",
         panel_code="BMP",
-        collection_timestamp=datetime(2026, 1, 28, 16, 5, 33, tzinfo=timezone.utc),
+        collection_timestamp=datetime(
+            2026, 1, 28, 16, 5, 33, tzinfo=timezone.utc
+        ),
     )
     db_session.add(panel)
     db_session.flush()
@@ -133,14 +137,14 @@ def test_upsert_many_from_payload_inserts_and_is_idempotent(db_session):
             diagnostic_report_id=dr.diagnostic_report_id,
             ingestion_id=ingestion.ingestion_id,
             patient_id=patient_id,
-                code="GLU",
+            code="GLU",
         ),
         _base_payload(
             test_id=t2.test_id,
             diagnostic_report_id=dr.diagnostic_report_id,
             ingestion_id=ingestion.ingestion_id,
             patient_id=patient_id,
-                code="BUN",
+            code="BUN",
         ),
     ]
 
@@ -155,7 +159,13 @@ def test_upsert_many_from_payload_inserts_and_is_idempotent(db_session):
     assert inserted_count_2 == 0
     assert by_test_id_2 == by_test_id_1
 
-    obs = db_session.execute(
-        select(Observation).where(Observation.ingestion_id == ingestion.ingestion_id)
-    ).scalars().all()
+    obs = (
+        db_session.execute(
+            select(Observation).where(
+                Observation.ingestion_id == ingestion.ingestion_id
+            )
+        )
+        .scalars()
+        .all()
+    )
     assert len(obs) == 2
