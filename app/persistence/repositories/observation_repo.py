@@ -1,7 +1,8 @@
 from sqlalchemy.orm import Session
-from sqlalchemy import select, update, desc, asc
+from sqlalchemy import select, update, desc, asc, bindparam
 from uuid import UUID
 from sqlalchemy.dialects.postgresql import insert
+from typing import Any
 
 from app.persistence.models.normalization import Observation
 from app.schemas.identifiers import PatientId
@@ -43,9 +44,7 @@ class ObservationRepository:
         stmt = select(Observation).where(Observation.test_id == test_id)
         return self.session.scalars(stmt).one_or_none()
 
-    def get_by_test_id_list(
-        self, test_ids: list[UUID]
-    ) -> list[Observation]:
+    def get_by_test_id_list(self, test_ids: list[UUID]) -> list[Observation]:
         if not test_ids:
             return []
         stmt = select(Observation).where(Observation.test_id.in_(test_ids))
@@ -88,7 +87,7 @@ class ObservationRepository:
         if inserted_id is not None:
             return inserted_id, True
 
-        # Conflict path: row exists, fetch its id
+        # In inserted_id in None - Conflict path: row already exists, fetch its id
         existing_id = self.session.execute(
             select(Observation.observation_id).where(
                 Observation.test_id == payload["test_id"]
@@ -103,6 +102,69 @@ class ObservationRepository:
 
         return existing_id, False
 
+    def upsert_many_from_payload(
+        self, params: list[dict[str, Any]]
+    ) -> tuple[dict[UUID, UUID], int]:
+        """
+        Bulk insert-first idempotent write keyed by unique(test_id).
+
+        Returns:
+        - by_test_id: mapping of test_id -> observation_id for ALL input rows
+          (both newly inserted and pre-existing)
+        - inserted_count: number of rows newly inserted in this call
+
+        NOTE: Does NOT overwrite resource_json (Phase 2 owns it).
+        """
+
+        if not params:
+            return {}, 0
+
+        # INSERT many (executemany) and return ids for newly inserted rows.
+        insert_stmt = (
+            insert(Observation)
+            .values(params)
+            .on_conflict_do_nothing(index_elements=[Observation.test_id])
+            .returning(Observation.test_id, Observation.observation_id)
+        )
+
+        inserted_rows = list(self.session.execute(insert_stmt).all())
+        inserted_by_test_id: dict[UUID, UUID] = {
+            row[0]: row[1] for row in inserted_rows
+        }
+        inserted_count = len(inserted_by_test_id)
+
+        # Fetch ids for conflict rows in ONE query.
+        requested_test_ids: list[UUID] = [p["test_id"] for p in params]
+        missing_test_ids = [
+            tid for tid in requested_test_ids if tid not in inserted_by_test_id
+        ]
+        if not missing_test_ids:
+            return inserted_by_test_id, inserted_count
+
+        existing_rows = list(
+            self.session.execute(
+                select(Observation.test_id, Observation.observation_id).where(
+                    Observation.test_id.in_(missing_test_ids)
+                )
+            ).all()
+        )
+        existing_by_test_id: dict[UUID, UUID] = {
+            row[0]: row[1] for row in existing_rows
+        }
+
+        by_test_id = dict(inserted_by_test_id)
+        by_test_id.update(existing_by_test_id)
+
+        # Safety: ensure all requested test_ids were resolved.
+        unresolved = [tid for tid in requested_test_ids if tid not in by_test_id]
+        if unresolved:
+            raise RuntimeError(
+                "Observation bulk upsert failed to resolve observation_id for test_id(s): "
+                + ", ".join(str(t) for t in unresolved[:20])
+            )
+
+        return by_test_id, inserted_count
+
     def update_resource_json(
         self, observation_id: UUID, resource_json: dict | None
     ):
@@ -113,6 +175,15 @@ class ObservationRepository:
             .execution_options(synchronize_session="fetch")
         )
         self.session.execute(stmt)
+
+    def update_many_resource_json(self, params: list[dict[str, Any]]):
+        stmt = (
+            update(Observation)
+            .where(Observation.observation_id == bindparam("observation_id"))
+            .values(resource_json=bindparam("resource_json"))
+            .execution_options(synchronize_session=False)
+        )
+        self.session.execute(stmt, params)
 
     def get_by_patient_id(self, patient_id: PatientId) -> list[Observation]:
         """

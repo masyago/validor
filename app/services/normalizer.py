@@ -729,6 +729,14 @@ class NormalizationJob:
         obs_core_by_test_id: dict[uuid.UUID, dict[str, Any]] = {}
         discrepancy_details: list[dict[str, Any]] = []
 
+        panel_ids = [panel.panel_id for panel in panels]
+
+        # Refetch test rows
+        tests_all = self.test_repo.get_by_panel_ids(panel_ids)
+        tests_by_panel_id: dict[uuid.UUID, list[Test]] = {}
+        for test in tests_all:
+            tests_by_panel_id.setdefault(test.panel_id, []).append(test)
+
         for panel in panels:
             dr_payload, dr_errors = (
                 self.dr_norm.build_diagnostic_report_payload(panel)
@@ -737,7 +745,7 @@ class NormalizationJob:
             if dr_payload is not None:
                 dr_payload_by_panel_id[panel.panel_id] = dr_payload
 
-            tests = self.test_repo.get_by_panel_id(panel.panel_id)
+            tests = tests_by_panel_id.get(panel.panel_id, [])
             for test in tests:
                 core_payload, obs_errors = (
                     self.obs_norm.build_observation_payload_core(
@@ -764,17 +772,18 @@ class NormalizationJob:
                 dr_payload = dict(dr_payload_by_panel_id[panel.panel_id])
                 dr_payload["normalized_at"] = now
 
+                # TODO: upsert many
                 dr_id, dr_inserted = self.dr_repo.upsert_from_payload(
                     dr_payload
                 )
                 if dr_inserted:
                     dr_created += 1
 
-                tests = self.test_repo.get_by_panel_id(panel.panel_id)
+                tests = tests_by_panel_id.get(panel.panel_id, [])
+                obs_payloads: list[dict[str, Any]] = []
                 for test in tests:
                     core = obs_core_by_test_id.get(test.test_id)
                     if core is None:
-                        # Shouldn't happen if Phase 1 validation succeeded, but keep it safe.
                         continue
 
                     obs_payload = self.obs_norm.attach_diagnostic_report_id(
@@ -782,29 +791,39 @@ class NormalizationJob:
                     )
                     obs_payload = dict(obs_payload)
                     obs_payload["normalized_at"] = now
+                    obs_payloads.append(obs_payload)
 
-                    ob_id, ob_inserted = self.obs_repo.upsert_from_payload(
-                        obs_payload
-                    )
-                    if ob_inserted:
-                        ob_created += 1
+                by_test_id, inserted_count = (
+                    self.obs_repo.upsert_many_from_payload(obs_payloads)
+                )
+                ob_created += inserted_count
 
-                        if obs_payload.get("discrepancy") is not None:
-                            discrepancy_details.append(
-                                {
-                                    "observation_id": str(ob_id),
-                                    "code": obs_payload.get("code"),
-                                    "discrepancy_text": obs_payload.get(
-                                        "discrepancy"
-                                    ),
-                                    "flag_analyzer_interpretation": obs_payload.get(
-                                        "flag_analyzer_interpretation"
-                                    ),
-                                    "flag_system_interpretation": obs_payload.get(
-                                        "flag_system_interpretation"
-                                    ),
-                                }
-                            )
+                # Discrepancies are only counted for newly inserted rows
+                # (mirrors prior per-row upsert behavior).
+                if inserted_count:
+                    inserted_test_ids = set(by_test_id.keys())
+                    for payload in obs_payloads:
+                        test_id = payload.get("test_id")
+                        if test_id not in inserted_test_ids:
+                            continue
+                        if payload.get("discrepancy") is None:
+                            continue
+                        ob_id = by_test_id.get(test_id)
+                        if ob_id is None:
+                            continue
+                        discrepancy_details.append(
+                            {
+                                "observation_id": str(ob_id),
+                                "code": payload.get("code"),
+                                "discrepancy_text": payload.get("discrepancy"),
+                                "flag_analyzer_interpretation": payload.get(
+                                    "flag_analyzer_interpretation"
+                                ),
+                                "flag_system_interpretation": payload.get(
+                                    "flag_system_interpretation"
+                                ),
+                            }
+                        )
 
             self.session.commit()
             return (
@@ -829,6 +848,17 @@ class NormalizationJob:
 
     # Phase build JSON for resources and persist the ones that don't have errors.
     def _phase2_persist_fhir_json(
+        self, ingestion_id: uuid.UUID
+    ) -> tuple[list[JsonBuildFailure], Phase2Summary]:
+        # Phase 2 intentionally does not open a new transaction via `begin()`.
+        # The runner commits Phase 1 before invoking Phase 2, and commits again
+        # after Phase 2 event emission.
+        #
+        # Within Phase 2 we use SAVEPOINTs (`begin_nested`) to isolate per-resource
+        # JSON build/persist so one bad resource doesn't abort the entire phase.
+        return self._phase2_persist_fhir_json_body(ingestion_id)
+
+    def _phase2_persist_fhir_json_body(
         self, ingestion_id: uuid.UUID
     ) -> tuple[list[JsonBuildFailure], Phase2Summary]:
         failures: list[JsonBuildFailure] = []
@@ -919,15 +949,16 @@ class NormalizationJob:
                 if ob is None:
                     continue
                 try:
-                    ob_json = self.serializer.make_observation(ob)
-                    obs_json_params.append(
-                        {
-                            "observation_id": ob.observation_id,
-                            "resource_json": ob_json,
-                        }
-                    )
+                    with self.session.begin_nested():  # SAVEPOINT
+                        ob_json = self.serializer.make_observation(ob)
+                        obs_json_params.append(
+                            {
+                                "observation_id": ob.observation_id,
+                                "resource_json": ob_json,
+                            }
+                        )
 
-                    ob_json_written += 1
+                        ob_json_written += 1
                 except Exception as e:
                     failures.append(
                         JsonBuildFailure(
@@ -942,12 +973,9 @@ class NormalizationJob:
             if obs_json_params:
                 self.obs_repo.update_many_resource_json(obs_json_params)
 
-        # Commit all successful SAVEPOINT changes together
-        try:
-            self.session.commit()
-        except Exception:
-            self.session.rollback()
-            raise
+        # Ensure JSON updates are written to the DB within the current transaction
+        # before the runner emits events / callers query in the same Session.
+        self.session.flush()
 
         return failures, Phase2Summary(
             diagnostic_reports_json_written=dr_json_written,

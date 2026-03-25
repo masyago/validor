@@ -49,7 +49,7 @@ This document outlines metrics and methodology for benchmarking.
     * Perform correctness checks: no erorrs, status "COMPLETED" for the ingestion_id`,
       number of DiagnosticReports and Observation rows in DB match expected
     * Reset DB and restart services
-    
+
 * Run protocol:
   * Benchmark runtime mode: run the API locally, run Postgres in Docker.
     * Why: avoids containerizing the API just for benchmarking, and ensures the results CSV is written to  host filesystem.
@@ -61,7 +61,7 @@ This document outlines metrics and methodology for benchmarking.
     * Run migrations (locally, against the docker DB):
       * `DATABASE_URL=postgresql+psycopg://postgres:postgres@localhost:5432/cla uv run alembic upgrade head`
     * Make sure tables were migrated: `docker compose exec -T db psql -U postgres -d cla -c "\\dt"`
-    * Start API (locally) in a consistent mode.Include dataset type:
+    * Start API (locally) in a consistent mode:
         * `DATABASE_URL=postgresql+psycopg://postgres:postgres@localhost:5432/cla CLA_QUERY_METRICS=1 CLA_BENCHMARK_RESULTS_CSV=metrics/benchmark_results.csv uv run uvicorn app.main:app --host 0.0.0.0 --port 8000`
     * Ensure no other load generators are running.
     * Record run metadata: git commit SHA, timestamp, dataset name (small/medium/large), and API base URL.

@@ -20,7 +20,18 @@ from app.persistence.models import provenance
 config = context.config
 
 # Allow runtime override of sqlalchemy.url (e.g., docker-compose).
-database_url = os.getenv("DATABASE_URL")
+#
+# Alembic supports multiple ini sections via `alembic --name <section> ...`.
+# To make test DB migrations easy, we honor both:
+# - DATABASE_URL (global override)
+# - <SECTION>_DATABASE_URL (section-specific override), e.g. TEST_DATABASE_URL
+section_name = (getattr(config, "config_ini_section", None) or "")
+section_env_var = f"{section_name.upper()}_DATABASE_URL" if section_name else None
+
+database_url = os.getenv(section_env_var) if section_env_var else None
+if not database_url:
+    database_url = os.getenv("DATABASE_URL")
+
 if database_url:
     config.set_main_option("sqlalchemy.url", database_url)
 
