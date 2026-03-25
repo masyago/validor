@@ -913,16 +913,20 @@ class NormalizationJob:
                     )
 
             # Observation JSON (isolated per Observation)
+            obs_json_params: list[dict[str, Any]] = []
             for test in tests:
                 ob = obs_by_test_id.get(test.test_id)
                 if ob is None:
                     continue
                 try:
-                    with self.session.begin_nested():
-                        ob_json = self.serializer.make_observation(ob)
-                        self.obs_repo.update_resource_json(
-                            ob.observation_id, ob_json
-                        )
+                    ob_json = self.serializer.make_observation(ob)
+                    obs_json_params.append(
+                        {
+                            "observation_id": ob.observation_id,
+                            "resource_json": ob_json,
+                        }
+                    )
+
                     ob_json_written += 1
                 except Exception as e:
                     failures.append(
@@ -934,6 +938,9 @@ class NormalizationJob:
                             type=type(e).__name__,
                         )
                     )
+
+            if obs_json_params:
+                self.obs_repo.update_many_resource_json(obs_json_params)
 
         # Commit all successful SAVEPOINT changes together
         try:
