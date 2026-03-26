@@ -2,7 +2,7 @@ from sqlalchemy.orm import Session
 from sqlalchemy import select, update, desc, asc, bindparam
 from uuid import UUID
 from sqlalchemy.dialects.postgresql import insert
-from typing import Any
+from typing import Any, cast
 
 from app.persistence.models.normalization import Observation
 from app.schemas.identifiers import PatientId
@@ -155,8 +155,10 @@ class ObservationRepository:
         by_test_id = dict(inserted_by_test_id)
         by_test_id.update(existing_by_test_id)
 
-        # Safety: ensure all requested test_ids were resolved.
-        unresolved = [tid for tid in requested_test_ids if tid not in by_test_id]
+        # Ensure all requested test_ids were resolved.
+        unresolved = [
+            tid for tid in requested_test_ids if tid not in by_test_id
+        ]
         if unresolved:
             raise RuntimeError(
                 "Observation bulk upsert failed to resolve observation_id for test_id(s): "
@@ -172,18 +174,29 @@ class ObservationRepository:
             update(Observation)
             .where(Observation.observation_id == observation_id)
             .values(resource_json=resource_json)
-            .execution_options(synchronize_session="fetch")
+            .execution_options(synchronize_session=False)
         )
         self.session.execute(stmt)
 
     def update_many_resource_json(self, params: list[dict[str, Any]]):
+        # Use Core UPDATE against the mapped table to avoid ORM bulk update
+        # planning which can trigger FK resolution errors when metadata is
+        # split across modules.
+        table = cast(Any, Observation.__table__)
         stmt = (
-            update(Observation)
-            .where(Observation.observation_id == bindparam("observation_id"))
-            .values(resource_json=bindparam("resource_json"))
-            .execution_options(synchronize_session=False)
+            update(table)
+            .where(table.c.observation_id == bindparam("b_observation_id"))
+            .values(resource_json=bindparam("b_resource_json"))
         )
-        self.session.execute(stmt, params)
+
+        mapped_params = [
+            {
+                "b_observation_id": p.get("observation_id"),
+                "b_resource_json": p.get("resource_json"),
+            }
+            for p in params
+        ]
+        self.session.execute(stmt, mapped_params)
 
     def get_by_patient_id(self, patient_id: PatientId) -> list[Observation]:
         """

@@ -28,3 +28,12 @@ class PanelRepository:
         self.session.add(panel)
         self.session.flush()
         return panel
+
+    def create_many(self, panels: list[Panel]) -> list[Panel]:
+        if not panels:
+            return []
+
+        self.session.add_all(panels)
+        # Flush once so DB defaults (panel_id) are populated.
+        self.session.flush()
+        return panels

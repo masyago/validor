@@ -43,3 +43,12 @@ class TestRepository:
         self.session.add(test)
         self.session.flush()
         return test
+
+    def create_many(self, tests: list[Test]) -> list[Test]:
+        if not tests:
+            return []
+
+        self.session.add_all(tests)
+        # Flush once for all inserts.
+        self.session.flush()
+        return tests

@@ -211,15 +211,19 @@ class IngestionService:
             return False
 
         if panel_packages is not None:
-            for panel_package in panel_packages:
-                panel = Panel(
-                    ingestion_id=ingestion_id, **panel_package.panel_payload
-                )
-                panel = self.panel_repo.create(panel)
+            panels: list[Panel] = [
+                Panel(ingestion_id=ingestion_id, **pp.panel_payload)
+                for pp in panel_packages
+            ]
+            self.panel_repo.create_many(panels)
 
+            tests: list[Test] = []
+            for panel, panel_package in zip(
+                panels, panel_packages, strict=True
+            ):
                 for test_payload in panel_package.test_payloads:
-                    test = Test(panel_id=panel.panel_id, **test_payload)
-                    self.test_repo.create(test)
+                    tests.append(Test(panel_id=panel.panel_id, **test_payload))
+            self.test_repo.create_many(tests)
 
         return True
 

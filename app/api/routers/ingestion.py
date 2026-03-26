@@ -38,6 +38,7 @@ from typing import Union, Any, Literal, cast
 
 from sqlalchemy.orm import Session
 from sqlalchemy import select
+from sqlalchemy.exc import IntegrityError
 from app.persistence.models.core import RawData, Ingestion
 from app.api.routers.dependencies import get_session
 
@@ -181,9 +182,8 @@ async def create_ingestion(
         metadata.instrument_id, metadata.run_id
     )
 
-    if existing_ingestion:  # Simulate finding record
+    if existing_ingestion:
         if existing_ingestion.server_sha256 == server_sha256_new:
-            # Set the Location header for the 200 OK response
             response.headers["Location"] = (
                 f"/v1/ingestions/{existing_ingestion.ingestion_id}"
             )
@@ -193,30 +193,31 @@ async def create_ingestion(
                 message="The run was already submitted.",
             )
 
-        else:
-            raise HTTPException(
-                status_code=status.HTTP_409_CONFLICT,
-                detail=IngestionDuplicateConflictResponse(
-                    code="RUN_ID_CONTENT_MISMATCH",
-                    retryable=False,
-                    existing_ingestion_id=str(existing_ingestion.ingestion_id),
-                    conflict_key={
-                        "instrument_id": metadata.instrument_id,
-                        "run_id": metadata.run_id,
-                    },
-                    hashes={
-                        "existing": existing_ingestion.server_sha256,
-                        "submitted": server_sha256_new,
-                    },
-                    message="""An ingestion already exists for the run (instrument_id, run_id) but server-produced hash differs.""",
-                ).model_dump(),
-            )
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail=IngestionDuplicateConflictResponse(
+                code="RUN_ID_CONTENT_MISMATCH",
+                retryable=False,
+                existing_ingestion_id=str(existing_ingestion.ingestion_id),
+                conflict_key={
+                    "instrument_id": metadata.instrument_id,
+                    "run_id": metadata.run_id,
+                },
+                hashes={
+                    "existing": existing_ingestion.server_sha256,
+                    "submitted": server_sha256_new,
+                },
+                message=(
+                    "An ingestion already exists for the run (instrument_id, run_id) "
+                    "but server-produced hash differs."
+                ),
+            ).model_dump(),
+        )
 
     # Create new records
     new_ingestion_id = uuid4()
     new_ingestion_api_received_at = datetime.now(timezone.utc)
 
-    # Create and add Ingestion and RawData objects
     new_ingestion_record = Ingestion(
         ingestion_id=new_ingestion_id,
         instrument_id=metadata.instrument_id,
@@ -239,7 +240,48 @@ async def create_ingestion(
 
     IngestionRepository(db).create(new_ingestion_record)
     RawDataRepository(db).create(new_raw_data_record)
-    db.commit()
+    try:
+        db.commit()
+    except IntegrityError:
+        # Race-safe idempotency: another request may have inserted the same
+        # (instrument_id, run_id) after our initial existence check.
+        db.rollback()
+        existing_ingestion = IngestionRepository(
+            db
+        ).get_by_instrument_id_run_id(metadata.instrument_id, metadata.run_id)
+        if existing_ingestion is None:
+            raise
+
+        if existing_ingestion.server_sha256 == server_sha256_new:
+            response.headers["Location"] = (
+                f"/v1/ingestions/{existing_ingestion.ingestion_id}"
+            )
+            response.status_code = status.HTTP_200_OK
+            return IngestionDuplicateOkResponse(
+                existing_ingestion_id=str(existing_ingestion.ingestion_id),
+                message="The run was already submitted.",
+            )
+
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail=IngestionDuplicateConflictResponse(
+                code="RUN_ID_CONTENT_MISMATCH",
+                retryable=False,
+                existing_ingestion_id=str(existing_ingestion.ingestion_id),
+                conflict_key={
+                    "instrument_id": metadata.instrument_id,
+                    "run_id": metadata.run_id,
+                },
+                hashes={
+                    "existing": existing_ingestion.server_sha256,
+                    "submitted": server_sha256_new,
+                },
+                message=(
+                    "An ingestion already exists for the run (instrument_id, run_id) "
+                    "but server-produced hash differs."
+                ),
+            ).model_dump(),
+        )
 
     # Record acceptance in processing_event for traceability.
     pe_repo = ProcessingEventRepository(db)

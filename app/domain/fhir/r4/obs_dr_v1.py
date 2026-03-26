@@ -266,7 +266,14 @@ class R4ObsDrV1Serializer:
             for ob in observations
         ]
 
-        last_updated_iso = _as_utc_iso(getattr(dr, "normalized_at"))
+        normalized_at = getattr(dr, "normalized_at", None)
+        if normalized_at is None:
+            # Phase 1/2 pipeline invariants: normalized_at should be set during
+            # Phase 1. If it's missing, treat this as a deterministic data
+            # issue so Phase 2 can mark the resource as a JSON failure.
+            raise ValueError("DiagnosticReport.normalized_at is required")
+
+        last_updated_iso = _as_utc_iso(normalized_at)
 
         model = DiagnosticReportR4(
             id=str(getattr(dr, "diagnostic_report_id")),

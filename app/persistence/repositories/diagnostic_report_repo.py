@@ -157,7 +157,9 @@ class DiagnosticReportRepository:
                 DiagnosticReport.diagnostic_report_id == diagnostic_report_id
             )
             .values(resource_json=resource_json)
-            .execution_options(synchronize_session="fetch")
+            # Avoid issuing an implicit SELECT in transaction/savepoint-heavy
+            # contexts (tests). We'll expire objects on commit anyway.
+            .execution_options(synchronize_session=False)
         )
         self.session.execute(stmt)
 

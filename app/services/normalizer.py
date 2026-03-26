@@ -11,6 +11,7 @@ from decimal import Decimal
 from dataclasses import dataclass
 from sqlalchemy.orm import Session
 from sqlalchemy.exc import SQLAlchemyError, DBAPIError, OperationalError
+from sqlalchemy import select
 
 from app.persistence.models.parsing import Panel, Test
 from app.persistence.models.normalization import DiagnosticReport, Observation
@@ -443,6 +444,8 @@ class NormalizationJob:
                     "failed_phase": "phase1",
                     "retry_attempts": attempt,
                     "max_retry_attempts": max_attempts,
+                    "exception_type": type(err).__name__,
+                    "exception_message": str(err),
                     "normalization_error_count": len(norm_errors),
                     "normalization_errors_sample": [
                         str(ne)
@@ -460,6 +463,8 @@ class NormalizationJob:
                 details={
                     "failed_phase": "phase1",
                     "retry_attempts": attempt,
+                    "exception_type": type(err).__name__,
+                    "exception_message": str(err),
                     "normalization_error_count": len(norm_errors),
                 },
             )
@@ -860,7 +865,10 @@ class NormalizationJob:
                             }
                         )
 
-            self.session.commit()
+            # IMPORTANT: Do not commit here.
+            # `NormalizationJob.run_for_ingestion_id()` owns the transaction
+            # boundaries so it can emit processing events consistently and so
+            # test harnesses using savepoints can manage isolation.
             return (
                 True,
                 [],
@@ -899,6 +907,14 @@ class NormalizationJob:
         failures: list[JsonBuildFailure] = []
         dr_json_written = 0
         ob_json_written = 0
+
+        # Phase 2 runs inside the caller's transaction scope. In tests, the
+        # session is often wrapped in a SAVEPOINT; we therefore avoid using
+        # nested savepoints here and instead handle failures by catching
+        # exceptions per resource.
+        #
+        # This keeps Phase 2 deterministic across drivers and avoids leaving
+        # nested transactions open.
 
         panels = self.panel_repo.get_by_ingestion_id(ingestion_id)
 
@@ -958,13 +974,12 @@ class NormalizationJob:
                         if t.test_id in obs_by_test_id
                     ]
 
-                    with self.session.begin_nested():  # SAVEPOINT
-                        dr_json_dict = self.serializer.make_diagnostic_report(
-                            dr, ob_list
-                        )
-                        self.dr_repo.update_resource_json(
-                            dr.diagnostic_report_id, dr_json_dict
-                        )
+                    dr_json_dict = self.serializer.make_diagnostic_report(
+                        dr, ob_list
+                    )
+                    self.dr_repo.update_resource_json(
+                        dr.diagnostic_report_id, dr_json_dict
+                    )
                     dr_json_written += 1
                 except Exception as e:
                     failures.append(
@@ -984,16 +999,15 @@ class NormalizationJob:
                 if ob is None:
                     continue
                 try:
-                    with self.session.begin_nested():  # SAVEPOINT
-                        ob_json = self.serializer.make_observation(ob)
-                        obs_json_params.append(
-                            {
-                                "observation_id": ob.observation_id,
-                                "resource_json": ob_json,
-                            }
-                        )
+                    ob_json = self.serializer.make_observation(ob)
+                    obs_json_params.append(
+                        {
+                            "observation_id": ob.observation_id,
+                            "resource_json": ob_json,
+                        }
+                    )
 
-                        ob_json_written += 1
+                    ob_json_written += 1
                 except Exception as e:
                     failures.append(
                         JsonBuildFailure(

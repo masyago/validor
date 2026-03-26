@@ -13,8 +13,11 @@ def _bool_env(name: str, default: bool) -> bool:
 
 def _default_database_url() -> str:
     if os.getenv("ENV") == "testing":
-        return "postgresql+psycopg://localhost:5432/test_cla"
-    return "postgresql+psycopg://localhost:5432/cla"
+        return os.getenv(
+            "TEST_DATABASE_URL",
+            "postgresql+psycopg://postgres:postgres@localhost:5432/test_cla",
+        )
+    return "postgresql+psycopg://postgres:postgres@localhost:5432/cla"
 
 
 DATABASE_URL = os.getenv("DATABASE_URL") or _default_database_url()

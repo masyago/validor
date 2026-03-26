@@ -113,10 +113,12 @@ This document outlines metrics and methodology for benchmarking.
     * After completing “before” measurements, apply the optimization(s) and rerun the exact same protocol for “after” measurements.
 * Correctness checks for every measured run:
         * ingestion status is "COMPLETED"
-        * diagnostic_report and observation counts match expected counts. Commands:
+        * diagnostic_report and observation counts match expected counts. Can run only resource_json commands. Commands:
           * Diagnostic reports count: `docker compose exec -T db psql -U postgres -d cla -c "select count(*) from diagnostic_report;"`
+            * not null resource_json count: `docker compose exec -T db psql -U postgres -d cla -c "select count(*) from diagnostic_report where resource_json is not null;"`
           * Observation count: `docker compose exec -T db psql -U postgres -d cla -c "select count(*) as observation_count from observation;"`
-          * Expected counts:
+            * not null resource_json count:`docker compose exec -T db psql -U postgres -d cla -c "select count(*) as observation_count from observation where resource_json is not null;"`
+          * Expected counts. JSON counts equal to corresponding DR or Obs counts:
             * small: DR - 18, Obs - 108
             * medium: DR - 180, Obs - 1080
             * large: DR - 1800, Obs - 10800
