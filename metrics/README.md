@@ -139,6 +139,7 @@ This document outlines metrics and methodology for benchmarking.
         * median, p95, min, max for latency
         * median and p95 for query count
         * percent change before vs after
+        * batch processing duration: max(measured_at_utc) - min(api_received_at_utc)
 
 
 ## Tools
@@ -163,3 +164,78 @@ Set these environment variables when running the API:
 Notes:
 * `CLA_BENCHMARK_TOP_N` controls how many “top offenders” are flattened into columns (default 5).
 * `CLA_BENCHMARK_FP_MAX_CHARS` truncates long SQL fingerprints in CSV cells (default 800).
+
+
+## Set-of-50 total time
+
+For the “set of 50 small CSVs”, the API writes one row per ingestion into `benchmark_results.csv`.
+To compute “total time to finish all 50 end-to-end” (first API accept → last completion), use:
+
+* batch start: `min(api_received_at_utc)` across the 50 ingestion rows
+* batch end: `max(measured_at_utc)` across the 50 ingestion rows
+* makespan: `batch_end - batch_start`
+
+A small helper script is provided:
+
+* `uv run python -m metrics.compute_set_of_50_makespan --csv metrics/benchmark_results.csv --dataset set_of_50`
+
+If your `benchmark_results.csv` contains many historical runs, you can compute just the latest run:
+
+* `uv run python -m metrics.compute_set_of_50_makespan --csv metrics/benchmark_results.csv --dataset set_of_50 --latest-run`
+  * Tune the gap threshold if needed: `--run-gap-seconds 300`
+
+Optional filters:
+
+* `--since 2026-03-25T00:00:00+00:00` and/or `--until ...` to narrow to a specific run window
+* `--batch-id <id>` if you recorded a batch id into the CSV
+
+
+## Commands to run for "AFTER" benchmarking
+
+Note that arguments were added to API and uploader commands.
+
+* Reset DB:
+   * `docker compose down -v`
+   * `docker compose up -d db`
+   * `DATABASE_URL=postgresql+psycopg://postgres:postgres@localhost:5432/cla uv run alembic upgrade head`
+* Start local API:
+    * warmup 
+      `DATABASE_URL=postgresql+psycopg://postgres:postgres@localhost:5432/cla CLA_QUERY_METRICS=1 CLA_MAX_INFLIGHT_INGESTIONS=12 CLA_RETRY_AFTER_SECONDS=1 CLA_BENCHMARK_RESULTS_CSV=metrics/benchmark_results.csv CLA_BENCHMARK_DATASET=warmup uv run uvicorn app.main:app --host 0.0.0.0 --port 8000`
+
+    * small files
+      `DATABASE_URL=postgresql+psycopg://postgres:postgres@localhost:5432/cla CLA_QUERY_METRICS=1 CLA_MAX_INFLIGHT_INGESTIONS=12 CLA_RETRY_AFTER_SECONDS=1 CLA_BENCHMARK_RESULTS_CSV=metrics/benchmark_results.csv CLA_BENCHMARK_DATASET=small uv run uvicorn app.main:app --host 0.0.0.0 --port 8000`
+
+    * medium files
+      `DATABASE_URL=postgresql+psycopg://postgres:postgres@localhost:5432/cla CLA_QUERY_METRICS=1 CLA_MAX_INFLIGHT_INGESTIONS=12 CLA_RETRY_AFTER_SECONDS=1 CLA_BENCHMARK_RESULTS_CSV=metrics/benchmark_results.csv CLA_BENCHMARK_DATASET=medium uv run uvicorn app.main:app --host 0.0.0.0 --port 8000`
+
+    * large files
+      `DATABASE_URL=postgresql+psycopg://postgres:postgres@localhost:5432/cla CLA_QUERY_METRICS=1 CLA_MAX_INFLIGHT_INGESTIONS=12 CLA_RETRY_AFTER_SECONDS=1 CLA_BENCHMARK_RESULTS_CSV=metrics/benchmark_results.csv CLA_BENCHMARK_DATASET=large uv run uvicorn app.main:app --host 0.0.0.0 --port 8000`
+
+    * set of 50 files
+      `DATABASE_URL=postgresql+psycopg://postgres:postgres@localhost:5432/cla CLA_QUERY_METRICS=1 CLA_BENCHMARK_RESULTS_CSV=metrics/benchmark_results.csv CLA_BENCHMARK_DATASET=set_of_50 CLA_MAX_INFLIGHT_INGESTIONS=12 CLA_RETRY_AFTER_SECONDS=1 uv run uvicorn app.main:app --host 0.0.0.0 --port 8000`
+
+* In a separate terminal run uploader. Commands per file type or a set:
+  * warmup
+  `CSV_UPLOADER_MAX_429_SLEEP_SECONDS=0.1 CSV_UPLOADER_MAX_429_RETRIES=2000 uv run python -m csv_uploader.csv_uploader --file metrics/data_raw/fixed_csv_v1/warmup.csv --keep-files --stability-delay-seconds 0 --wait-for-terminal --batch-results-csv metrics/benchmark_results.csv`
+
+  * small
+    `CSV_UPLOADER_MAX_429_SLEEP_SECONDS=0.1 CSV_UPLOADER_MAX_429_RETRIES=2000 uv run python -m csv_uploader.csv_uploader --file metrics/data_raw/fixed_csv_v1/small.csv --keep-files --stability-delay-seconds 0 --wait-for-terminal --batch-results-csv metrics/benchmark_results.csv`
+
+  * medium
+    `CSV_UPLOADER_MAX_429_SLEEP_SECONDS=0.1 CSV_UPLOADER_MAX_429_RETRIES=2000 uv run python -m csv_uploader.csv_uploader --file metrics/data_raw/fixed_csv_v1/medium.csv --keep-files --stability-delay-seconds 0 --wait-for-terminal --batch-results-csv metrics/benchmark_results.csv`
+
+  * large
+    `CSV_UPLOADER_MAX_429_SLEEP_SECONDS=0.1 CSV_UPLOADER_MAX_429_RETRIES=2000 uv run python -m csv_uploader.csv_uploader --file metrics/data_raw/fixed_csv_v1/large.csv --keep-files --stability-delay-seconds 0 --wait-for-terminal --batch-results-csv metrics/benchmark_results.csv`
+
+  * set of 50:
+    `CSV_UPLOADER_MAX_429_SLEEP_SECONDS=0.1 CSV_UPLOADER_MAX_429_RETRIES=2000 uv run python -m csv_uploader.csv_uploader --watch-dir metrics/data_raw/fixed_csv_v1/set_of_50 --once --keep-files --stability-delay-seconds 0 --wait-for-terminal --batch-results-csv metrics/benchmark_results.csv --batch-id set_of_50_01`
+
+* Perform correctness checks
+
+* For set of 50 only, calculate makespan:
+  `uv run python -m metrics.compute_set_of_50_makespan --csv metrics/benchmark_results.csv --dataset set_of_50 --latest-run`
+
+* Shut down API
+
+* Repeat 5 times for each file type or set
+

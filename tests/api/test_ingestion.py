@@ -281,6 +281,32 @@ def test_413_content_too_large(client, valid_form_data, valid_csv_file):
     assert response_data["detail"]["max_bytes"] == 10000000
 
 
+def test_429_backpressure_when_inflight_limit_reached(
+    client,
+    valid_form_data,
+    valid_csv_file,
+    db_session,
+    monkeypatch,
+):
+    # Seed one inflight ingestion (RECEIVED) so inflight count is already 1.
+    _seed_ingestion(db_session)
+
+    monkeypatch.setenv("CLA_MAX_INFLIGHT_INGESTIONS", "1")
+    monkeypatch.setenv("CLA_RETRY_AFTER_SECONDS", "2")
+
+    response = client.post(
+        "/ingestions",
+        data=valid_form_data,
+        files=valid_csv_file,
+    )
+
+    assert response.status_code == 429
+    assert response.headers.get("Retry-After") == "2"
+    payload = response.json()
+    assert payload["detail"]["code"] == "INGESTION_BACKPRESSURE"
+    assert payload["detail"]["retryable"] is True
+
+
 """
 GET endpoints testing
 """

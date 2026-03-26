@@ -124,7 +124,19 @@ def benchmark_fieldnames(*, top_n: int) -> list[str]:
             ]
         )
 
-    return base + cols
+    # NOTE: Any newly added columns must go at the END to preserve stable
+    # positions for existing per-ingestion columns in downstream tooling.
+    batch_cols = [
+        "result_kind",
+        "batch_id",
+        "batch_file_count",
+        "batch_completed_count",
+        "batch_failed_count",
+        "batch_total_wall_time_s",
+        "batch_files_per_min",
+    ]
+
+    return base + cols + batch_cols
 
 
 def append_benchmark_row(
@@ -173,6 +185,13 @@ def append_benchmark_row(
         "git_sha": git_sha or "",
         "api_base_url": api_base_url or "",
         "dataset": dataset or "",
+        "result_kind": "",
+        "batch_id": "",
+        "batch_file_count": "",
+        "batch_completed_count": "",
+        "batch_failed_count": "",
+        "batch_total_wall_time_s": "",
+        "batch_files_per_min": "",
         "source_filename": source_filename or "",
         "ingestion_id": ingestion_id,
         "instrument_id": instrument_id or "",
@@ -238,6 +257,110 @@ def append_benchmark_row(
 
     # Use a lock for safe concurrent append on Unix.
     # On platforms without fcntl (or if it fails), we still attempt a best-effort append.
+    with path.open("a+", newline="", encoding="utf-8") as f:
+        if fcntl is not None:  # pragma: no cover (covered on Unix)
+            try:
+                fcntl.flock(f.fileno(), fcntl.LOCK_EX)
+            except Exception:
+                pass
+
+        f.seek(0, os.SEEK_END)
+        need_header = f.tell() == 0
+
+        writer = csv.DictWriter(
+            f,
+            fieldnames=fieldnames,
+            extrasaction="ignore",
+        )
+        if need_header:
+            writer.writeheader()
+        writer.writerow(row)
+        f.flush()
+
+        if fcntl is not None:  # pragma: no cover
+            try:
+                fcntl.flock(f.fileno(), fcntl.LOCK_UN)
+            except Exception:
+                pass
+
+
+def append_benchmark_batch_row(
+    *,
+    csv_path: str,
+    measured_at: datetime,
+    git_sha: str | None,
+    api_base_url: str | None,
+    dataset: str | None,
+    batch_id: str,
+    batch_file_count: int,
+    batch_completed_count: int,
+    batch_failed_count: int,
+    batch_total_wall_time_s: float,
+    batch_files_per_min: float | None,
+) -> None:
+    """Append an aggregate row representing a batch run (e.g., 50-file run).
+
+    Uses the same CSV file and fieldnames as per-ingestion rows.
+    """
+
+    top_n = _int_env("CLA_BENCHMARK_TOP_N", _DEFAULT_TOP_N)
+
+    row: dict[str, Any] = {
+        "measured_at_utc": measured_at.isoformat(),
+        "git_sha": git_sha or "",
+        "api_base_url": api_base_url or "",
+        "dataset": dataset or "",
+        "result_kind": "batch",
+        "batch_id": batch_id,
+        "batch_file_count": int(batch_file_count),
+        "batch_completed_count": int(batch_completed_count),
+        "batch_failed_count": int(batch_failed_count),
+        "batch_total_wall_time_s": float(batch_total_wall_time_s),
+        "batch_files_per_min": (
+            "" if batch_files_per_min is None else float(batch_files_per_min)
+        ),
+        # Ingestion-specific fields intentionally blank.
+        "source_filename": "",
+        "ingestion_id": "",
+        "instrument_id": "",
+        "run_id": "",
+        "uploader_id": "",
+        "spec_version": "",
+        "status": "",
+        "idempotency_disposition": "",
+        "error_code": "",
+        "content_size_bytes": "",
+        "server_sha256": "",
+        "submitted_sha256": "",
+        "uploader_received_at_utc": "",
+        "api_received_at_utc": "",
+        "end_to_end_s": "",
+        "wall_time_s": "",
+        "sql_query_count": "",
+        "sql_total_db_time_s": "",
+    }
+
+    # Top query columns intentionally blank for batch rows.
+    fp_max = _int_env("CLA_BENCHMARK_FP_MAX_CHARS", _DEFAULT_FP_MAX_CHARS)
+    for i in range(1, top_n + 1):
+        row[f"sql_top_time_{i}_fingerprint"] = _sanitize_cell(
+            "", max_chars=fp_max
+        )
+        row[f"sql_top_time_{i}_total_time_s"] = ""
+        row[f"sql_top_time_{i}_count"] = ""
+
+    for i in range(1, top_n + 1):
+        row[f"sql_top_count_{i}_fingerprint"] = _sanitize_cell(
+            "", max_chars=fp_max
+        )
+        row[f"sql_top_count_{i}_total_time_s"] = ""
+        row[f"sql_top_count_{i}_count"] = ""
+
+    path = Path(csv_path)
+    path.parent.mkdir(parents=True, exist_ok=True)
+
+    fieldnames = benchmark_fieldnames(top_n=top_n)
+
     with path.open("a+", newline="", encoding="utf-8") as f:
         if fcntl is not None:  # pragma: no cover (covered on Unix)
             try:

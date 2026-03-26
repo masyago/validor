@@ -30,6 +30,7 @@ from app.schemas.ingestion import (
 from app.schemas.identifiers import PatientId
 
 from datetime import datetime, timezone
+import os
 from uuid import UUID, uuid4
 from app.core.ingestion_status_enums import IngestionStatus
 import hashlib
@@ -37,7 +38,7 @@ import io
 from typing import Union, Any, Literal, cast
 
 from sqlalchemy.orm import Session
-from sqlalchemy import select
+from sqlalchemy import select, func
 from sqlalchemy.exc import IntegrityError
 from app.persistence.models.core import RawData, Ingestion
 from app.api.routers.dependencies import get_session
@@ -93,6 +94,58 @@ def calculate_sha256(file_content: bytes):
     hasher = hashlib.sha256()
     hasher.update(file_content)
     return hasher.hexdigest()
+
+
+def _int_env(name: str) -> int | None:
+    raw = os.getenv(name)
+    if raw is None:
+        return None
+    raw = raw.strip()
+    if not raw:
+        return None
+    try:
+        return int(raw)
+    except ValueError:
+        return None
+
+
+def _enforce_inflight_limit_or_429(db: Session) -> None:
+    """Backpressure: refuse to enqueue more background work when saturated.
+
+    Enable by setting `CLA_MAX_INFLIGHT_INGESTIONS` to a positive integer.
+    When enabled, if the number of ingestions with status RECEIVED or PROCESSING
+    is >= the limit, this raises a 429 with Retry-After.
+    """
+
+    limit = _int_env("CLA_MAX_INFLIGHT_INGESTIONS")
+    if limit is None or limit <= 0:
+        return
+
+    inflight = db.execute(
+        select(func.count())
+        .select_from(Ingestion)
+        .where(
+            Ingestion.status.in_(
+                [IngestionStatus.RECEIVED, IngestionStatus.PROCESSING]
+            )
+        )
+    ).scalar_one()
+
+    if int(inflight) >= int(limit):
+        retry_after_s = _int_env("CLA_RETRY_AFTER_SECONDS") or 1
+        raise HTTPException(
+            status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+            headers={"Retry-After": str(int(retry_after_s))},
+            detail={
+                "code": "INGESTION_BACKPRESSURE",
+                "retryable": True,
+                "message": (
+                    "Server is at capacity for queued/in-flight ingestions; retry later."
+                ),
+                "limit": int(limit),
+                "inflight": int(inflight),
+            },
+        )
 
 
 @router.post(
@@ -214,6 +267,9 @@ async def create_ingestion(
             ).model_dump(),
         )
 
+    # Backpressure: do not accept more work if too many ingestions are queued/in-flight.
+    _enforce_inflight_limit_or_429(db)
+
     # Create new records
     new_ingestion_id = uuid4()
     new_ingestion_api_received_at = datetime.now(timezone.utc)
@@ -333,6 +389,9 @@ def process_ingestion(
                 "message": "No ingestion found for ingestion_id.",
             },
         )
+
+    # Backpressure for manual trigger too.
+    _enforce_inflight_limit_or_429(session)
 
     background_tasks.add_task(process_ingestion_task, ingestion_id)
 

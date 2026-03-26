@@ -5,6 +5,41 @@ import hashlib
 import os
 from sqlalchemy import create_engine
 from sqlalchemy.orm import Session
+from sqlalchemy.engine.url import make_url
+
+from alembic import command
+from alembic.config import Config
+
+
+def _ensure_database_exists(database_url: str) -> None:
+    url = make_url(database_url)
+    if url.get_backend_name() != "postgresql":
+        return
+
+    db_name = url.database
+    if not db_name:
+        return
+
+    admin_url = url.set(database="postgres")
+    admin_engine = create_engine(admin_url)
+    try:
+        with admin_engine.connect() as conn:
+            conn.execution_options(isolation_level="AUTOCOMMIT")
+            exists = conn.exec_driver_sql(
+                "SELECT 1 FROM pg_database WHERE datname = %s",
+                (db_name,),
+            ).scalar()
+            if not exists:
+                conn.exec_driver_sql(f'CREATE DATABASE "{db_name}"')
+    finally:
+        admin_engine.dispose()
+
+
+def _run_alembic_upgrade_head(database_url: str) -> None:
+    alembic_cfg = Config(os.path.join(os.getcwd(), "alembic.ini"))
+    alembic_cfg.set_main_option("sqlalchemy.url", database_url)
+    command.upgrade(alembic_cfg, "head")
+
 
 TEST_DATABASE_URL = os.getenv(
     "TEST_DATABASE_URL",
@@ -15,6 +50,8 @@ TEST_DATABASE_URL = os.getenv(
 @pytest.fixture(scope="session")
 def test_db():
     """Connect to the test database (tables already exist via Alembic)."""
+    _ensure_database_exists(TEST_DATABASE_URL)
+    _run_alembic_upgrade_head(TEST_DATABASE_URL)
     engine = create_engine(TEST_DATABASE_URL, echo=True)
     yield engine
     engine.dispose()
