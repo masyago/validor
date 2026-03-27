@@ -216,16 +216,16 @@ Note that arguments were added to API and uploader commands.
 
 * In a separate terminal run uploader. Commands per file type or a set:
   * warmup
-  `CSV_UPLOADER_MAX_429_SLEEP_SECONDS=0.1 CSV_UPLOADER_MAX_429_RETRIES=2000 uv run python -m csv_uploader.csv_uploader --file metrics/data_raw/fixed_csv_v1/warmup.csv --keep-files --stability-delay-seconds 0 --wait-for-terminal --batch-results-csv metrics/benchmark_results.csv`
+  `CSV_UPLOADER_MAX_429_SLEEP_SECONDS=0.1 CSV_UPLOADER_MAX_429_RETRIES=2000 uv run python -m csv_uploader.csv_uploader --file metrics/data_raw/fixed_csv_v1/warmup.csv --keep-files --stability-delay-seconds 0 --wait-for-terminal`
 
   * small
-    `CSV_UPLOADER_MAX_429_SLEEP_SECONDS=0.1 CSV_UPLOADER_MAX_429_RETRIES=2000 uv run python -m csv_uploader.csv_uploader --file metrics/data_raw/fixed_csv_v1/small.csv --keep-files --stability-delay-seconds 0 --wait-for-terminal --batch-results-csv metrics/benchmark_results.csv`
+    `CSV_UPLOADER_MAX_429_SLEEP_SECONDS=0.1 CSV_UPLOADER_MAX_429_RETRIES=2000 uv run python -m csv_uploader.csv_uploader --file metrics/data_raw/fixed_csv_v1/small.csv --keep-files --stability-delay-seconds 0 --wait-for-terminal`
 
   * medium
-    `CSV_UPLOADER_MAX_429_SLEEP_SECONDS=0.1 CSV_UPLOADER_MAX_429_RETRIES=2000 uv run python -m csv_uploader.csv_uploader --file metrics/data_raw/fixed_csv_v1/medium.csv --keep-files --stability-delay-seconds 0 --wait-for-terminal --batch-results-csv metrics/benchmark_results.csv`
+    `CSV_UPLOADER_MAX_429_SLEEP_SECONDS=0.1 CSV_UPLOADER_MAX_429_RETRIES=2000 uv run python -m csv_uploader.csv_uploader --file metrics/data_raw/fixed_csv_v1/medium.csv --keep-files --stability-delay-seconds 0 --wait-for-terminal`
 
   * large
-    `CSV_UPLOADER_MAX_429_SLEEP_SECONDS=0.1 CSV_UPLOADER_MAX_429_RETRIES=2000 uv run python -m csv_uploader.csv_uploader --file metrics/data_raw/fixed_csv_v1/large.csv --keep-files --stability-delay-seconds 0 --wait-for-terminal --batch-results-csv metrics/benchmark_results.csv`
+    `CSV_UPLOADER_MAX_429_SLEEP_SECONDS=0.1 CSV_UPLOADER_MAX_429_RETRIES=2000 uv run python -m csv_uploader.csv_uploader --file metrics/data_raw/fixed_csv_v1/large.csv --keep-files --stability-delay-seconds 0 --wait-for-terminal`
 
   * set of 50:
     `CSV_UPLOADER_MAX_429_SLEEP_SECONDS=0.1 CSV_UPLOADER_MAX_429_RETRIES=2000 uv run python -m csv_uploader.csv_uploader --watch-dir metrics/data_raw/fixed_csv_v1/set_of_50 --once --keep-files --stability-delay-seconds 0 --wait-for-terminal --batch-results-csv metrics/benchmark_results.csv --batch-id set_of_50_01`
