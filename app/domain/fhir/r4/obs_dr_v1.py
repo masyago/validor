@@ -98,11 +98,6 @@ class ObservationR4(FHIRBaseModel):
             raise ValueError(
                 "Observation must have valueQuantity or valueString"
             )
-        # Disallow both at once for simplicity.
-        if self.valueQuantity is not None and self.valueString is not None:
-            raise ValueError(
-                "Observation must not have both valueQuantity and valueString"
-            )
         return self
 
 

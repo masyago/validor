@@ -9,6 +9,9 @@ import io
 import uuid
 import hashlib
 from datetime import datetime, timezone, timedelta
+from types import SimpleNamespace
+
+from sqlalchemy.exc import IntegrityError
 
 
 from fastapi import FastAPI
@@ -305,6 +308,108 @@ def test_429_backpressure_when_inflight_limit_reached(
     payload = response.json()
     assert payload["detail"]["code"] == "INGESTION_BACKPRESSURE"
     assert payload["detail"]["retryable"] is True
+
+
+def test_race_safe_idempotency_integrity_error_returns_200_duplicate_ok(
+    client,
+    valid_form_data,
+    valid_csv_file,
+    content_sha256,
+    db_session,
+    monkeypatch,
+):
+    """
+    Simulate a unique constraint race: commit fails because the same
+    (instrument_id, run_id) was inserted between initial duplicate check and commit.
+    Hashes for the duplicates match.
+    """
+
+    valid_form_data["content_sha256"] = content_sha256
+
+    # Force commit to raise IntegrityError (as if another transaction inserted first).
+    commit_calls = {"n": 0}
+    orig_commit = db_session.commit
+
+    def _commit_once(*args, **kwargs):
+        commit_calls["n"] += 1
+        if commit_calls["n"] == 1:
+            raise IntegrityError("INSERT ...", {}, Exception("unique"))
+        return orig_commit(*args, **kwargs)
+
+    monkeypatch.setattr(db_session, "commit", _commit_once)
+
+    existing_ingestion_id = uuid.uuid4()
+    existing = SimpleNamespace(
+        ingestion_id=existing_ingestion_id,
+        server_sha256=content_sha256,
+    )
+
+    # First existence check returns None (race window), second (after rollback)
+    # returns the existing ingestion with matching content hash.
+    with patch(
+        "app.api.routers.ingestion.IngestionRepository.get_by_instrument_id_run_id",
+        side_effect=[None, existing],
+    ):
+        response = client.post(
+            "/ingestions",
+            data=valid_form_data,
+            files=valid_csv_file,
+        )
+
+    assert response.status_code == 200
+    data = response.json()
+    assert data["existing_ingestion_id"] == str(existing_ingestion_id)
+    assert str(existing_ingestion_id) in response.headers.get("Location", "")
+    assert "already submitted" in data["message"].lower()
+
+
+def test_race_safe_idempotency_integrity_error_returns_409_conflict(
+    client,
+    valid_form_data,
+    valid_csv_file,
+    content_sha256,
+    db_session,
+    monkeypatch,
+):
+    """
+    Simulate a unique constraint race: commit fails and existing hash differs.
+    """
+
+    valid_form_data["content_sha256"] = content_sha256
+
+    commit_calls = {"n": 0}
+    orig_commit = db_session.commit
+
+    def _commit_once(*args, **kwargs):
+        commit_calls["n"] += 1
+        if commit_calls["n"] == 1:
+            raise IntegrityError("INSERT ...", {}, Exception("unique"))
+        return orig_commit(*args, **kwargs)
+
+    monkeypatch.setattr(db_session, "commit", _commit_once)
+
+    existing_ingestion_id = uuid.uuid4()
+    existing = SimpleNamespace(
+        ingestion_id=existing_ingestion_id,
+        server_sha256="0" * 64,
+    )
+
+    with patch(
+        "app.api.routers.ingestion.IngestionRepository.get_by_instrument_id_run_id",
+        side_effect=[None, existing],
+    ):
+        response = client.post(
+            "/ingestions",
+            data=valid_form_data,
+            files=valid_csv_file,
+        )
+
+    assert response.status_code == 409
+    payload = response.json()
+    assert payload["detail"]["code"] == "RUN_ID_CONTENT_MISMATCH"
+    assert payload["detail"]["existing_ingestion_id"] == str(
+        existing_ingestion_id
+    )
 
 
 """

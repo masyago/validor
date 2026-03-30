@@ -7,7 +7,7 @@ import threading
 import pytest
 from sqlalchemy import select, text
 from sqlalchemy.orm import Session
-from sqlalchemy.exc import OperationalError
+from sqlalchemy.exc import DBAPIError, OperationalError, SQLAlchemyError
 
 from app.persistence.models.normalization import DiagnosticReport, Observation
 from app.persistence.models.core import Ingestion
@@ -306,6 +306,185 @@ def test_phase1_empty_ingestion_returns_error_and_emits_failed_events(
     events = fetch_events(ingestion.ingestion_id)
     event_types = {e["event_type"] for e in events}
     assert "NORMALIZATION_STARTED" in event_types
+    assert "NORMALIZATION_RELATIONAL_FAILED" in event_types
+    assert "NORMALIZATION_FAILED" in event_types
+
+
+def test_phase1_retries_dbapi_error_and_fails_after_max_attempts(
+    db_session,
+    fetch_events,
+    seed_ingestion,
+    monkeypatch,
+):
+    ingestion = seed_ingestion()
+
+    job = NormalizationJob(db_session)
+
+    def _raise_retryable(_ingestion_id):
+        raise DBAPIError(
+            "SELECT 1",
+            {},
+            Exception("transient disconnect"),
+            connection_invalidated=True,
+        )
+
+    monkeypatch.setattr(job, "_phase1_normalize_and_persist", _raise_retryable)
+
+    ok, norm_errors, json_failures = job.run_for_ingestion_id(
+        ingestion.ingestion_id
+    )
+
+    assert ok is False
+    assert json_failures == []
+
+    events = fetch_events(ingestion.ingestion_id)
+    phase1_failed = [
+        e
+        for e in events
+        if e["event_type"] == "NORMALIZATION_RELATIONAL_FAILED"
+    ][-1]
+    details = phase1_failed.get("details") or {}
+    assert details.get("retry_attempts") == 3
+    assert details.get("max_retry_attempts") == 3
+    assert details.get("exception_type") == "DBAPIError"
+
+
+def test_phase1_non_retryable_exception_fails_without_retry(
+    db_session,
+    fetch_events,
+    seed_ingestion,
+    monkeypatch,
+):
+    ingestion = seed_ingestion()
+
+    job = NormalizationJob(db_session)
+
+    def _raise_non_retryable(_ingestion_id):
+        raise RuntimeError("boom")
+
+    monkeypatch.setattr(
+        job, "_phase1_normalize_and_persist", _raise_non_retryable
+    )
+
+    ok, norm_errors, json_failures = job.run_for_ingestion_id(
+        ingestion.ingestion_id
+    )
+
+    assert ok is False
+    assert json_failures == []
+
+    events = fetch_events(ingestion.ingestion_id)
+    phase1_failed = [
+        e
+        for e in events
+        if e["event_type"] == "NORMALIZATION_RELATIONAL_FAILED"
+    ][-1]
+    details = phase1_failed.get("details") or {}
+    assert details.get("retry_attempts") == 1
+    assert details.get("exception_type") == "RuntimeError"
+
+
+def test_phase1_sqlalchemy_error_rolls_back_and_persists_nothing(
+    db_session,
+    fetch_events,
+    seed_ingestion,
+    seed_panel,
+    seed_test,
+    monkeypatch,
+):
+    ingestion = seed_ingestion()
+    panel = seed_panel(ingestion_id=ingestion.ingestion_id)
+    seed_test(panel_id=panel.panel_id, row_number=1)
+
+    job = NormalizationJob(db_session)
+
+    def _raise_sa(*args, **kwargs):
+        raise SQLAlchemyError("db write failed")
+
+    monkeypatch.setattr(job.dr_repo, "upsert_many_from_payloads", _raise_sa)
+
+    ok, norm_errors, json_failures = job.run_for_ingestion_id(
+        ingestion.ingestion_id
+    )
+    assert ok is False
+    assert json_failures == []
+
+    # Phase 1 should rollback; no normalized rows persisted.
+    drs = (
+        db_session.execute(
+            select(DiagnosticReport).where(
+                DiagnosticReport.ingestion_id == ingestion.ingestion_id
+            )
+        )
+        .scalars()
+        .all()
+    )
+    obs = (
+        db_session.execute(
+            select(Observation).where(
+                Observation.ingestion_id == ingestion.ingestion_id
+            )
+        )
+        .scalars()
+        .all()
+    )
+    assert drs == []
+    assert obs == []
+
+    events = fetch_events(ingestion.ingestion_id)
+    event_types = {e["event_type"] for e in events}
+    assert "NORMALIZATION_RELATIONAL_FAILED" in event_types
+    assert "NORMALIZATION_FAILED" in event_types
+
+
+def test_phase1_catch_all_exception_rolls_back_and_persists_nothing(
+    db_session,
+    fetch_events,
+    seed_ingestion,
+    seed_panel,
+    seed_test,
+    monkeypatch,
+):
+    ingestion = seed_ingestion()
+    panel = seed_panel(ingestion_id=ingestion.ingestion_id)
+    seed_test(panel_id=panel.panel_id, row_number=1)
+
+    job = NormalizationJob(db_session)
+
+    def _raise_any(*args, **kwargs):
+        raise RuntimeError("unexpected")
+
+    monkeypatch.setattr(job.dr_repo, "upsert_many_from_payloads", _raise_any)
+
+    ok, norm_errors, json_failures = job.run_for_ingestion_id(
+        ingestion.ingestion_id
+    )
+    assert ok is False
+    assert json_failures == []
+
+    drs = (
+        db_session.execute(
+            select(DiagnosticReport).where(
+                DiagnosticReport.ingestion_id == ingestion.ingestion_id
+            )
+        )
+        .scalars()
+        .all()
+    )
+    obs = (
+        db_session.execute(
+            select(Observation).where(
+                Observation.ingestion_id == ingestion.ingestion_id
+            )
+        )
+        .scalars()
+        .all()
+    )
+    assert drs == []
+    assert obs == []
+
+    events = fetch_events(ingestion.ingestion_id)
+    event_types = {e["event_type"] for e in events}
     assert "NORMALIZATION_RELATIONAL_FAILED" in event_types
     assert "NORMALIZATION_FAILED" in event_types
 
@@ -909,6 +1088,192 @@ def test_phase2_partial_json_failure_returns_ok_with_warnings_and_leaves_one_res
         }
     ]
     assert all(e.get("severity") == "WARN" for e in warn_events)
+
+
+def test_phase2_missing_observation_row_yields_json_failure(
+    db_session,
+    fetch_events,
+    seed_ingestion,
+    seed_panel,
+    seed_test,
+    monkeypatch,
+):
+    ingestion = seed_ingestion()
+    panel = seed_panel(ingestion_id=ingestion.ingestion_id)
+
+    t1 = seed_test(panel_id=panel.panel_id, row_number=1, test_code="A")
+    t2 = seed_test(panel_id=panel.panel_id, row_number=2, test_code="B")
+
+    job = NormalizationJob(db_session)
+    orig_get_obs = job.obs_repo.get_by_ingestion_id
+
+    def _missing_one_obs(ingestion_id):
+        obs = list(orig_get_obs(ingestion_id))
+        return [o for o in obs if o.test_id != t2.test_id]
+
+    monkeypatch.setattr(job.obs_repo, "get_by_ingestion_id", _missing_one_obs)
+
+    ok, norm_errors, json_failures = job.run_for_ingestion_id(
+        ingestion.ingestion_id
+    )
+    assert ok is True
+    assert norm_errors == []
+    assert any(
+        (
+            f.resource_type == "Observation"
+            and f.type == "MissingRow"
+            and "missing Observation" in f.message
+        )
+        for f in json_failures
+    )
+
+    events = fetch_events(ingestion.ingestion_id)
+    event_types = {e["event_type"] for e in events}
+    assert "FHIR_JSON_GENERATION_FAILED" in event_types
+    assert "NORMALIZATION_SUCCEEDED_WITH_WARNINGS" in event_types
+
+    # The missing observation should remain without resource_json.
+    obs_rows = (
+        db_session.execute(
+            select(Observation).where(
+                Observation.ingestion_id == ingestion.ingestion_id
+            )
+        )
+        .scalars()
+        .all()
+    )
+    obs_by_test = {o.test_id: o for o in obs_rows}
+    assert obs_by_test[t1.test_id].resource_json is not None
+    assert obs_by_test[t2.test_id].resource_json is None
+
+
+def test_phase2_missing_diagnostic_report_row_yields_json_failure(
+    db_session,
+    fetch_events,
+    seed_ingestion,
+    seed_panel,
+    seed_test,
+    monkeypatch,
+):
+    ingestion = seed_ingestion()
+    panel = seed_panel(ingestion_id=ingestion.ingestion_id)
+    seed_test(panel_id=panel.panel_id, row_number=1)
+
+    job = NormalizationJob(db_session)
+
+    monkeypatch.setattr(job.dr_repo, "get_by_ingestion_id", lambda _id: [])
+
+    ok, norm_errors, json_failures = job.run_for_ingestion_id(
+        ingestion.ingestion_id
+    )
+    assert ok is True
+    assert norm_errors == []
+    assert any(
+        (
+            f.resource_type == "DiagnosticReport"
+            and f.type == "MissingRow"
+            and "missing DiagnosticReport" in f.message
+        )
+        for f in json_failures
+    )
+
+    events = fetch_events(ingestion.ingestion_id)
+    event_types = {e["event_type"] for e in events}
+    assert "FHIR_JSON_GENERATION_FAILED" in event_types
+    assert "NORMALIZATION_SUCCEEDED_WITH_WARNINGS" in event_types
+
+    # Observation JSON may still be written, but DR JSON should remain NULL.
+    drs = (
+        db_session.execute(
+            select(DiagnosticReport).where(
+                DiagnosticReport.ingestion_id == ingestion.ingestion_id
+            )
+        )
+        .scalars()
+        .all()
+    )
+    assert len(drs) == 1
+    assert drs[0].resource_json is None
+
+
+def test_phase2_non_retryable_exception_yields_warnings_and_no_json_written(
+    db_session,
+    fetch_events,
+    seed_ingestion,
+    seed_panel,
+    seed_test,
+    monkeypatch,
+):
+    ingestion = seed_ingestion()
+    panel = seed_panel(ingestion_id=ingestion.ingestion_id)
+    seed_test(panel_id=panel.panel_id, row_number=1)
+
+    job = NormalizationJob(db_session)
+
+    def _raise_phase2(_ingestion_id):
+        raise RuntimeError("phase2 crashed")
+
+    monkeypatch.setattr(job, "_phase2_persist_fhir_json", _raise_phase2)
+
+    ok, norm_errors, json_failures = job.run_for_ingestion_id(
+        ingestion.ingestion_id
+    )
+    assert ok is True
+    assert norm_errors == []
+    assert json_failures == []
+
+    events = fetch_events(ingestion.ingestion_id)
+    event_types = {e["event_type"] for e in events}
+    assert "FHIR_JSON_GENERATION_FAILED" in event_types
+    assert "NORMALIZATION_SUCCEEDED_WITH_WARNINGS" in event_types
+
+    failed = [
+        e for e in events if e["event_type"] == "FHIR_JSON_GENERATION_FAILED"
+    ][-1]
+    details = failed.get("details") or {}
+    assert details.get("attempts") == 1
+    assert details.get("max_attempts") == 3
+    assert details.get("execution_error")
+
+
+def test_phase2_retryable_exception_retries_and_yields_warnings_after_max_attempts(
+    db_session,
+    fetch_events,
+    seed_ingestion,
+    seed_panel,
+    seed_test,
+    monkeypatch,
+):
+    ingestion = seed_ingestion()
+    panel = seed_panel(ingestion_id=ingestion.ingestion_id)
+    seed_test(panel_id=panel.panel_id, row_number=1)
+
+    job = NormalizationJob(db_session)
+
+    def _raise_retryable(_ingestion_id):
+        raise OperationalError(
+            "UPDATE observation SET resource_json = ...",
+            {},
+            Exception("deadlock"),
+        )
+
+    monkeypatch.setattr(job, "_phase2_persist_fhir_json", _raise_retryable)
+
+    ok, norm_errors, json_failures = job.run_for_ingestion_id(
+        ingestion.ingestion_id
+    )
+    assert ok is True
+    assert norm_errors == []
+    assert json_failures == []
+
+    events = fetch_events(ingestion.ingestion_id)
+    failed = [
+        e for e in events if e["event_type"] == "FHIR_JSON_GENERATION_FAILED"
+    ][-1]
+    details = failed.get("details") or {}
+    assert details.get("attempts") == 3
+    assert details.get("max_attempts") == 3
+    assert details.get("execution_error")
 
 
 # With frozen time, Phase 2 JSON should be semantically identical across reruns

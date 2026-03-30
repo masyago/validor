@@ -38,7 +38,7 @@ class TestValidationParsing:
         assert payload["result_value_num"] == expected_value_num
         assert payload["result_raw"] == result
 
-    def test_negative_numeric_rejected(self, test_validation, make_row):
+    def test_negative_numeric_result_rejected(self, test_validation, make_row):
         row = make_row(result="-4")
         payload, errors = test_validation.build_test_payload(row, row_number=6)
 
@@ -47,7 +47,9 @@ class TestValidationParsing:
         assert errors[0].field == "result"
 
     # Error when required field missing, ok when an optional field missing
-    def test_required_field_missing_error(self, test_validation, make_row):
+    def test_labtest_required_field_missing_error(
+        self, test_validation, make_row
+    ):
         row = make_row(result="")
 
         payload, errors = test_validation.build_test_payload(row, row_number=5)
@@ -57,7 +59,9 @@ class TestValidationParsing:
         assert errors[0].field == "result"
         assert errors[0].message == "required field missing"
 
-    def test_optional_field_missing_ok(self, test_validation, make_row):
+    def test_labtest_optional_field_missing_ok(
+        self, test_validation, make_row
+    ):
         row = make_row(reference_range_low="")
 
         payload, errors = test_validation.build_test_payload(row, row_number=1)
@@ -102,6 +106,29 @@ class TestPanelValidationParsing:
         assert payload is None
         assert len(errors) == 1
         assert part_message in errors[0].message
+
+    def test_panel_required_field_missing(self, panel_validation, make_row):
+        row = make_row(panel_code="")
+
+        payload, errors = panel_validation.build_panel_payload(
+            row, row_number=3
+        )
+
+        assert payload is None
+        assert len(errors) == 1
+        assert errors[0].field == "panel_code"
+        assert errors[0].message == "required field missing"
+
+    def test_panel_optional_field_missing(self, panel_validation, make_row):
+        row = make_row(sample_id="")
+
+        payload, errors = panel_validation.build_panel_payload(
+            row, row_number=3
+        )
+
+        assert errors == []
+        assert payload is not None
+        assert payload["sample_id"] is None
 
     @pytest.mark.parametrize(
         "collection_timestamp",

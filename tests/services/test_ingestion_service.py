@@ -10,6 +10,7 @@ import uuid
 
 import pytest
 from sqlalchemy import select
+from sqlalchemy.exc import MultipleResultsFound, SQLAlchemyError
 
 from app.core.ingestion_status_enums import IngestionStatus
 from app.persistence.models.core import Ingestion, RawData
@@ -226,6 +227,58 @@ class TestIngestionServiceIntegration:
             "error_code"
         ) == "raw_data_not_found"
 
+    def test_process_ingestion_multiple_raw_data_marks_failed(
+        self,
+        db_session,
+        ingestion_service,
+        fetch_events,
+        uploader_id,
+        spec_version,
+        instrument_id,
+        run_id,
+        monkeypatch,
+    ):
+        ingestion_id = uuid.uuid4()
+        csv_bytes = b"instrument_id,run_id\nX,Y\n"
+
+        _seed_ingestion_and_raw_data(
+            db_session,
+            ingestion_id=ingestion_id,
+            csv_bytes=csv_bytes,
+            uploader_id=uploader_id,
+            spec_version=spec_version,
+            instrument_id=instrument_id,
+            run_id=run_id,
+            source_filename="multiple_raw.csv",
+        )
+
+        def _raise_multiple(*args, **kwargs):
+            raise MultipleResultsFound("multiple raw rows")
+
+        monkeypatch.setattr(
+            ingestion_service.raw_repo, "get_content_bytes", _raise_multiple
+        )
+
+        ingestion_service.process_ingestion(ingestion_id)
+
+        ingestion = db_session.scalars(
+            select(Ingestion).where(Ingestion.ingestion_id == ingestion_id)
+        ).one()
+        assert ingestion.status == IngestionStatus.FAILED
+        assert ingestion.error_code == "raw_data_multiple"
+        assert ingestion.error_detail is not None
+
+        events = fetch_events(ingestion_id)
+        types = [e["event_type"] for e in events]
+        assert "PARSE_STARTED" in types
+        assert "PARSE_FAILED" in types
+        parse_failed = [
+            e for e in events if e["event_type"] == "PARSE_FAILED"
+        ][-1]
+        assert (parse_failed.get("details") or {}).get(
+            "error_code"
+        ) == "raw_data_multiple"
+
     def test_process_ingestion_empty_csv_marks_failed_validation(
         self,
         db_session,
@@ -310,6 +363,288 @@ class TestIngestionServiceIntegration:
         assert (parse_failed.get("details") or {}).get(
             "error_code"
         ) == "csv_decode_error"
+
+    def test_process_ingestion_parse_exception_marks_failed_validation(
+        self,
+        db_session,
+        ingestion_service,
+        fetch_events,
+        uploader_id,
+        spec_version,
+        instrument_id,
+        run_id,
+        monkeypatch,
+    ):
+        ingestion_id = uuid.uuid4()
+        csv_bytes = b"not-empty"
+
+        _seed_ingestion_and_raw_data(
+            db_session,
+            ingestion_id=ingestion_id,
+            csv_bytes=csv_bytes,
+            uploader_id=uploader_id,
+            spec_version=spec_version,
+            instrument_id=instrument_id,
+            run_id=run_id,
+            source_filename="parse_crash.csv",
+        )
+
+        def _raise_parse(*args, **kwargs):
+            raise RuntimeError("parser crashed")
+
+        monkeypatch.setattr(ingestion_service, "parse_csv_file", _raise_parse)
+
+        ingestion_service.process_ingestion(ingestion_id)
+
+        ingestion = db_session.scalars(
+            select(Ingestion).where(Ingestion.ingestion_id == ingestion_id)
+        ).one()
+        assert ingestion.status == IngestionStatus.FAILED_VALIDATION
+        assert ingestion.error_code == "csv_parse_error"
+        assert ingestion.error_detail is not None
+
+        events = fetch_events(ingestion_id)
+        parse_failed = [
+            e for e in events if e["event_type"] == "PARSE_FAILED"
+        ][-1]
+        assert (parse_failed.get("details") or {}).get(
+            "error_code"
+        ) == "csv_parse_error"
+
+    def test_process_ingestion_generate_payload_exception_marks_failed(
+        self,
+        db_session,
+        ingestion_service,
+        fetch_events,
+        uploader_id,
+        spec_version,
+        instrument_id,
+        run_id,
+        monkeypatch,
+    ):
+        ingestion_id = uuid.uuid4()
+        csv_bytes = b"not-empty"
+
+        _seed_ingestion_and_raw_data(
+            db_session,
+            ingestion_id=ingestion_id,
+            csv_bytes=csv_bytes,
+            uploader_id=uploader_id,
+            spec_version=spec_version,
+            instrument_id=instrument_id,
+            run_id=run_id,
+            source_filename="validation_crash.csv",
+        )
+
+        monkeypatch.setattr(
+            ingestion_service, "parse_csv_file", lambda _b: [{"ok": "1"}]
+        )
+
+        def _raise_validation(*args, **kwargs):
+            raise RuntimeError("validation crashed")
+
+        monkeypatch.setattr(
+            ingestion_service, "generate_payload_for_db", _raise_validation
+        )
+
+        ingestion_service.process_ingestion(ingestion_id)
+
+        ingestion = db_session.scalars(
+            select(Ingestion).where(Ingestion.ingestion_id == ingestion_id)
+        ).one()
+        assert ingestion.status == IngestionStatus.FAILED
+        assert ingestion.error_code == "validation_exception"
+        assert ingestion.error_detail is not None
+
+        events = fetch_events(ingestion_id)
+        types = [e["event_type"] for e in events]
+        assert "PARSE_SUCCEEDED" in types
+        assert "VALIDATION_STARTED" in types
+        assert "VALIDATION_FAILED" in types
+        validation_failed = [
+            e for e in events if e["event_type"] == "VALIDATION_FAILED"
+        ][-1]
+        assert (validation_failed.get("details") or {}).get(
+            "error_code"
+        ) == "validation_exception"
+
+    def test_process_ingestion_insert_panel_test_data_sqlalchemy_error_marks_failed(
+        self,
+        db_session,
+        ingestion_service,
+        fetch_events,
+        uploader_id,
+        spec_version,
+        instrument_id,
+        run_id,
+        monkeypatch,
+    ):
+        ingestion_id = uuid.uuid4()
+        csv_bytes = b"not-empty"
+
+        _seed_ingestion_and_raw_data(
+            db_session,
+            ingestion_id=ingestion_id,
+            csv_bytes=csv_bytes,
+            uploader_id=uploader_id,
+            spec_version=spec_version,
+            instrument_id=instrument_id,
+            run_id=run_id,
+            source_filename="persistence_crash.csv",
+        )
+
+        monkeypatch.setattr(
+            ingestion_service, "parse_csv_file", lambda _b: [{"ok": "1"}]
+        )
+        monkeypatch.setattr(
+            ingestion_service,
+            "generate_payload_for_db",
+            lambda _rows: ([], []),
+        )
+
+        def _raise_sa(*args, **kwargs):
+            raise SQLAlchemyError("db write failed")
+
+        monkeypatch.setattr(
+            ingestion_service, "insert_panel_test_data", _raise_sa
+        )
+
+        ingestion_service.process_ingestion(ingestion_id)
+
+        ingestion = db_session.scalars(
+            select(Ingestion).where(Ingestion.ingestion_id == ingestion_id)
+        ).one()
+        assert ingestion.status == IngestionStatus.FAILED
+        assert ingestion.error_code == "persistence_error"
+        assert ingestion.error_detail is not None
+
+        events = fetch_events(ingestion_id)
+        validation_failed = [
+            e for e in events if e["event_type"] == "VALIDATION_FAILED"
+        ][-1]
+        assert (validation_failed.get("details") or {}).get(
+            "error_code"
+        ) == "persistence_error"
+
+    def test_process_ingestion_normalization_db_error_marks_failed(
+        self,
+        db_session,
+        ingestion_service,
+        fetch_events,
+        uploader_id,
+        spec_version,
+        instrument_id,
+        run_id,
+        monkeypatch,
+    ):
+        ingestion_id = uuid.uuid4()
+        csv_bytes = b"not-empty"
+
+        _seed_ingestion_and_raw_data(
+            db_session,
+            ingestion_id=ingestion_id,
+            csv_bytes=csv_bytes,
+            uploader_id=uploader_id,
+            spec_version=spec_version,
+            instrument_id=instrument_id,
+            run_id=run_id,
+            source_filename="normalization_db_crash.csv",
+        )
+
+        monkeypatch.setattr(
+            ingestion_service, "parse_csv_file", lambda _b: [{"ok": "1"}]
+        )
+        monkeypatch.setattr(
+            ingestion_service,
+            "generate_payload_for_db",
+            lambda _rows: ([], []),
+        )
+        monkeypatch.setattr(
+            ingestion_service, "insert_panel_test_data", lambda *_a, **_k: True
+        )
+
+        import app.services.ingestion_service as ingestion_service_mod
+
+        def _raise_norm_db(self, _ingestion_id):
+            raise SQLAlchemyError("normalization db error")
+
+        monkeypatch.setattr(
+            ingestion_service_mod.NormalizationJob,
+            "run_for_ingestion_id",
+            _raise_norm_db,
+        )
+
+        ingestion_service.process_ingestion(ingestion_id)
+
+        ingestion = db_session.scalars(
+            select(Ingestion).where(Ingestion.ingestion_id == ingestion_id)
+        ).one()
+        assert ingestion.status == IngestionStatus.FAILED
+        assert ingestion.error_code == "normalization_db_error"
+
+        events = fetch_events(ingestion_id)
+        types = [e["event_type"] for e in events]
+        assert "VALIDATION_SUCCEEDED" in types
+
+    def test_process_ingestion_normalization_exception_marks_failed(
+        self,
+        db_session,
+        ingestion_service,
+        fetch_events,
+        uploader_id,
+        spec_version,
+        instrument_id,
+        run_id,
+        monkeypatch,
+    ):
+        ingestion_id = uuid.uuid4()
+        csv_bytes = b"not-empty"
+
+        _seed_ingestion_and_raw_data(
+            db_session,
+            ingestion_id=ingestion_id,
+            csv_bytes=csv_bytes,
+            uploader_id=uploader_id,
+            spec_version=spec_version,
+            instrument_id=instrument_id,
+            run_id=run_id,
+            source_filename="normalization_crash.csv",
+        )
+
+        monkeypatch.setattr(
+            ingestion_service, "parse_csv_file", lambda _b: [{"ok": "1"}]
+        )
+        monkeypatch.setattr(
+            ingestion_service,
+            "generate_payload_for_db",
+            lambda _rows: ([], []),
+        )
+        monkeypatch.setattr(
+            ingestion_service, "insert_panel_test_data", lambda *_a, **_k: True
+        )
+
+        import app.services.ingestion_service as ingestion_service_mod
+
+        def _raise_norm(self, _ingestion_id):
+            raise RuntimeError("normalization crashed")
+
+        monkeypatch.setattr(
+            ingestion_service_mod.NormalizationJob,
+            "run_for_ingestion_id",
+            _raise_norm,
+        )
+
+        ingestion_service.process_ingestion(ingestion_id)
+
+        ingestion = db_session.scalars(
+            select(Ingestion).where(Ingestion.ingestion_id == ingestion_id)
+        ).one()
+        assert ingestion.status == IngestionStatus.FAILED
+        assert ingestion.error_code == "normalization_exception"
+
+        events = fetch_events(ingestion_id)
+        types = [e["event_type"] for e in events]
+        assert "VALIDATION_SUCCEEDED" in types
 
     def test_process_ingestion_happy_path_data_persists(
         self,

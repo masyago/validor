@@ -46,6 +46,7 @@
     * 4 larger files and many defects
 
 * How to process the files and record results:
+    * Reset DB to avoid uniqueness violations
     * run uploader for the folder `metrics/validation_accuracy/fixed_csv_v1`
      `uv run python -m csv_uploader.csv_uploader --watch-dir metrics/validation_accuracy/fixed_csv_v1 --once --keep-files --stability-delay-seconds 0 --wait-for-terminal`
     * run script that extracts results from the DB `metrics/record_validation_accuracy_results.py`
