@@ -1,0 +1,5 @@
+run_id,sample_id,patient_id,panel_code,test_code,test_name,analyte_type,result,units,reference_range_low,reference_range_high,flag,collection_timestamp,instrument_id
+20260331_024,SAM-7abeb6e6-ceed-4593-a0e5-de69b37bd80e,,,,Total Cholesterol,lipid,,mg/dL,0,200,HIGH,2026-03-31T19:43:52.043801+00:00,CANONICAL_CHEM_ANALYZER_V1
+20260331_024,SAM-7abeb6e6-ceed-4593-a0e5-de69b37bd80e,,,,Low-Density Lipoprotein,lipoprotein,,mg/dL,0,100,NORMAL,2026-03-31T19:43:52.043801+00:00,CANONICAL_CHEM_ANALYZER_V1
+20260331_024,SAM-7abeb6e6-ceed-4593-a0e5-de69b37bd80e,,,,High-Density Lipoprotein,lipoprotein,,mg/dL,40,100,NORMAL,2026-03-31T19:43:52.043801+00:00,CANONICAL_CHEM_ANALYZER_V1
+20260331_024,SAM-7abeb6e6-ceed-4593-a0e5-de69b37bd80e,,,,Triglycerides,lipid,,mg/dL,0,150,NORMAL,2026-03-31T19:43:52.043801+00:00,CANONICAL_CHEM_ANALYZER_V1

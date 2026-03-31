@@ -7,6 +7,13 @@ from pathlib import Path
 import json
 import random
 import uuid
+from typing import Any
+from rich.rule import Rule
+
+try:
+    from csv_uploader.cli_rich import console
+except ModuleNotFoundError:  # pragma: no cover
+    from cli_rich import console
 
 TARGET_FOLDER = Path("csv_uploader/simulated_exports/pending")
 CONFIG_FILE_PATH = Path("csv_uploader/config.yaml")
@@ -29,7 +36,10 @@ def get_next_run_counter() -> str:
             with open(DAILY_RUN_COUNTER_FILE_PATH, "r") as f:
                 state = json.load(f)
         except (json.JSONDecodeError, IOError):
-            print("Warning: Could not read state file. Starting fresh.")
+            console.print(
+                "Warning: Could not read state file. Starting fresh.",
+                style="warning",
+            )
 
     # If it's a new day, reset the counter. Otherwise, increment it.
     if state.get("last_date") == today_str:
@@ -89,7 +99,9 @@ def select_profile(profiles: dict) -> tuple[str, dict]:
     return selected, profiles[selected]
 
 
-def generate_result_value(low: float, high: float) -> tuple[float, str | None]:
+def generate_result_value(
+    low: float, high: float, profile: dict[str, Any]
+) -> tuple[float, str | None]:
     """
     Generates a result value and optional flag.
     Most values within range, some outside.
@@ -99,9 +111,10 @@ def generate_result_value(low: float, high: float) -> tuple[float, str | None]:
     if rand < 0.70:  # 70% normal (within range)
         result = random.uniform(low, high)
         flag = "NORMAL"
+
     elif rand < 0.85:  # 15% low (below range)
         range_width = high - low
-        result = random.uniform(low - (range_width * 0.3), low)
+        result = abs(random.uniform(low - (range_width * 0.3), low))
         flag = "LOW"
     else:  # 15% high (above range)
         range_width = high - low
@@ -120,6 +133,7 @@ def generate_csv_rows(
     sample_id: str,
     patient_id: str,
     collection_timestamp: str,
+    profile: dict,
 ) -> list[list]:
     """
     Generates CSV data based on profile specifications.
@@ -145,6 +159,18 @@ def generate_csv_rows(
         available_panels, min(panels_count, len(available_panels))
     )
 
+    # If this profile is meant to inject a defect, force at least one negative
+    # numeric result (but only one) somewhere in the generated CSV.
+    force_one_negative = bool(profile.get("negative_results", False))
+    total_result_rows = sum(
+        len(panel_analytes) for panel_analytes in selected_panels
+    )
+    forced_negative_row_index = (
+        random.randrange(total_result_rows)
+        if force_one_negative and total_result_rows > 0
+        else None
+    )
+
     # CSV header
     csv_data = [
         [
@@ -166,12 +192,21 @@ def generate_csv_rows(
     ]
 
     # Generate rows for each selected panel
+    result_row_index = 0
     for panel_analytes in selected_panels:
         for analyte in panel_analytes:
             result, flag = generate_result_value(
                 analyte["reference_range_low"],
                 analyte["reference_range_high"],
+                profile=profile,
             )
+
+            if (
+                forced_negative_row_index is not None
+                and result_row_index == forced_negative_row_index
+            ):
+                # Negative numeric results are invalid by design (validator should reject them).
+                result = round(random.uniform(-100.0, -0.1), 2)
 
             row = {
                 "run_id": run_id,
@@ -193,7 +228,15 @@ def generate_csv_rows(
             # Apply missing columns strategy
             for col in missing_columns:
                 if col in row:
+                    if (
+                        col == "result"
+                        and forced_negative_row_index is not None
+                        and result_row_index == forced_negative_row_index
+                    ):
+                        continue
                     row[col] = ""  # Omit the value
+
+            result_row_index += 1
 
             # Convert dict to list in header order
             csv_data.append([row.get(col, "") for col in csv_data[0]])
@@ -217,16 +260,24 @@ def create_csv_in_folder(
             # Write the data
             writer.writerows(data)
 
-        print(f"Successfully created CSV file: {full_path}")
+        print(f"  Output file: {full_path}")
         return full_path
 
     except IOError as e:
+        console.print(
+            Rule(title="CSV GENERATOR", align="left", characters="─")
+        )
         print(f"Error writing to file {full_path}: {e}")
         return None
 
 
 def main() -> Path | None:
     """Generates a single simulated lab analyzer CSV file."""
+
+    print("")
+    print("CSV GENERATOR")
+    console.print(Rule(style="white"))
+
     try:
         today_str = date.today().strftime("%Y%m%d")
         run_counter = get_next_run_counter()
@@ -238,11 +289,18 @@ def main() -> Path | None:
         profiles = read_profiles()
 
         if not analytes:
-            print("Error: No analytes found in analytes.yaml")
+            print("")
+            console.print(
+                "Error: No analytes found in analytes.yaml", style="error"
+            )
             return None
 
         if not profiles:
-            print("Error: No profiles found in generation_profiles.yaml")
+            print("")
+            console.print(
+                "Error: No profiles found in generation_profiles.yaml",
+                style="error",
+            )
             return None
 
         # Select generation profile
@@ -263,6 +321,7 @@ def main() -> Path | None:
             sample_id=sample_id,
             patient_id=patient_id,
             collection_timestamp=collection_timestamp,
+            profile=profile_config,
         )
 
         created_path = create_csv_in_folder(
@@ -270,26 +329,45 @@ def main() -> Path | None:
         )
 
         # Print generation summary
-        print(f"Generated CSV using profile: {profile_name}")
+
+        print(f"  Profile: {profile_name}")
         print(f"  Description: {profile_config.get('description', 'N/A')}")
         print(f"  Panels: {profile_config.get('panels_per_csv')}")
         print(f"  Total rows: {len(csv_data) - 1}")  # -1 for header
-        if profile_config.get("missing_columns"):
+        missing_columns = profile_config.get("missing_columns") or []
+        if missing_columns:
             print(
-                f"  Missing columns: {', '.join(profile_config.get('missing_columns'))}"
+                f"  Missing columns: {', '.join(str(c) for c in missing_columns)}"
             )
-        print("DONE")
+        if not profile_config["valid_csv"]:
+            print("")
+            console.print(
+                "STATUS: GENERATED (INTENTIONALLY INVALID)", style="success"
+            )
+            print("")
+        else:
+            print("")
+            console.print("STATUS: GENERATED VALID CSV", style="success")
+            print("")
 
         return created_path
 
     except FileNotFoundError:
-        print(f"Error: Configuration file not found at {CONFIG_FILE_PATH}")
+        print("")
+        console.print(
+            f"Error: Configuration file not found at {CONFIG_FILE_PATH}",
+            style="error",
+        )
         return None
     except KeyError as e:
-        print(f"Error: Missing key {e} in the configuration file.")
+        print("")
+        console.print(
+            f"Error: Missing key {e} in the configuration file.", style="error"
+        )
         return None
     except Exception as e:
-        print(f"Unexpected error: {e}")
+        print("")
+        console.print(f"Unexpected error: {e}", style="error")
         return None
 
 

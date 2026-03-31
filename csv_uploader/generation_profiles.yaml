@@ -1,8 +1,33 @@
 profiles:
-
-  multi_panel:
-    description: "Multiple panels in one CSV (e.g., BMP + CBC)"
+  
+  valid_all_fields_present:
+    valid_csv: True
+    description: "Valid CSV file"
     panels_per_csv: 2
     missing_columns: []
-    probability: 1
+    probability: 0.3
+    negative_results: False
+
+  valid_optional_fields_omitted:
+    valid_csv: True
+    description: "Valid file with optional fields omitted"
+    panels_per_csv: 2
+    missing_columns: ["flag", "analyte_type"]
+    probability: 0.3
+    negative_results: False
+
+  invalid_required_fields_missing:
+    valid_csv: False
+    description: "Invalid file with missing required fields"
+    panels_per_csv: 3
+    missing_columns: ["result", "test_code", "panel_code", "patient_id"]
+    probability: 0.1
+    negative_results: False
   
+  invalid_negative_result:
+    valid_csv: False
+    description: "Invalid file with negative result(s) and missing columns"
+    panels_per_csv: 3
+    missing_columns: ["result", "test_code"]
+    probability: 0.1
+    negative_results: True

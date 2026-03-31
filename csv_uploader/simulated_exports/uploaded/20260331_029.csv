@@ -1,0 +1,5 @@
+run_id,sample_id,patient_id,panel_code,test_code,test_name,analyte_type,result,units,reference_range_low,reference_range_high,flag,collection_timestamp,instrument_id
+20260331_029,SAM-d6ea83da-a325-4b5e-a5fb-74b96779d668,PAT-a45cd96c-949b-485a-9547-1349b45ce8db,LIPID,TC,Total Cholesterol,lipid,194.37,mg/dL,0,200,NORMAL,2026-03-31T21:44:24.620236+00:00,CANONICAL_CHEM_ANALYZER_V1
+20260331_029,SAM-d6ea83da-a325-4b5e-a5fb-74b96779d668,PAT-a45cd96c-949b-485a-9547-1349b45ce8db,LIPID,LDL,Low-Density Lipoprotein,lipoprotein,65.6,mg/dL,0,100,NORMAL,2026-03-31T21:44:24.620236+00:00,CANONICAL_CHEM_ANALYZER_V1
+20260331_029,SAM-d6ea83da-a325-4b5e-a5fb-74b96779d668,PAT-a45cd96c-949b-485a-9547-1349b45ce8db,LIPID,HDL,High-Density Lipoprotein,lipoprotein,87.67,mg/dL,40,100,NORMAL,2026-03-31T21:44:24.620236+00:00,CANONICAL_CHEM_ANALYZER_V1
+20260331_029,SAM-d6ea83da-a325-4b5e-a5fb-74b96779d668,PAT-a45cd96c-949b-485a-9547-1349b45ce8db,LIPID,TG,Triglycerides,lipid,3.42,mg/dL,0,150,NORMAL,2026-03-31T21:44:24.620236+00:00,CANONICAL_CHEM_ANALYZER_V1
