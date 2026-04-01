@@ -57,14 +57,21 @@ def _print_ingestion_processing_status(
     ingestion_id: str,
     config: dict,
     session: requests.Session,
+    console_out=None,
+    status_payload_override: dict[str, Any] | None = None,
 ) -> None:
+    out = console_out or console
     # Wait for terminal so the stage metrics are stable.
-    status_payload = csv_uploader.poll_until_terminal(
-        ingestion_id=ingestion_id,
-        config=config,
-        session=session,
-        request_timeout_seconds=csv_uploader.REQUEST_TIMEOUT_SECONDS,
-        status_poll_seconds=1,
+    status_payload = (
+        status_payload_override
+        if status_payload_override is not None
+        else csv_uploader.poll_until_terminal(
+            ingestion_id=ingestion_id,
+            config=config,
+            session=session,
+            request_timeout_seconds=csv_uploader.REQUEST_TIMEOUT_SECONDS,
+            status_poll_seconds=1,
+        )
     )
 
     base_url = str(config.get("api_base_url", "http://localhost:8000")).rstrip(
@@ -144,17 +151,19 @@ def _print_ingestion_processing_status(
             succeeded=succeeded,
             skipped=skipped,
         )
-        console.print(f"{label:<14} {symbol} {status}{detail}")
+        out.print(f"{label:<14} {symbol} {status}{detail}")
 
-    console.print("")
-    console.print(Rule("INGESTION PROCESSING STATUS"))
-    console.print(f"ingestion_id: {ingestion_id}")
+    out.print("")
+    out.print("")
+    out.print("INGESTION PROCESSING STATUS")
+    out.print(Rule(style="white"))
+    out.print(f"ingestion_id: {ingestion_id}")
     if stage_events_warning:
-        console.print(
+        out.print(
             f"stage events unavailable ({stage_events_warning})",
             style="warning",
         )
-    console.print("")
+    out.print("")
 
     previous_stage_failed = False
 
@@ -207,7 +216,7 @@ def _print_ingestion_processing_status(
         detail="",
     )
 
-    console.print("")
+    out.print("")
     final_status = (
         status_payload.get("status")
         if isinstance(status_payload, dict)
@@ -215,38 +224,54 @@ def _print_ingestion_processing_status(
     )
     if not isinstance(final_status, str) or not final_status:
         final_status = "UNKNOWN"
-    console.print(f"FINAL STATUS: {final_status}")
+
+    normalized_status = final_status.strip().upper().replace("_", " ")
+    status_style: str | None
+    if normalized_status == "COMPLETED":
+        status_style = "success"
+    elif normalized_status in {"FAILED", "FAILED VALIDATION"}:
+        status_style = "error"
+    else:
+        status_style = None
+
+    out.print("FINAL STATUS: ", end="", style=status_style)
+    if status_style:
+        out.print(final_status, style=status_style)
+    else:
+        out.print(final_status)
 
     if isinstance(final_status, str) and final_status.upper() == "COMPLETED":
-        console.print("")
-        console.print(Rule("LINKS"))
-        console.print(f"Status: {base_url}/v1/ingestions/{ingestion_id}")
-        console.print("")
-        console.print(
+        out.print("")
+        out.print("")
+        out.print("LINKS", style="bold")
+        out.print(Rule(style="white"))
+        out.print(f"Status: {base_url}/v1/ingestions/{ingestion_id}")
+        out.print("")
+        out.print(
             f"DiagnosticReports: {base_url}/v1/ingestions/{ingestion_id}/diagnostic-reports"
         )
-        console.print("")
-        console.print(
+        out.print("")
+        out.print(
             f"Observations: {base_url}/v1/ingestions/{ingestion_id}/observations"
         )
-        console.print("")
-        console.print(
+        out.print("")
+        out.print(
             "FHIR JSON: add `?include_json=1` to DiagnosticReports/Observations."
         )
-        console.print("")
+        out.print("")
 
     if isinstance(final_status, str) and final_status.upper().startswith(
         "FAILED"
     ):
-        console.print("")
-        console.print(Rule("ERRORS"))
+        out.print("")
+        out.print(Rule(title="[red]ERRORS[/red]", style="red"))
 
         error_code = (
             status_payload.get("error_code")
             if isinstance(status_payload, dict)
             else None
         )
-        console.print(
+        out.print(
             f"error_code: {error_code if isinstance(error_code, str) and error_code else 'UNKNOWN'}"
         )
 
@@ -256,7 +281,7 @@ def _print_ingestion_processing_status(
             else None
         )
         if details is None:
-            console.print("error_detail: <none>")
+            out.print("error_detail: <none>")
         else:
             if isinstance(details, (dict, list)):
                 pretty = json.dumps(
@@ -269,8 +294,8 @@ def _print_ingestion_processing_status(
                 pretty = details
             else:
                 pretty = repr(details)
-            console.print("error_detail:")
-            console.print(pretty)
+            out.print("error_detail:")
+            out.print(pretty, style="white", highlight=False)
 
 
 def main() -> None:

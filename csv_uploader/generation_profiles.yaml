@@ -5,7 +5,7 @@ profiles:
     description: "Valid CSV file"
     panels_per_csv: 2
     missing_columns: []
-    probability: 0.3
+    probability: 0.2
     negative_results: False
 
   valid_optional_fields_omitted:
@@ -13,7 +13,7 @@ profiles:
     description: "Valid file with optional fields omitted"
     panels_per_csv: 2
     missing_columns: ["flag", "analyte_type"]
-    probability: 0.3
+    probability: 0.2
     negative_results: False
 
   invalid_required_fields_missing:
@@ -21,7 +21,7 @@ profiles:
     description: "Invalid file with missing required fields"
     panels_per_csv: 3
     missing_columns: ["test_code", "panel_code", "patient_id"]
-    probability: 0.1
+    probability: 0.2
     negative_results: False
   
   invalid_required_fields_missing_and_negative_result:
@@ -29,5 +29,5 @@ profiles:
     description: "Invalid file with negative result(s) and missing columns"
     panels_per_csv: 3
     missing_columns: ["result", "test_code"]
-    probability: 0.1
+    probability: 0.2
     negative_results: True

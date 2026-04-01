@@ -16,6 +16,7 @@ from typing import Any
 import yaml
 
 from rich.rule import Rule
+from rich.console import Console
 
 try:
     from csv_uploader.cli_rich import console
@@ -63,27 +64,29 @@ def _print_upload_request_summary(
     instrument_id: str,
     run_id: str,
     content_sha256: str,
+    console_out: Console,
 ) -> None:
-    console.print("UPLOAD REQUEST")
-    console.print(Rule(style="white"))
-    console.print(f"File:              {csv_path.name}")
-    console.print(f"Instrument ID:     {instrument_id}")
-    console.print(f"Run ID:            {run_id}")
-    console.print(f"Content SHA256:    {_abbrev_sha256(content_sha256)}")
+    console_out.print("UPLOAD REQUEST")
+    console_out.print(Rule(style="white"))
+    console_out.print(f"File:              {csv_path.name}")
+    console_out.print(f"Instrument ID:     {instrument_id}")
+    console_out.print(f"Run ID:            {run_id}")
+    console_out.print(f"Content SHA256:    {_abbrev_sha256(content_sha256)}")
     try:
         size_bytes = int(csv_path.stat().st_size)
     except OSError:
         size_bytes = 0
-    console.print(f"File size:         {_format_file_size(size_bytes)}")
+    console_out.print(f"File size:         {_format_file_size(size_bytes)}")
 
 
 def _print_upload_response_summary(
     *,
     response: requests.Response,
     payload: Any,
+    console_out: Console,
 ) -> None:
-    console.print("")
-    console.print("RESPONSE")
+    console_out.print("")
+    console_out.print("RESPONSE")
 
     reason = getattr(response, "reason", "") or ""
     reason = reason.strip()
@@ -92,7 +95,7 @@ def _print_upload_response_summary(
         if reason
         else str(response.status_code)
     )
-    console.print(f"  status_code:     {status_label}")
+    console_out.print(f"  status_code:     {status_label}")
 
     ingestion_id = None
     api_received_at = None
@@ -107,11 +110,11 @@ def _print_upload_response_summary(
         location = f"/v1/ingestions/{ingestion_id}"
 
     if ingestion_id:
-        console.print(f"  ingestion_id:    {ingestion_id}")
+        console_out.print(f"  ingestion_id:    {ingestion_id}")
     if location:
-        console.print(f"  location:        {location}")
+        console_out.print(f"  location:        {location}")
     if api_received_at:
-        console.print(f"  api_received_at: {api_received_at}")
+        console_out.print(f"  api_received_at: {api_received_at}")
 
 
 def _parse_retry_after_seconds(response: requests.Response) -> float | None:
@@ -289,6 +292,11 @@ def process_file(
     keep_files: bool,
 ) -> None:
     """Processes a single CSV file: computes hash, uploads, and optionally moves it."""
+
+    # `process_file` is used by the CLI watcher and always prints to the default
+    # CLI console.
+    out = console
+
     # Ensure file is stable
     if stability_delay_seconds > 0:
         while True:
@@ -328,21 +336,22 @@ def process_file(
             }
 
             if debug_request:
-                console.print("--- Preparing HTTP Request ---")
-                console.print(f"URL: POST {url}")
-                console.print(f"Data: {data}")
-                console.print(f"Files: {files['file'][0]}")
-                console.print("-----------------------------")
+                out.print("--- Preparing HTTP Request ---")
+                out.print(f"URL: POST {url}")
+                out.print(f"Data: {data}")
+                out.print(f"Files: {files['file'][0]}")
+                out.print("-----------------------------")
 
-            console.print("")
+            out.print("")
             _print_upload_request_summary(
                 csv_path=csv_path,
                 instrument_id=str(config.get("instrument_id", "")),
                 run_id=str(run_id),
                 content_sha256=str(content_sha256),
+                console_out=out,
             )
-            console.print("")
-            console.print(f"SENDING REQUEST → POST {CSV_POST_API_ENDPOINT}")
+            out.print("")
+            out.print(f"SENDING REQUEST → POST {CSV_POST_API_ENDPOINT}")
 
             response = None
             max_429_retries = int(
@@ -372,7 +381,7 @@ def process_file(
 
                         total_429_retries += 1
                         if total_429_retries > max_429_retries:
-                            console.print(
+                            out.print(
                                 "Received too many 429 responses; giving up on this file. "
                                 f"total_429_retries={total_429_retries}",
                                 style="warning",
@@ -435,7 +444,9 @@ def process_file(
                 failed_dir.mkdir(parents=True, exist_ok=True)
                 csv_path.rename(failed_dir / csv_path.name)
 
-            _print_upload_response_summary(response=response, payload=payload)
+            _print_upload_response_summary(
+                response=response, payload=payload, console_out=console
+            )
             error_code = (
                 payload.get("code")
                 if isinstance(payload, dict) and payload.get("code")
@@ -448,7 +459,9 @@ def process_file(
             )
             return
 
-        _print_upload_response_summary(response=response, payload=payload)
+        _print_upload_response_summary(
+            response=response, payload=payload, console_out=console
+        )
 
         if response.status_code in {200, 202}:
             # Move file to processed directory on successful upload
@@ -493,8 +506,11 @@ def upload_file_and_get_ingestion_id(
     retry_backoff_seconds: int,
     debug_request: bool,
     keep_files: bool,
+    console_out: Console | None = None,
 ) -> str | None:
     """Upload a file and return ingestion_id when the API returns one."""
+
+    out = console_out or console
 
     # Reuse the existing upload logic, but also surface ingestion_id for polling.
 
@@ -531,21 +547,22 @@ def upload_file_and_get_ingestion_id(
             }
 
             if debug_request:
-                console.print("--- Preparing HTTP Request ---")
-                console.print(f"URL: POST {url}")
-                console.print(f"Data: {data}")
-                console.print(f"Files: {files['file'][0]}")
-                console.print("-----------------------------")
+                out.print("--- Preparing HTTP Request ---")
+                out.print(f"URL: POST {url}")
+                out.print(f"Data: {data}")
+                out.print(f"Files: {files['file'][0]}")
+                out.print("-----------------------------")
 
-            console.print("")
+            out.print("")
             _print_upload_request_summary(
                 csv_path=csv_path,
                 instrument_id=str(config.get("instrument_id", "")),
                 run_id=str(run_id),
                 content_sha256=str(content_sha256),
+                console_out=out,
             )
-            console.print("")
-            console.print(f"SENDING REQUEST → POST {CSV_POST_API_ENDPOINT}")
+            out.print("")
+            out.print(f"SENDING REQUEST → POST {CSV_POST_API_ENDPOINT}")
 
             response = None
             # 429 backpressure can happen during high-throughput runs.
@@ -576,7 +593,7 @@ def upload_file_and_get_ingestion_id(
 
                         total_429_retries += 1
                         if total_429_retries > max_429_retries:
-                            console.print(
+                            out.print(
                                 "Received too many 429 responses; giving up on this file. "
                                 f"total_429_retries={total_429_retries}",
                                 style="warning",
@@ -600,20 +617,20 @@ def upload_file_and_get_ingestion_id(
                     break
                 except (RequestsConnectionError, RequestsTimeout) as e:
                     print("")
-                    console.print(
+                    out.print(
                         f"Upload attempt {attempt}/{max_upload_retries} failed: {e}"
                     )
                     if attempt < max_upload_retries:
                         time.sleep(retry_backoff_seconds * attempt)
                     else:
                         print("")
-                        console.print(
+                        out.print(
                             f"API not reachable; leaving {csv_path.name} in pending for retry."
                         )
                         print("")
                         return None
                 except RequestException as e:
-                    console.print(f"Request failed: {e}", style="error")
+                    out.print(f"Request failed: {e}", style="error")
                     if keep_files:
                         pass
                     else:
@@ -631,27 +648,31 @@ def upload_file_and_get_ingestion_id(
 
         if response.status_code == 429:
             # We exceeded max_429_retries above; treat as a normal failure.
-            console.print(f"Error: {response.text}", style="error")
+            out.print(f"Error: {response.text}", style="error")
             if keep_files:
                 pass
             else:
                 failed_dir.mkdir(parents=True, exist_ok=True)
                 csv_path.rename(failed_dir / csv_path.name)
 
-            _print_upload_response_summary(response=response, payload=payload)
+            _print_upload_response_summary(
+                response=response, payload=payload, console_out=out
+            )
             error_code = (
                 payload.get("code")
                 if isinstance(payload, dict) and payload.get("code")
                 else str(response.status_code)
             )
-            console.print("")
-            console.print(
+            out.print("")
+            out.print(
                 f"{csv_path.name}  UPLOAD FAILED: ERROR {error_code}",
                 style="error",
             )
             return None
 
-        _print_upload_response_summary(response=response, payload=payload)
+        _print_upload_response_summary(
+            response=response, payload=payload, console_out=out
+        )
 
         if response.status_code not in {200, 202}:
             if not keep_files:
@@ -663,8 +684,8 @@ def upload_file_and_get_ingestion_id(
                 if isinstance(payload, dict) and payload.get("code")
                 else str(response.status_code)
             )
-            console.print("")
-            console.print(
+            out.print("")
+            out.print(
                 f"{csv_path.name}  UPLOAD FAILED: ERROR {error_code}",
                 style="error",
             )
@@ -688,12 +709,12 @@ def upload_file_and_get_ingestion_id(
             processed_dir.mkdir(parents=True, exist_ok=True)
             csv_path.rename(processed_dir / csv_path.name)
 
-        console.print("")
-        console.print("STATUS: ACCEPTED", style="success")
+        out.print("")
+        out.print("STATUS: ACCEPTED", style="success")
 
         return str(ingestion_id) if ingestion_id is not None else None
     except IOError as e:
-        console.print(f"Error processing file {csv_path}: {e}", style="error")
+        out.print(f"Error processing file {csv_path}: {e}", style="error")
         if keep_files:
             pass
         else:
