@@ -81,6 +81,61 @@ ingestion, timestamp when API received the raw data, and error details.
 ### Error responses
 See Common Error Responses (404, 422)
 
+
+## `GET /v1/ingestions/{ingestion_id}/processing-events`
+
+### Description
+Returns an ordered list of processing/provenance events for the specified `ingestion_id`.
+These events include stage-level pipeline transitions (parse/validation/normalization/FHIR) as well as ingestion acceptance and idempotency-related events.
+
+This endpoint is intended for operational visibility (e.g., CLI demo output) and is the canonical HTTP way to derive per-stage status without directly querying the database.
+
+### URL Parameters
+`ingestion_id`: UUID. Required parameter.
+
+### Responses
+
+#### `200 OK`
+Returns a list of processing events associated with `ingestion_id`.
+The list MAY be empty (e.g., the ingestion exists but no events have been emitted yet).
+
+**Content-Type:** `application/json`
+
+**Body:**
+
+```json
+[
+  {
+    "event_id": "4c64c0c2-1b07-4b2b-8bd7-80e3c02ad1c4",
+    "ingestion_id": "a7b1c3d4-e5f6-7890-1234-567890abcdef",
+    "occurred_at": "2026-01-12T14:35:10.130Z",
+    "event_type": "INGESTION_ACCEPTED",
+    "actor": "ingestion-api",
+    "severity": "INFO",
+    "message": "Ingestion accepted",
+    "details": {
+      "instrument_id": "CANONICAL_CHEM_ANALYZER_V1",
+      "run_id": "20260112_001"
+    }
+  },
+  {
+    "event_id": "86afc5d7-15b8-4e8a-a3a4-8adbd44ddc55",
+    "ingestion_id": "a7b1c3d4-e5f6-7890-1234-567890abcdef",
+    "occurred_at": "2026-01-12T14:35:11.205Z",
+    "event_type": "PARSE_SUCCEEDED",
+    "actor": "parser",
+    "severity": "INFO",
+    "message": null,
+    "details": {
+      "row_count": 18
+    }
+  }
+]
+```
+
+### Error responses
+See Common Error Responses (404, 422)
+
 ## `GET /v1/ingestions/{ingestion_id}/diagnostic-reports?include_json=1`
 
 ### Description

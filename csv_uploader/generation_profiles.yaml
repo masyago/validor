@@ -20,11 +20,11 @@ profiles:
     valid_csv: False
     description: "Invalid file with missing required fields"
     panels_per_csv: 3
-    missing_columns: ["result", "test_code", "panel_code", "patient_id"]
+    missing_columns: ["test_code", "panel_code", "patient_id"]
     probability: 0.1
     negative_results: False
   
-  invalid_negative_result:
+  invalid_required_fields_missing_and_negative_result:
     valid_csv: False
     description: "Invalid file with negative result(s) and missing columns"
     panels_per_csv: 3

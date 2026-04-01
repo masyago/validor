@@ -289,20 +289,18 @@ class TestValidation:
         test_code = require("test_code")
         result_raw = require("result")
 
-        if test_code is None or result_raw is None:
-            return None, errors
+        if result_raw is not None:
+            result_comparator, remainder = self._parse_result_field(result_raw)
+            result_value_num = self._parse_result_numeric(remainder)
 
-        result_comparator, remainder = self._parse_result_field(result_raw)
-        result_value_num = self._parse_result_numeric(remainder)
-
-        if result_value_num is not None and result_value_num < 0:
-            errors.append(
-                RowValidationError(
-                    row_number=row_number,
-                    field="result",
-                    message="numeric result cannot be negative",
+            if result_value_num is not None and result_value_num < 0:
+                errors.append(
+                    RowValidationError(
+                        row_number=row_number,
+                        field="result",
+                        message="numeric result cannot be negative",
+                    )
                 )
-            )
 
         if errors:
             return None, errors

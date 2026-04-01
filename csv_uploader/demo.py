@@ -19,12 +19,9 @@ if __package__ in (None, ""):
 import argparse
 import json
 import time
-from uuid import UUID
 
 import requests
 from rich.rule import Rule
-from sqlalchemy import create_engine
-from sqlalchemy.orm import Session
 
 try:
     from csv_uploader.cli_rich import console
@@ -62,7 +59,7 @@ def _print_ingestion_processing_status(
     session: requests.Session,
 ) -> None:
     # Wait for terminal so the stage metrics are stable.
-    csv_uploader.poll_until_terminal(
+    status_payload = csv_uploader.poll_until_terminal(
         ingestion_id=ingestion_id,
         config=config,
         session=session,
@@ -70,93 +67,58 @@ def _print_ingestion_processing_status(
         status_poll_seconds=1,
     )
 
-    # Pull stage counts + final status from the DB.
-    from app.persistence import db as app_db
-    from app.persistence.models.provenance import ProcessingEventType
-    from app.persistence.repositories.ingestion_repo import IngestionRepository
-    from app.persistence.repositories.processing_event_repo import (
-        ProcessingEventRepository,
+    base_url = str(config.get("api_base_url", "http://localhost:8000")).rstrip(
+        "/"
     )
-
-    ingestion_uuid = UUID(ingestion_id)
-    engine = create_engine(app_db.DATABASE_URL, echo=False)
-    with Session(engine) as db_session:
-        ingestion = IngestionRepository(db_session).get_by_ingestion_id(
-            ingestion_uuid
+    events_url = f"{base_url}/v1/ingestions/{ingestion_id}/processing-events"
+    events: list[dict[str, Any]] = []
+    stage_events_warning: str | None = None
+    try:
+        r = session.get(
+            events_url,
+            timeout=csv_uploader.REQUEST_TIMEOUT_SECONDS,
         )
-        events = ProcessingEventRepository(db_session).list_by_ingestion_id(
-            ingestion_uuid
-        )
+        if r.status_code == 404:
+            stage_events_warning = "API missing /processing-events"
+        elif not r.ok:
+            stage_events_warning = f"HTTP {r.status_code}"
+        else:
+            payload = r.json()
+            if isinstance(payload, list):
+                events = [e for e in payload if isinstance(e, dict)]
+            else:
+                stage_events_warning = "invalid response"
+    except requests.RequestException:
+        stage_events_warning = "unreachable"
 
-    parse_details = _get_latest_event_details(
-        events=events,
-        event_types={
-            ProcessingEventType.PARSE_SUCCEEDED,
-            ProcessingEventType.PARSE_FAILED,
-        },
-    )
-    validation_details = _get_latest_event_details(
-        events=events,
-        event_types={
-            ProcessingEventType.VALIDATION_SUCCEEDED,
-            ProcessingEventType.VALIDATION_FAILED,
-        },
-    )
-    normalization_details = _get_latest_event_details(
-        events=events,
-        event_types={
-            ProcessingEventType.NORMALIZATION_RELATIONAL_SUCCEEDED,
-            ProcessingEventType.NORMALIZATION_RELATIONAL_FAILED,
-        },
-    )
+    def _event_types_present() -> set[str]:
+        out: set[str] = set()
+        for e in events:
+            t = e.get("event_type")
+            if isinstance(t, str):
+                out.add(t)
+        return out
 
-    row_count = parse_details.get("row_count")
-    panel_count = validation_details.get("panel_count")
-    test_count = validation_details.get("test_count")
-    dr_count = normalization_details.get("diagnostic_reports_created")
-    obs_count = normalization_details.get("observations_created")
+    types = _event_types_present()
 
-    parse_failed = _has_any_event_type(
-        events=events, event_types={ProcessingEventType.PARSE_FAILED}
+    parse_failed = "PARSE_FAILED" in types
+    parse_succeeded = "PARSE_SUCCEEDED" in types
+
+    validation_failed = "VALIDATION_FAILED" in types
+    validation_succeeded = "VALIDATION_SUCCEEDED" in types
+
+    normalization_failed = (
+        "NORMALIZATION_FAILED" in types
+        or "NORMALIZATION_RELATIONAL_FAILED" in types
     )
-    parse_succeeded = _has_any_event_type(
-        events=events, event_types={ProcessingEventType.PARSE_SUCCEEDED}
-    )
-    validation_failed = _has_any_event_type(
-        events=events, event_types={ProcessingEventType.VALIDATION_FAILED}
-    )
-    validation_succeeded = _has_any_event_type(
-        events=events, event_types={ProcessingEventType.VALIDATION_SUCCEEDED}
-    )
-    normalization_failed = _has_any_event_type(
-        events=events,
-        event_types={
-            ProcessingEventType.NORMALIZATION_FAILED,
-            ProcessingEventType.NORMALIZATION_RELATIONAL_FAILED,
-        },
-    )
-    normalization_succeeded = _has_any_event_type(
-        events=events,
-        event_types={
-            ProcessingEventType.NORMALIZATION_SUCCEEDED,
-            ProcessingEventType.NORMALIZATION_SUCCEEDED_WITH_WARNINGS,
-            ProcessingEventType.NORMALIZATION_RELATIONAL_SUCCEEDED,
-        },
-    )
-    fhir_failed = _has_any_event_type(
-        events=events,
-        event_types={ProcessingEventType.FHIR_JSON_GENERATION_FAILED},
-    )
-    fhir_succeeded = _has_any_event_type(
-        events=events,
-        event_types={ProcessingEventType.FHIR_JSON_GENERATION_SUCCEEDED},
+    normalization_succeeded = (
+        "NORMALIZATION_SUCCEEDED" in types
+        or "NORMALIZATION_SUCCEEDED_WITH_WARNINGS" in types
+        or "NORMALIZATION_RELATIONAL_SUCCEEDED" in types
     )
 
-    def _fmt_int(value: object) -> str:
-        return str(value) if isinstance(value, int) else "?"
-
-    valid_rows = row_count if isinstance(row_count, int) else None
-    invalid_rows = 0 if valid_rows is not None else None
+    fhir_failed = "FHIR_JSON_GENERATION_FAILED" in types
+    fhir_succeeded = "FHIR_JSON_GENERATION_SUCCEEDED" in types
 
     def _stage_symbol_and_label(
         *, failed: bool, succeeded: bool, skipped: bool
@@ -187,6 +149,11 @@ def _print_ingestion_processing_status(
     console.print("")
     console.print(Rule("INGESTION PROCESSING STATUS"))
     console.print(f"ingestion_id: {ingestion_id}")
+    if stage_events_warning:
+        console.print(
+            f"stage events unavailable ({stage_events_warning})",
+            style="warning",
+        )
     console.print("")
 
     previous_stage_failed = False
@@ -241,29 +208,26 @@ def _print_ingestion_processing_status(
     )
 
     console.print("")
-    final_status = ingestion.status if ingestion is not None else "UNKNOWN"
+    final_status = (
+        status_payload.get("status")
+        if isinstance(status_payload, dict)
+        else None
+    )
+    if not isinstance(final_status, str) or not final_status:
+        final_status = "UNKNOWN"
     console.print(f"FINAL STATUS: {final_status}")
 
-    if ingestion is None:
-        return
-
-    if (
-        isinstance(ingestion.status, str)
-        and ingestion.status.upper() == "COMPLETED"
-    ):
-        base_url = "http://localhost:8000"
+    if isinstance(final_status, str) and final_status.upper() == "COMPLETED":
         console.print("")
         console.print(Rule("LINKS"))
-        console.print(
-            f"Status:            {base_url}/v1/ingestions/{ingestion_id}"
-        )
+        console.print(f"Status: {base_url}/v1/ingestions/{ingestion_id}")
         console.print("")
         console.print(
             f"DiagnosticReports: {base_url}/v1/ingestions/{ingestion_id}/diagnostic-reports"
         )
         console.print("")
         console.print(
-            f"Observations:      {base_url}/v1/ingestions/{ingestion_id}/observations"
+            f"Observations: {base_url}/v1/ingestions/{ingestion_id}/observations"
         )
         console.print("")
         console.print(
@@ -271,14 +235,26 @@ def _print_ingestion_processing_status(
         )
         console.print("")
 
-    if isinstance(
-        ingestion.status, str
-    ) and ingestion.status.upper().startswith("FAILED"):
+    if isinstance(final_status, str) and final_status.upper().startswith(
+        "FAILED"
+    ):
         console.print("")
         console.print(Rule("ERRORS"))
-        console.print(f"error_code: {ingestion.error_code or 'UNKNOWN'}")
 
-        details = ingestion.error_detail
+        error_code = (
+            status_payload.get("error_code")
+            if isinstance(status_payload, dict)
+            else None
+        )
+        console.print(
+            f"error_code: {error_code if isinstance(error_code, str) and error_code else 'UNKNOWN'}"
+        )
+
+        details = (
+            status_payload.get("error_detail")
+            if isinstance(status_payload, dict)
+            else None
+        )
         if details is None:
             console.print("error_detail: <none>")
         else:

@@ -162,6 +162,7 @@ def generate_csv_rows(
     # If this profile is meant to inject a defect, force at least one negative
     # numeric result (but only one) somewhere in the generated CSV.
     force_one_negative = bool(profile.get("negative_results", False))
+    apply_missing_columns_to_all_rows = bool(profile.get("valid_csv", True))
     total_result_rows = sum(
         len(panel_analytes) for panel_analytes in selected_panels
     )
@@ -170,6 +171,42 @@ def generate_csv_rows(
         if force_one_negative and total_result_rows > 0
         else None
     )
+
+    # For invalid CSV profiles, omitting *all* missing columns on *all* rows
+    # creates huge, noisy validation error output. Instead, omit each specified
+    # column in only one row per CSV (one row per missing field).
+    missing_column_row_index: dict[str, int] = {}
+    if (
+        missing_columns
+        and not apply_missing_columns_to_all_rows
+        and total_result_rows > 0
+    ):
+        used_row_indices: set[int] = set()
+        all_indices = list(range(total_result_rows))
+
+        for col in missing_columns:
+            # Avoid colliding with forced negative row when also omitting result,
+            # so we still inject both defects at least once.
+            candidates = all_indices
+            if (
+                col == "result"
+                and forced_negative_row_index is not None
+                and total_result_rows > 1
+            ):
+                candidates = [
+                    i for i in all_indices if i != forced_negative_row_index
+                ]
+
+            # Prefer unique rows for readability when possible.
+            unique_candidates = [
+                i for i in candidates if i not in used_row_indices
+            ]
+            pick_from = unique_candidates or candidates
+            if not pick_from:
+                continue
+            chosen = random.choice(pick_from)
+            missing_column_row_index[col] = chosen
+            used_row_indices.add(chosen)
 
     # CSV header
     csv_data = [
@@ -228,13 +265,20 @@ def generate_csv_rows(
             # Apply missing columns strategy
             for col in missing_columns:
                 if col in row:
-                    if (
-                        col == "result"
-                        and forced_negative_row_index is not None
-                        and result_row_index == forced_negative_row_index
-                    ):
-                        continue
-                    row[col] = ""  # Omit the value
+                    if apply_missing_columns_to_all_rows:
+                        if (
+                            col == "result"
+                            and forced_negative_row_index is not None
+                            and result_row_index == forced_negative_row_index
+                        ):
+                            continue
+                        row[col] = ""  # Omit the value
+                    else:
+                        if (
+                            missing_column_row_index.get(col)
+                            == result_row_index
+                        ):
+                            row[col] = ""  # Omit the value
 
             result_row_index += 1
 

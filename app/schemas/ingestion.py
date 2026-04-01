@@ -111,6 +111,17 @@ class ReadIngestionIdFoundOkResponse(BaseModel):
     error_detail: dict[str, Any] | None = None
 
 
+class ReadProcessingEventOkResponse(BaseModel):
+    event_id: UUID
+    ingestion_id: UUID
+    occurred_at: datetime
+    event_type: str
+    actor: str
+    severity: str
+    message: str | None = None
+    details: dict[str, Any] | None = None
+
+
 class ReadDiagnosticReportsOkResponse(BaseModel):
     diagnostic_report_id: UUID
     patient_id: PatientId

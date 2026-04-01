@@ -25,6 +25,7 @@ from app.schemas.ingestion import (
     PathResourceNotFoundResponse,
     ReadDiagnosticReportsOkResponse,
     ReadObservationsOkResponse,
+    ReadProcessingEventOkResponse,
 )
 
 from app.schemas.identifiers import PatientId
@@ -597,6 +598,53 @@ async def read_observations_for_ingestion_id(
         list_row_responses.append(row_response)
 
     return list_row_responses
+
+
+@router.get(
+    "/ingestions/{ingestion_id}/processing-events",
+    response_model=list[ReadProcessingEventOkResponse],
+    response_model_exclude_unset=True,
+    responses={
+        status.HTTP_404_NOT_FOUND: {
+            "model": PathResourceNotFoundResponse,
+            "description": "Item not found",
+        },
+    },
+)
+def read_processing_events_for_ingestion_id(
+    ingestion_id: UUID,
+    db: Session = Depends(get_session),
+) -> list[ReadProcessingEventOkResponse]:
+    pe_repo = ProcessingEventRepository(db)
+    pe_rows = pe_repo.list_by_ingestion_id(ingestion_id)
+
+    if not pe_rows:
+        ingestion_repo = IngestionRepository(db)
+        ingestion_row = ingestion_repo.get_by_ingestion_id(ingestion_id)
+        if ingestion_row is None:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=PathResourceNotFoundResponse(
+                    ingestion_id=ingestion_id,
+                    detail="Item not found",
+                ).model_dump(mode="json", exclude_none=True),
+            )
+
+    out: list[ReadProcessingEventOkResponse] = []
+    for row in pe_rows:
+        out.append(
+            ReadProcessingEventOkResponse(
+                event_id=row.event_id,
+                ingestion_id=row.ingestion_id,
+                occurred_at=row.occurred_at,
+                event_type=row.event_type.value,
+                actor=row.actor.value,
+                severity=row.severity.value,
+                message=row.message,
+                details=row.details,
+            )
+        )
+    return out
 
 
 # `GET /v1/patients/{patient_id}/diagnostic-reports?include_json=1&limit=...&offset=...`
