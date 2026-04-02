@@ -151,7 +151,7 @@ def _print_ingestion_processing_status(
             succeeded=succeeded,
             skipped=skipped,
         )
-        out.print(f"{label:<14} {symbol} {status}{detail}")
+        out.print(f"{label:<16} {symbol} {status}{detail}")
 
     out.print("")
     out.print("")
