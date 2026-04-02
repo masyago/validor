@@ -1,33 +1,38 @@
-# Clinical Lab Analyzer
-Clinical Lab Analyzer is a backend service that ingests laboratory analyzer 
-outputs as CSV, validates and normalizes results, enriches findings with schema-validated, non-authoritative annotations using controlled LLM workflows, and persist data in a FHIR-compliant PostgreSQL
-database with full auditability.
+# Validor (Clinical Lab Analyzer)
 
-## Scope
-### In Scope
+Validor is a backend service that ingests lab analyzer data, validates and 
+normalizes results, and persists FHIR-shaped data in PostgreSQL database with 
+full auditability.
 
-* Ingestion of canonical analyzer output
-    * The system assumes a canonical analyzer output schema. 
-      Instrument-specific formats would be handled via adapter layers in 
-      production
-    * The project models a subset of chemistry analyzer outputs. Hematology, 
-      coagulation, and hormone testing are out of scope.
-* Data ingestion format: CSV
-* Two FHIR resources:
-    * Observation (individual analytes)
-    * DiagnosticReport (panel-level grouping)
+I worked with a lot analytical lab results and know how challenging it is to keep
+the data process it, keep complaint, and preserve auditability. My goal is
+to build a service that does it all for you without adding extra complexity.
 
+In the next iterations, I'm planning to add AI enrichment of the findings by 
+implementing controlled, non-authoritative LLM workflows.
 
+## Demo
 
-### Out of Scope
+### Web demo: <URL>
+  * Select a file from the dropdown menu. Click `Upload`
+  * Ingestion status and uploading metadata will be displayed. 
+  * If the data was validated and normalized without errors, use 
+  `DiagnosticReports Data` and `Observation Data` buttons to show and hide 
+   the data.
 
-* Processing output from a vendor-specific analyzer
-* Frontend dashboards
-* Real clinical workflows
-* Authentication
-* Multi-tenant billing
-* Real device integrations
-* Real PHI
+### CLI demo:
+  * Install package
+  * Start docker containers
+  * Run command:
+    `uv run python run demo/cli_demo.py --once`
+  * Process and terminal output:
+    * CSV generator creates a file with randomly selected file profile (valid 
+      or invalid).
+    * Uploader sends an API request and receives the response.
+    * The service validates and normalizes and persists the data. Polling status
+      is shown for each stage. In case of failed validation, error details are
+      displayed.
+
 
 ## Tech Stack
 
@@ -38,23 +43,45 @@ database with full auditability.
 * **Testing:** Pytest
 * **Environment & Dependency Management:** uv
 
+## Scope
+### In Scope
+
+* Ingestion of canonical analyzer output
+    * The system assumes a canonical analyzer output schema. 
+      Instrument-specific formats would be handled via adapter layers in 
+      production
+    * The service models a subset of chemistry analyzer outputs
+* Data ingestion format: CSV
+* Two FHIR resources:
+    * Observation (individual analytes)
+    * DiagnosticReport (panel-level grouping)
+
+
+### Out of Scope
+
+* Processing output from a vendor-specific analyzer
+* Frontend dashboards
+* Real clinical workflows
+* Authentication
+* Multi-tenant billing
+* Real device integrations
+* PHI
 
 ## Service Architecture
 
 ### High-level overview
 
+TODO: include architecture diagram
+
 The service has layered architecture to isolate concerns and ensure that
 each layer has access only to the data appropriate to its responsibility. 
-AI is treated as a controlled, non-authoritative augmentation layer
 
-1. External data source: Lab Analyzer Simulator
+1. External data source: Lab Analyzer Simulator and uploader (middleware)
     * Data flows into the system through a controlled API boundary. No direct
      access to database and service-layer is allowed
     * The system assumes a canonical analyzer output schema. 
-      Instrument-specific formats would be handled via adapter layers in 
-      production
-    * API layer create an export request record
-    * A simulated middleware fulfills it and then sends data to the API layer
+    * An uploader/middleware forms a request to API and sends data to the API 
+      layer
     * Authentication between uploader and API is intentionally omitted in this
      project; in production this boundary would be secured via 
      service-to-service authentication (e.g., mTLS or signed tokens) and 
@@ -66,41 +93,55 @@ AI is treated as a controlled, non-authoritative augmentation layer
    * API Layer keeps track of each ingestion status:
       - `RECEIVED`
       - `PROCESSING`
-      - `FAILED VALIDATION` - terminal. Invalid input/schema. Any validation error persist nothing for `Panel` and `Test`. 
       - `COMPLETED`
+      - `FAILED VALIDATION` - terminal. Invalid input/schema. Any validation 
+        error persists nothing in tables containing results. Uploaded file, 
+        it's metadata and processing events are persisted regardless of validation
+        status.
       - `FAILED` - terminal non-validation errors
+
+    * TODO: add API contracts links
 
 3. Service Layer: Domain and Business Logic
    * Responsible for data validation, normalization, and conversion into domain
      models
-   * Coordinates with AI enrichment workflows
-   * FHIR Serializer versions are append-only. No silent edits to existing versions allowed.
+   * FHIR Serializer versions are append-only. No silent edits to existing 
+     versions allowed.
 
 
 4. Persistence Layer: Database
-   * Stores raw and normalized data, generated FHIR resources and 
-     processing metadata
+   * Stores raw and normalized data, generated FHIR resources,
+     metadata, and and processing events.
+    * TODO: add DB diagram (short version)
 
+5. TODO: Think where to mention provenance 
 
 ### Trade-offs
-Authentication and Trust Model
-For simplicity, the CSV uploader and ingestion API are assumed to operate within a trusted internal network. Authentication is intentionally omitted. In a production setting, this boundary would be enforced via API keys, mTLS, or service identity.
 
-FHIR Resources
-We deliberately don’t use a full FHIR object library. Instead, we emit a strictly versioned, minimal R4-compliant projection using Pydantic so the JSON exactly reflects our domain semantics and remains reproducible across pipeline versions.
+#### Authentication and Trust Model
+For simplicity, the CSV uploader and ingestion API are assumed to operate 
+within a trusted internal network. Authentication is intentionally omitted. 
+In a production setting, this boundary would be enforced via API keys, mTLS, or service identity.
+
+#### FHIR Resources
+We deliberately don’t use a full FHIR object library. Instead, we emit a 
+strictly versioned, minimal R4-compliant projection using Pydantic so the JSON 
+exactly reflects our domain semantics and remains reproducible across pipeline 
+versions.
+
 
 ## Metrics
 * Ingestion validation accuracy
 * Performance optimization: Throughput increase
-    * Process measured between INGESTION_ACCEPTED and (NORMALIZATION_SUCCEEDED or NORMALIZATION_SUCCEEDED_WITH_WARNINGS or NORMALIZATION_FAILED = "NORMALIZATION_FAILED")
-    * either ingestions per minute or row/second
+    * Process measured between INGESTION_ACCEPTED and (NORMALIZATION_SUCCEEDED
+     or NORMALIZATION_SUCCEEDED_WITH_WARNINGS or NORMALIZATION_FAILED = "NORMALIZATION_FAILED")
+    * ingestions per minute
+    * number of queries per data row
 * Test coverage
-* (Maybe) Query N+1 optimization
 
 ## Database
-Data pipeline: raw ingest - parsed relations - validated and normalized FHIR artifacts
-
-
+Data pipeline: raw ingest - parsed relations - validated and normalized FHIR artifacts.
+At each stage services emit processing event records for ensure auditability.
 
 
 ## Features
@@ -110,7 +151,6 @@ Data pipeline: raw ingest - parsed relations - validated and normalized FHIR art
 The service works with 2 resources: DiagnosticReport and Observation.
 DiagnosticReport resource groups Observation resources and provides clinical 
 context. Observation resource contains individual test result.
-
 
 
 ## Installation & Setup
@@ -128,13 +168,38 @@ cd path/to/folder
 
 2. **Create environment files**
 
+4. **Build docker images and start containers**
+   Starting the containers and database migration can take a few seconds.
+
+```sh
+docker compose up --build
+```
+
+5. **Run the application**
+   
+   In a different terminal,
+
+  * To generate a CSV and upload it in one command:
+      ```sh
+      uv run python run demo/cli_demo.py --once
+      ```
+  * To run the CSV generator and uploader separately:
     
-3. **Update secrets and API keys**
+    * Run CSV generator. By default it saves the CSV in a folder 
+      `csv_uploader/simulated_exports/pending`:
+      ```sh
+      uv run python run csv_uploader/csv_generator.py
+      ```
 
-4. **Build and run the application**
+    * Run CSV uploader. By default it processes all CSV files from 
+      `csv_uploader/simulated_exports/pending` directory and moves them to 
+      `csv_uploader/simulated_exports/uploaded` in case of successful API 
+      request (code 200 or 202) or to `csv_uploader/simulated_exports/failed`
+      if API response indicated error (e.g. 409).
 
-5. **Access the application**
-
+      ```sh
+      uv run python run csv_uploader/csv_uploader.py
+      ```
 
 ## Stopping the Application
 ```sh
@@ -142,12 +207,16 @@ docker compose down
 ```
 ## Application Screenshots 
 
+![Data file is generated and uploaded](supporting_docs/screenshots/cli_valid_file_generated_uploaded.png)
+
+![Ingestion status displayed](supporting_docs/screenshots/cli_ingestion_status_complete.png)
+
+In case of errors, error details are included for each data row to ensure
+traceability.
+
+![Failed validation: errors included](supporting_docs/screenshots/cli_ingestion_status_errors.png)
 
 
-## Development Roadmap
-- Replace in-process  FAST API background tasks to more durable workers:
- Celery and Redis
-- 
 
 ## Local Demo Workflow (Simulator + Uploader)
 
@@ -193,28 +262,13 @@ E2E_BASE_URL=http://localhost:8000 uv run pytest -m e2e -q
 Notes:
 - E2E tests are excluded from the default `pytest` run (they can be slower and require a running API).
 
-### Run a single local demo command
-Starts the uploader watcher and generates a CSV every 60 seconds:
-```sh
-uv run python -m csv_uploader.demo --generate-every 60
-```
+## Development Roadmap
 
-### One-command "generate + upload" (good for technical reviewers)
-Generates one CSV and waits until the uploader moves it to `uploaded/` or `failed/`:
-```sh
-uv run python -m csv_uploader.demo --once
-```
-
-### VS Code tasks
-
-This repo includes [.vscode/tasks.json](.vscode/tasks.json) so you can run:
-- **API: fastapi dev**
-- **Sim: uploader watch**
-- **Sim: generate CSV once**
-- **Sim: demo (generate + upload)**
-
-### Tech Enhancements
-
+* Add an AI enrichment of findings, such as reference ranges, historical context,
+  and clinical guidelines used as a controlled augmentation layer (RAG, schema 
+  verification, acceptance process)
+* Replace in-process FastAPI background tasks with more durable workers for 
+  enhanced reliability and further throughput increase 
 
 ## License
 MIT
@@ -224,7 +278,7 @@ MIT
 
 * **0.0.1** Pre-release
 
-**Last Updated:** January 2025
+**Last Updated:** April 2026
 
 
 

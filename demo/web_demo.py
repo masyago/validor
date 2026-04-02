@@ -7,13 +7,14 @@ from typing import Any
 
 import requests
 import streamlit as st
+from PIL import Image
 
 if __package__ in (None, ""):
     import sys
 
     sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
-from csv_uploader import cli_demo
+from demo import cli_demo
 from csv_uploader import csv_uploader
 import importlib
 
@@ -24,11 +25,47 @@ import csv_uploader.cli_rich as cli_rich
 cli_rich = importlib.reload(cli_rich)
 make_console = cli_rich.make_console
 
+st.image("demo/validor_logo.svg")
 folder_path = "demo/csv_files"
 
 # Get list of files in the directory
 # Filter by extension if necessary (e.g., only .csv files)
 files = sorted([f for f in os.listdir(folder_path) if f.endswith(".csv")])
+
+
+# @st.cache_data(show_spinner=False)
+# def _load_logo_image(
+#     *, display_width_px: int, device_pixel_ratio: int = 2
+# ) -> Image.Image:
+#     """Return a logo image that stays crisp on high-DPI displays.
+
+#     We resize to `display_width_px * device_pixel_ratio` pixels and then ask
+#     Streamlit/browser to display it at `display_width_px` CSS pixels.
+#     """
+
+#     logo_path = Path(__file__).resolve().parent / "logo_v2.png"
+#     img = Image.open(logo_path)
+
+#     # Pillow >= 9 uses Image.Resampling; keep a fallback for older versions.
+#     resample = (
+#         Image.Resampling.LANCZOS
+#         if hasattr(Image, "Resampling")
+#         else Image.LANCZOS
+#     )
+
+#     target_w = int(display_width_px * device_pixel_ratio)
+#     aspect_ratio = img.height / img.width
+#     target_h = int(target_w * aspect_ratio)
+#     return img.resize((target_w, target_h), resample=resample)
+
+
+# LOGO_DISPLAY_WIDTH = 100
+# st.image(
+#     _load_logo_image(
+#         display_width_px=LOGO_DISPLAY_WIDTH, device_pixel_ratio=2
+#     ),
+#     width=LOGO_DISPLAY_WIDTH,
+# )
 
 # st.title("Clinical Lab Analyzer — Web Demo")
 st.header("Clinical Lab Analyzer — Web Demo", divider="rainbow")

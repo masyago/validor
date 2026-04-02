@@ -1,0 +1,87 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="360" viewBox="0 0 1200 360" role="img" aria-labelledby="title desc">
+  <title id="title">Validor logo</title>
+  <desc id="desc">Vector logo for Validor with shield checkmark icon and wordmark, optimized for dark backgrounds.</desc>
+
+  <defs>
+    <linearGradient id="shieldGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#35E6D6"/>
+      <stop offset="55%" stop-color="#1395E6"/>
+      <stop offset="100%" stop-color="#133EBC"/>
+    </linearGradient>
+
+    <linearGradient id="checkGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#FFFFFF"/>
+      <stop offset="100%" stop-color="#DDF5FF"/>
+    </linearGradient>
+
+    <filter id="softGlow" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="10" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+
+    <filter id="textGlow" x="-40%" y="-40%" width="180%" height="180%">
+      <feGaussianBlur stdDeviation="6" result="blur"/>
+      <feColorMatrix in="blur" type="matrix"
+        values="1 0 0 0 0
+                0 1 0 0 0
+                0 0 1 0 0
+                0 0 0 0.28 0" result="soft"/>
+      <feMerge>
+        <feMergeNode in="soft"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+
+  <rect x="30" y="45" width="1140" height="270" rx="34" fill="none" stroke="rgba(255,255,255,0.12)"/>
+
+  <g transform="translate(90 46)">
+    <ellipse cx="138" cy="120" rx="112" ry="96" fill="#35E6D6" opacity="0.18" filter="url(#softGlow)"/>
+    <path d="M140 18
+             C110 30, 74 33, 48 40
+             L45 99
+             C45 168, 93 215, 140 250
+             C187 215, 235 168, 235 99
+             L232 40
+             C206 33, 170 30, 140 18Z"
+          fill="url(#shieldGrad)"/>
+
+    <path d="M140 18
+             C110 30, 74 33, 48 40
+             L45 99
+             C45 168, 93 215, 140 250
+             C187 215, 235 168, 235 99
+             L232 40
+             C206 33, 170 30, 140 18Z"
+          fill="none" stroke="rgba(255,255,255,0.22)" stroke-width="2"/>
+
+    <path d="M58 138 L119 189 L243 43 L121 210 Z"
+          fill="url(#checkGrad)" opacity="0.98"/>
+
+    <rect x="90" y="77" width="58" height="20" rx="3" fill="#F6FCFF"/>
+    <rect x="109" y="58" width="20" height="58" rx="3" fill="#F6FCFF"/>
+
+    <g fill="#F6FCFF" opacity="0.9">
+      <circle cx="82" cy="70" r="2.6"/>
+      <circle cx="72" cy="87" r="2.2"/>
+      <circle cx="176" cy="59" r="2.4"/>
+      <circle cx="194" cy="76" r="2.1"/>
+      <circle cx="187" cy="165" r="2.3"/>
+      <circle cx="204" cy="184" r="2"/>
+      <circle cx="88" cy="173" r="2.1"/>
+    </g>
+
+    <g stroke="#F6FCFF" stroke-width="1.8" stroke-linecap="round" opacity="0.9">
+      <path d="M82 62 v-7 M82 78 v7 M74 70 h-7 M90 70 h7"/>
+      <path d="M176 50 v-6 M176 68 v6 M167 59 h-6 M185 59 h6"/>
+      <path d="M187 156 v-6 M187 174 v6 M178 165 h-6 M196 165 h6"/>
+    </g>
+  </g>
+
+  <g transform="translate(375 0)" filter="url(#textGlow)">
+    <text x="0" y="212" font-family="Inter, Segoe UI, Helvetica, Arial, sans-serif" font-size="132" font-weight="650" letter-spacing="-4" fill="#F7FBFF">Validor</text>
+  </g>
+</svg>
