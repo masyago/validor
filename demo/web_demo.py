@@ -25,7 +25,7 @@ import csv_uploader.cli_rich as cli_rich
 cli_rich = importlib.reload(cli_rich)
 make_console = cli_rich.make_console
 
-st.image("demo/validor_logo.svg")
+# st.image("demo/validor_logo.svg")
 folder_path = "demo/csv_files"
 
 # Get list of files in the directory
@@ -68,7 +68,7 @@ files = sorted([f for f in os.listdir(folder_path) if f.endswith(".csv")])
 # )
 
 # st.title("Clinical Lab Analyzer — Web Demo")
-st.header("Clinical Lab Analyzer — Web Demo", divider="rainbow")
+st.header("Validor", divider="rainbow")
 
 # Create the dropdown menu
 selected_filename = st.selectbox("Select a file to upload:", files)
