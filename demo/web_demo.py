@@ -68,7 +68,8 @@ files = sorted([f for f in os.listdir(folder_path) if f.endswith(".csv")])
 # )
 
 # st.title("Clinical Lab Analyzer — Web Demo")
-st.header("Validor", divider="rainbow")
+st.header(":blue[validor]", divider="rainbow")
+# color="#4a6fa5",
 
 # Create the dropdown menu
 selected_filename = st.selectbox("Select a file to upload:", files)
