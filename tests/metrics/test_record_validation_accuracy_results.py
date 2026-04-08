@@ -3,7 +3,7 @@ from __future__ import annotations
 from datetime import datetime, timezone
 
 from app.persistence.models.core import Ingestion
-from metrics.record_validation_accuracy_results import (
+from metrics.validation_accuracy.record_validation_accuracy_results import (
     collect_validation_accuracy_results,
 )
 
