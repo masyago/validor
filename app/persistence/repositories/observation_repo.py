@@ -12,8 +12,13 @@ Methods:
 - retrieve a row by observation_id (one or zero)
 - retrieve a row by diagnostic_report_id (zero or more)
 - retrieve a row by test_id (one or zero)
+- retrieve rows by a list of test_id's (zero or more)
 - retrieve rows by ingestion_id (zero or more)
 - add a new row
+- upsert a row
+- upsert multiple rows
+- update resource JSON (one and many)
+- retrieve rows by patient_id (zero or more)
 """
 
 

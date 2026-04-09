@@ -31,23 +31,19 @@ implementing controlled, non-authoritative LLM workflows.
 
 
 ### CLI demo:
-  * Install package
-  * Start docker containers
+* Install package
+* In terminal A, initialize docker containers. It will start API and database
+containers and migrate schemas. It can take a few seconds.
 ```sh
 docker compose up --build
 ```
-  * Run demo command:
-```sh
-uv run python run demo/cli_demo.py --once
-```
 
-  * What you see in the demo:
-    * CSV generator creates a file with a randomly selected CSV profile (valid 
-      or invalid).
-    * Uploader sends an API request and receives the response.
-    * The service validates, normalizes and persists the data. Polling status
-      is shown for each stage. In case of failed validation, error details are
-      displayed.
+* In terminal B, run demo file. You will see summary of generated CSV file, 
+the upload to API, API response, and status for each stage of the data pipeline, 
+along with the final status for the ingestion.
+```sh
+uv run python demo/cli_demo.py --once
+```
 
 
 ## Tech Stack
@@ -174,8 +170,8 @@ versions.
        files/min.
 * Test coverage
   * Average test coverage is 94%, median test coverage is 95%. Coverage 
-    tracked for business logic and idempotent persistence paths. End-to-end 
-    testing is not included.
+    tracked for business logic and repositories containing idempotent 
+    persistence paths. End-to-end testing is not included in the metric.
 
 ## Features
 

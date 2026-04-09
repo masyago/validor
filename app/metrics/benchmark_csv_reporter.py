@@ -66,8 +66,7 @@ def _coerce_top_items(raw_items: Any) -> list[BenchmarkTopItem]:
 
 
 def benchmark_results_csv_path() -> str | None:
-    """Where to append benchmark rows.
-
+    """
     When set, each processed ingestion appends a single CSV row suitable for
     import into Google Sheets.
 
@@ -124,7 +123,7 @@ def benchmark_fieldnames(*, top_n: int) -> list[str]:
             ]
         )
 
-    # NOTE: Any newly added columns must go at the END to preserve stable
+    # Newly added columns must go at the END to preserve stable
     # positions for existing per-ingestion columns in downstream tooling.
     batch_cols = [
         "result_kind",
@@ -167,11 +166,8 @@ def append_benchmark_row(
     sql_top_by_total_time: Any = None,
     sql_top_by_count: Any = None,
 ) -> None:
-    """Append a single benchmark row to a results CSV.
-
-    Designed to be:
-    - stable column order (good for Sheets import)
-    - safe for concurrent append within one host (uses file lock when available)
+    """
+    Append a single benchmark row to CSV.
     """
 
     top_n = _int_env("CLA_BENCHMARK_TOP_N", _DEFAULT_TOP_N)
@@ -256,7 +252,6 @@ def append_benchmark_row(
     fieldnames = benchmark_fieldnames(top_n=top_n)
 
     # Use a lock for safe concurrent append on Unix.
-    # On platforms without fcntl (or if it fails), we still attempt a best-effort append.
     with path.open("a+", newline="", encoding="utf-8") as f:
         if fcntl is not None:  # pragma: no cover (covered on Unix)
             try:
@@ -298,7 +293,8 @@ def append_benchmark_batch_row(
     batch_total_wall_time_s: float,
     batch_files_per_min: float | None,
 ) -> None:
-    """Append an aggregate row representing a batch run (e.g., 50-file run).
+    """
+    Append an aggregate row representing a batch run (i.e. set of 50).
 
     Uses the same CSV file and fieldnames as per-ingestion rows.
     """

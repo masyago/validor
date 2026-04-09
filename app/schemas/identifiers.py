@@ -7,7 +7,8 @@ from pydantic import AfterValidator
 
 
 def normalize_patient_id(value: str) -> str:
-    """Normalize a patient identifier of the form `PAT-<uuid>`.
+    """
+    Normalize a patient identifier of the form `PAT-<uuid>`.
 
     - Accepts any case for the `PAT-` prefix (e.g., `pat-...`, `Pat-...`).
     - Canonicalizes to `PAT-<uuid>` where the UUID is in canonical lowercase.

@@ -168,7 +168,9 @@ class DiagnosticReportRepository:
     ) -> list[DiagnosticReport]:
         """
         Returns zero or multiple rows. If zero rows, returns an empty list.
-        Results are ordered by (1) effective_at datetime in descending order (new first). If datetime the same, they're additionally ordered by diagnostic_report_id (to preserve order of results).
+        Results are ordered by effective_at datetime in descending order
+        (new first). If datetime the same, they're additionally ordered by
+        diagnostic_report_id (to preserve order of results).
         """
         stmt = (
             select(DiagnosticReport)

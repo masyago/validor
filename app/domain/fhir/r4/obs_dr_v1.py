@@ -249,7 +249,8 @@ class R4ObsDrV1Serializer:
         self, dr: DiagnosticReport, observations: Sequence[Any]
     ) -> dict[str, Any]:
         """
-        Map one normalized DiagnosticReport row (and related Observations) to an R4 DiagnosticReport dict.
+        Map one normalized DiagnosticReport row (and related Observations) to
+        an R4 DiagnosticReport dict.
         """
 
         result_refs = [

@@ -34,5 +34,7 @@ alembic/versions/__pycache__/
 
 # Chatbot history
 copilot_outputs/
+.specstory/**
 
-.specstory/
+# Internal docs
+dev_only/

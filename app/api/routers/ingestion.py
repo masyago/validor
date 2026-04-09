@@ -189,26 +189,23 @@ async def create_ingestion(
     file: Annotated[UploadFile, File()],
     metadata: IngestionMetadata = Depends(IngestionMetadata.as_form),
     db: Session = Depends(get_session),
-    # Uncomment when background tasks and database implemented:
-    # background_tasks: BackgroundTasks,
 ):
     """
     Logic:
-    - [No code - handled by FastAPI automatically].
+    - [handled by FastAPI automatically].
        Check media type. If not multipart/form-data:
         - return code 415
-    - [Can be handled by FastAPI automatically btu it won't use custom model.
-       Need to write code to overwrite default behavior.]. Check that all required fields present. If not,   return 422 - Missing field
-        - [DONE] if file size exceeds limit, return 413
-        - [DONE] generate content hash server_sha256
-            - if content_sha256 provided
-                - if content_sha256 != server_sha256:
-                                        - return 400 Content hash mismatch
-        - check if combination of instrument_id and run_id present in database
-          already. if yes, retrieve server_sha256.
-            - compare server_sha256_new to server_sha256.
-               - if differ, return 409
-               - if teh same, return 200
+    - Check that all required fields present. If not, return 422 - Missing field
+        - if file size exceeds limit, return 413
+    - Generate content hash server_sha256
+        - if content_sha256 provided
+            - if content_sha256 != server_sha256:
+                - return 400 Content hash mismatch
+    - check if combination of instrument_id and run_id present in database
+        already. if yes, retrieve server_sha256.
+        - compare server_sha256_new to server_sha256.
+            - if differ, return 409
+            - if the same, return 200
 
     - return 202
 
@@ -391,7 +388,7 @@ def process_ingestion(
             },
         )
 
-    # Backpressure for manual trigger too.
+    # Backpressure for manual trigger
     _enforce_inflight_limit_or_429(session)
 
     background_tasks.add_task(process_ingestion_task, ingestion_id)
