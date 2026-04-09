@@ -1,4 +1,4 @@
-The document describes how to run end-to-end tests.
+*The document describes how to run end-to-end tests.*
 
 E2E tests hit the API over HTTP as a black box (typically the Docker Compose stack), rather than using FastAPI's in-process `TestClient`.
 

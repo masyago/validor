@@ -8,14 +8,15 @@ in Postgresql.
 
 #### Core Data Pipeline
 Demonstrates data flow from a clinical lab analyzer to normalized results.
-<img src="supporting_docs/diagrams/database/data_pipeline.png" width="500">
+
+<img src="diagrams/database/data_pipeline.png" width="500">
 
 
 
 #### AI and Provenance
 Shows tables and relationships related to AI and provenance.
 
-<img src="supporting_docs/diagrams/database/erd_cla_ai_provenance_v1.png" width="500">
+<img src="diagrams/database/erd_cla_ai_provenance_v1.png" width="500">
 
 
 Polymorphic associations (processing_event, ai_annotation, vector_store) are intentionally represented as (type, id) pairs and omitted from the core ERD for

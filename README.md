@@ -4,10 +4,10 @@ Validor is a backend service that ingests lab analyzer data, validates and
 normalizes results, and persists FHIR-shaped data in PostgreSQL database with 
 full auditability.
 
-I have vast experience with a analytical lab results and know how challenging 
+I have vast experience with analytical lab results and know how challenging 
 it is to process data, keep it complaint, and preserve auditability.
-My goal is to build a service validates and normalizes lab data without adding
-extra complexity.
+My goal is to build a service that validates and normalizes lab data without 
+adding extra complexity.
 
 In the next iterations, I'm planning to add AI enrichment of the findings by 
 implementing controlled, non-authoritative LLM workflows.
@@ -87,7 +87,7 @@ uv run python demo/cli_demo.py --once
 The service has layered architecture to isolate concerns and ensure that
 each layer has access only to the data appropriate to its responsibility. 
 
-1. External data source: Lab Analyzer Simulator and uploader (middleware)
+### External data source: Lab Analyzer Simulator and uploader (middleware)
 * The analyzer CSV generator and CSV uploader are intentionally kept outside 
 the ingestion service. They simulate external systems in the pipeline
 * Data flows into the service through a controlled API boundary. No direct
@@ -99,38 +99,37 @@ or invalid).
   layer
       
 
-2. API Layer: FastAPI
-   * Acts a single entry point
-   * Responsible for request orchestration and boundary enforcement
-   * API Layer keeps track of each ingestion status
-   * Any validation error persists nothing in tables containing results. Raw 
-   data, metadata and processing events are persisted regardless of validation
-    status.
-
-    * API contracts:
-      * [POST data to API](api_contracts/raw_csv_api_contract.md)
-      * [Read data from API](api_contracts/read_api_contract.md)
-
-
-3. Service Layer: Domain and Business Logic
-   * Responsible for data validation, normalization, and conversion into domain
-     models
-   * Data pipeline: raw ingest - parsed relations - validated and normalized 
-   FHIR artifacts.
+### API Layer: FastAPI
+* Acts a single entry point
+* Responsible for request orchestration and boundary enforcement
+* API Layer keeps track of each ingestion status
+* Any validation error persists nothing in tables containing results. Raw 
+data, metadata and processing events are persisted regardless of validation
+status.
+* **API contracts**
+  * [POST data to API](api_contracts/raw_csv_api_contract.md)
+  * [Read data from API](api_contracts/read_api_contract.md)
 
 
-4. Persistence Layer: Database
-  * Stores raw and normalized data, generated FHIR resources,
-     metadata, and and processing events.
-  * Data pipeline:
+### Service Layer: Domain and Business Logic
+* Responsible for data validation, normalization, and conversion into domain
+  models
+* Data pipeline: raw ingest - parsed relations - validated and normalized 
+FHIR artifacts.
 
-<img src="supporting_docs/diagrams/database/data_pipeline.png" width="500">
-  
-  * At each stage, processing events (for example, VALIDATION_STARTED, 
-   VALIDATION_SUCCEEDED, VALIDATION_FAILED) are persisted in the database to 
-   ensure auditability.
 
-<img src="supporting_docs/diagrams/database/core_data_provenance.png" width="500">
+### Persistence Layer: Database
+* Stores raw and normalized data, generated FHIR resources,
+    metadata, and and processing events.
+* Data pipeline:
+
+  <img src="supporting_docs/diagrams/database/data_pipeline.png" width="500">
+
+* At each stage, processing events (for example, VALIDATION_STARTED, 
+  VALIDATION_SUCCEEDED, VALIDATION_FAILED) are persisted in the database to 
+  ensure auditability.
+
+  <img src="supporting_docs/diagrams/database/core_data_provenance.png" width="500">
 
 
 ### Trade-offs
@@ -238,22 +237,28 @@ docker compose up --build
       ```sh
       uv run python run csv_uploader/csv_uploader.py
       ```
-
-## Stopping the Application
+6. Stopping the Application
 ```sh
 docker compose down
 ```
-## Application Screenshots 
+## Screenshots 
 
-* A valid CSV file is generated and uploaded 
-<img src="supporting_docs/screenshots/cli_valid_file_generated_uploaded.png" width="500">
 
-* Data is successfully validated and normalized
-<img src="supporting_docs/screenshots/cli_ingestion_status_complete.png" width="500">
+1. *A valid CSV file is generated and uploaded*
 
-* Failed validation. Error details are included for each data row to ensure
-traceability.
-<img src="supporting_docs/screenshots/cli_ingestion_status_errors.png" width="500">
+  <img src="supporting_docs/screenshots/cli_valid_file_generated_uploaded.png" width="500">
+
+
+
+2. *Data is successfully validated and normalized*
+
+  <img src="supporting_docs/screenshots/cli_ingestion_status_complete.png" width="500">
+
+
+3. *Failed validation. Error details are included for each data row to ensure
+traceability.*
+
+  <img src="supporting_docs/screenshots/cli_ingestion_status_errors.png" width="500">
  
 
 
