@@ -1,4 +1,6 @@
-"""The script simulates CSV files produced by a canonical lab analyzer."""
+"""
+The script simulates CSV files produced by a canonical lab analyzer.
+"""
 
 import csv
 from datetime import datetime, date, timezone
@@ -159,8 +161,8 @@ def generate_csv_rows(
         available_panels, min(panels_count, len(available_panels))
     )
 
-    # If this profile is meant to inject a defect, force at least one negative
-    # numeric result (but only one) somewhere in the generated CSV.
+    # If this profile is meant to inject a defect, force one negative
+    # numeric result somewhere in the generated CSV.
     force_one_negative = bool(profile.get("negative_results", False))
     apply_missing_columns_to_all_rows = bool(profile.get("valid_csv", True))
     total_result_rows = sum(
@@ -172,9 +174,7 @@ def generate_csv_rows(
         else None
     )
 
-    # For invalid CSV profiles, omitting *all* missing columns on *all* rows
-    # creates huge, noisy validation error output. Instead, omit each specified
-    # column in only one row per CSV (one row per missing field).
+    # For invalid CSV profiles, omit each specified column in one row.
     missing_column_row_index: dict[str, int] = {}
     if (
         missing_columns
@@ -242,7 +242,8 @@ def generate_csv_rows(
                 forced_negative_row_index is not None
                 and result_row_index == forced_negative_row_index
             ):
-                # Negative numeric results are invalid by design (validator should reject them).
+                # Negative numeric results are invalid by design (validator
+                # should reject them).
                 result = round(random.uniform(-100.0, -0.1), 2)
 
             row = {

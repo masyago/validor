@@ -215,7 +215,8 @@ def reap_stuck_ingestions(
     Strategy:
     - Find PROCESSING ingestions whose latest ProcessingEvent.occurred_at is older
       than `now - max_age_seconds`.
-    - If normalization already succeeded (NORMALIZATION_SUCCEEDED event present) but ingestion status is still PROCESSING, mark it COMPLETED (heal).
+    - If normalization already succeeded (NORMALIZATION_SUCCEEDED event present)
+      but ingestion status is still PROCESSING, mark it COMPLETED (heal).
     - Otherwise, requeue to RECEIVED and re-run processing.
     """
 

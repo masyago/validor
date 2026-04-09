@@ -1,6 +1,6 @@
 """Shared Rich console configuration for CLI scripts.
 
-Keep styling consistent across generator/uploader.
+Keep styling consistent across CSV generator and uploader.
 
 Expose a `make_console()` factory so non-CLI callers (e.g., Streamlit) can
 capture the same output into an in-memory buffer.
@@ -23,12 +23,6 @@ def make_console(
     record: bool = False,
     highlight: bool | None = None,
 ) -> Console:
-    """Create a Rich console.
-
-    - CLI usage: defaults preserve Rich's normal terminal detection and colors.
-    - Capture usage (e.g., Streamlit): pass `force_terminal=False, color_system=None`.
-    - HTML usage: pass `record=True` and then call `console.export_html(...)`.
-    """
 
     return Console(
         theme=custom_theme,

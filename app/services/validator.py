@@ -11,7 +11,9 @@ Panel Model - Required fields from CSV:
 
 Test Model - Required fields from CSV:
 - test_code
-- result. try to convert text to a number (after removing potential result_comparator), if ok - assign to result_value_num. Assign result_comparator if present
+- result. try to convert text to a number (after removing potential
+result_comparator), if ok - assign to result_value_num.
+Assign result_comparator if present
 
 - if result_value_num present, check that the value is not negative.
 

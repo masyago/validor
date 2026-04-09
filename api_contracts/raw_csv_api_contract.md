@@ -10,7 +10,7 @@ canonical laboratory analyzers.
 ### Summary
 
 Accepts a raw CSV file from a canonical lab analyzer, along with metadata.
-The API performs checks whether required fields presents, file is not empty, and
+The API performs checks whether required fields present, file is not empty, and
 content_sha256 matches.
 
 ### Description
@@ -22,7 +22,7 @@ new data exports. The endpoint immediately accepts the data and returns a
 the status of the processing pipeline.
 
 Each uploaded CSV file is treated as a single, atomic ingestion event.
-Uniqueness of a run is defined as combination of instrument_id and run_id.
+Uniqueness of a run is defined as combination of `instrument_id` and `run_id`.
 
 ### Request
 
@@ -43,7 +43,7 @@ Uniqueness of a run is defined as combination of instrument_id and run_id.
 Note on hash optional field `content_sha256`:
 * If content_sha256 is provided: API recomputes and returns 400 CONTENT_HASH_MISMATCH on mismatch.
 * If content_sha256 is omitted: API skips comparison. Server still computes and stores
-  a server generated hash sever_sha256.
+  a server generated hash `sever_sha256`.
 
 
 ### Responses
@@ -54,7 +54,7 @@ and has identical content.
 
 **Content-Type:** `application/json`
 
-**Location:** /v1/ingestions/a7b1c3d4-e5f6-7890-1234-567890abcdef
+**Location:** `/v1/ingestions/a7b1c3d4-e5f6-7890-1234-567890abcdef`
 
 **Body:**
 
@@ -73,7 +73,7 @@ processing.
 
 **Content-Type:** `application/json`
 
-**Location:** /v1/ingestions/a7b1c3d4-e5f6-7890-1234-567890abcdef
+**Location:** `/v1/ingestions/a7b1c3d4-e5f6-7890-1234-567890abcdef`
 
 **Body:**
 
@@ -176,8 +176,6 @@ Media type is not `multipart/form-data`
 
 Validation error. The error can occur due to incorrect or missing metadata 
 (missing required fields, incorrect data types, bad data formatting).
-CSV column/row validation errors will be available at
-`GET /v1/ingestions/{id}/errors`.
 
 
 **Content-Type:** `application/json`

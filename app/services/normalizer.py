@@ -140,7 +140,8 @@ class ObservationNormalization:
 
     Other fields:
 
-    - Note: it'll be added to the payload right before persisting it. REQUIRED: diagnostic_report.diagnostic_report_id -> diagnostic_report_id
+    - Note: it'll be added to the payload right before persisting it.
+      REQUIRED: diagnostic_report.diagnostic_report_id -> diagnostic_report_id
     - REQUIRED: panel.ingestion_id -> ingestion_id
     - REQUIRED: panel.patient_id -> patient_id
     - REQUIRED: panel.collection_timestamp -> effective_at
@@ -865,7 +866,7 @@ class NormalizationJob:
                             }
                         )
 
-            # IMPORTANT: Do not commit here.
+            # Note: Do not commit here.
             # `NormalizationJob.run_for_ingestion_id()` owns the transaction
             # boundaries so it can emit processing events consistently and so
             # test harnesses using savepoints can manage isolation.
@@ -896,7 +897,6 @@ class NormalizationJob:
         # Phase 2 intentionally does not open a new transaction via `begin()`.
         # The runner commits Phase 1 before invoking Phase 2, and commits again
         # after Phase 2 event emission.
-        #
         # Within Phase 2 we use SAVEPOINTs (`begin_nested`) to isolate per-resource
         # JSON build/persist so one bad resource doesn't abort the entire phase.
         return self._phase2_persist_fhir_json_body(ingestion_id)
@@ -912,7 +912,7 @@ class NormalizationJob:
         # session is often wrapped in a SAVEPOINT; we therefore avoid using
         # nested savepoints here and instead handle failures by catching
         # exceptions per resource.
-        #
+
         # This keeps Phase 2 deterministic across drivers and avoids leaving
         # nested transactions open.
 

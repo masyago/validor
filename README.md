@@ -31,23 +31,19 @@ implementing controlled, non-authoritative LLM workflows.
 
 
 ### CLI demo:
-  * Install package
-  * Start docker containers
+* Install package
+* In terminal A, initialize docker containers. It will start API and database
+containers and migrate schemas. It can take a few seconds.
 ```sh
 docker compose up --build
 ```
-  * Run demo command:
-```sh
-uv run python run demo/cli_demo.py --once
-```
 
-  * What you see in the demo:
-    * CSV generator creates a file with a randomly selected CSV profile (valid 
-      or invalid).
-    * Uploader sends an API request and receives the response.
-    * The service validates, normalizes and persists the data. Polling status
-      is shown for each stage. In case of failed validation, error details are
-      displayed.
+* In terminal B, run demo file. You will see summary of generated CSV file, 
+the upload to API, API response, and status for each stage of the data pipeline, 
+along with the final status for the ingestion.
+```sh
+uv run python demo/cli_demo.py --once
+```
 
 
 ## Tech Stack
@@ -154,13 +150,28 @@ versions.
 
 ## Metrics
 * Ingestion validation accuracy
-* Performance optimization: Throughput increase
-    * ingestions per minute
-    * number of queries per data row
+  * 24 of of 24 invalid files and 6 out of 6 valid files were correctly 
+  identified and processed by the service. For rows with defects, recall was 
+  99.5%, precision was 100.0% with 49,896 rows ingested. 
+* Performance optimization
+    * Optimization steps:
+      * Performance optimization was focused mainly on reducing number of queries
+      per data row and total database time as the service is database 
+      operations heavy. Namely:
+        * fixed N+1 pattern
+        * batched UPDATE statements
+        * batched upsert statements
+      * Additionally, changes were made to reduce API backlog. 
+
+    * Results:
+       * Median query number per data row was decreased by 92%, median database 
+      time decreased by 80%. 
+      * Throughput was increased 3.8 fold from 88.6 files/min to 333.8
+       files/min.
 * Test coverage
-  * Average test coverage is 94%, with median test coverage of 95%. Coverage 
-    tracked for business logic and idempotent persistence paths. End-to-end 
-    testing is not included in the coverage.
+  * Average test coverage is 94%, median test coverage is 95%. Coverage 
+    tracked for business logic and repositories containing idempotent 
+    persistence paths. End-to-end testing is not included in the metric.
 
 ## Features
 
