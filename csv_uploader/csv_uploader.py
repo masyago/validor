@@ -19,7 +19,7 @@ from rich.console import Console
 
 try:
     from csv_uploader.cli_rich import console
-except ModuleNotFoundError:  # pragma: no cover
+except ModuleNotFoundError:
     from cli_rich import console
 
 from requests.exceptions import ConnectionError as RequestsConnectionError
@@ -471,6 +471,15 @@ def process_file(
             console.print("")
             console.print("STATUS: ACCEPTED", style="success")
             return
+
+        # For 4xx responses (excluding 429), the failure is attributable to the request
+        # (file/data/contract) rather than a transient service outage.
+        # Those should be moved to `failed/` so the watcher doesn't retry them
+        # forever. Keep other failures (e.g., 5xx) in `pending/` for retry.
+        if response.status_code in {400, 409, 413, 415, 422}:
+            if not keep_files:
+                failed_dir.mkdir(parents=True, exist_ok=True)
+                csv_path.rename(failed_dir / csv_path.name)
 
         console.print("")
         error_code = (

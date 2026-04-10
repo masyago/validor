@@ -1,9 +1,8 @@
 # Validor (Clinical Lab Analyzer)
 
 Validor is a backend service that ingests lab analyzer data, validates and 
-normalizes results, and persists FHIR-complaint resources in PostgreSQL with 
+normalizes results, and persists FHIR-compliant resources in PostgreSQL with 
 full auditability.
-
 Validor makes lab data processing reliable and traceable through deterministic 
 validation, standardized normalization, and explicit provenance tracking.
 
@@ -12,36 +11,18 @@ non-authoritative LLM workflows.
 
 ## Demo
 
-### Web demo: <URL>
-  * Select a file from the dropdown menu. Click `Upload`
-  * Ingestion status and uploading metadata will be displayed. 
-  * If the data was validated and normalized without errors, use 
-  `DiagnosticReports Data` and `Observation Data` buttons to show and hide 
-   the data.
+### Web Demo: DEPLOYING SOON
+* Select a file from the dropdown menu and click `Upload`.
+* The uploader output and ingestion status are displayed.
+* If the ingestion completes successfully, use the `DiagnosticReports Data` and `Observations Data` buttons to show/hide persisted results.
 
-#### Valid file
 <img src="demo/gifs/live_demo_valid1.gif" width="500">
 
+* [Invalid file demo](#web-demo-invalid-file)
 
+### Local Demo: Docker & CLI
+See [Installation & Setup](#installation--setup) for the quickest local run.
 
-#### Invalid file
-<img src="demo/gifs/live_demo_invalid1.gif" width="500">
-
-
-### CLI demo:
-* Install package
-* In terminal A, initialize docker containers. It will start API and database
-containers and migrate schemas. It can take a few seconds.
-```sh
-docker compose up --build
-```
-
-* In terminal B, run demo file. You will see summary of generated CSV file, 
-the upload to API, API response, and status for each stage of the data pipeline, 
-along with the final status for the ingestion.
-```sh
-uv run python demo/cli_demo.py --once
-```
 
 
 ## Tech Stack
@@ -82,25 +63,22 @@ uv run python demo/cli_demo.py --once
 <img src="supporting_docs/diagrams/service_diagrams/validor_architecture.jpg" width="500">
 
 Validor has a layered architecture to isolate concerns, enforce strict data
-boundaries, and ensure and ensure auditability across the ingestion pipeline.
+boundaries, and ensure auditability across the ingestion pipeline.
 
 ---
 
 ### External Source: Lab Analyzer Simulator and Data Uploader
-* Simulates a canonical lab analyzer output via controlled CSV generation
 * Intentionally external to model real-world system boundaries
-* Sends data only through the API (no direct database and service access)
+* Simulates a canonical lab analyzer output via controlled CSV generation
+* Sends data only through the API (no direct database or service access)
       
 
 ### API Layer: FastAPI
 * Single entry point with strict boundary enforcement
-* Orchestrates ingestion lifecycle and status tracking
-* Any validation error persists nothing in tables containing results. Raw 
-data, metadata and processing events are persisted regardless of validation
-status.
+* Orchestrates the ingestion lifecycle and status tracking
 * Ensures atomicity
-  * Request level: malformed POST-requests or failed pre-ingestion checks (e.g.
-  hash mismatch) are rejected and data is prevented from reaching 
+  * Request level: malformed POST requests or failed pre-ingestion checks (e.g.,
+  hash mismatch) are rejected, and data is prevented from reaching 
   validated/normalized layers
   * Pipeline level: invalid data is rejected before reaching downstream tables.
   No partial writes to validated and normalized data tables
@@ -125,7 +103,7 @@ FHIR artifacts
   * Raw data and ingestion metadata
   * Validated and normalized data
   * FHIR resource projections (JSONB)
-  * processing events (provenance log)
+  * Processing events (provenance log)
 * Ensures full auditability via append-only processing events at each stage
 (for example, VALIDATION_STARTED, VALIDATION_SUCCEEDED, VALIDATION_FAILED)
 <img src="supporting_docs/diagrams/database/core_data_provenance.png" width="500">
@@ -147,11 +125,13 @@ FHIR artifacts
 * Row-level: precision 100.0%, recall 99.5% across 49,896 rows
 
 
+
 **Performance optimization**
 * Query efficiency: query count per row reduced by 92% median (N+1 eliminated, 
 batching applied)
-* Database time: reduced by 80% median database time per ingestion
-* Throughput: 3.8 fold increase (from 88.6 files/min to 333.8 files/min)
+* Database time: median database time per ingestion reduced by 80% 
+* Throughput: 3.8-fold increase (from 88.6 files/min to 333.8 files/min)
+
 
 
 **Test coverage**
@@ -174,79 +154,82 @@ rejected
 
 ### Prerequisites
 
+* **python**: version >=3.13 
+* **Docker Desktop**: latest
+* **uv**: package manager, latest
 
 ### Quick Start
 
 1. **Clone the repository**
 ```sh
-git clone <INSERT URL>
-cd path/to/folder
+git clone <REPO_URL>
+cd clinical_lab_analyzer
 ```
 
-2. **Create environment files**
-? nothing here?
-
-4. **Build docker images and start containers**
-   Starting the containers and database migration can take a few seconds.
+2. **Build docker images and start containers**
+This starts the API and Postgres and runs migrations. It can take a few seconds.
 
 ```sh
 docker compose up --build
 ```
 
-5. **Run the application**
-   
-   In a different terminal,
+3. **Run the CLI demo**
+In a different terminal:
 
   * To generate a CSV and upload it in one command:
       ```sh
-      uv run python run demo/cli_demo.py --once
+      uv run python demo/cli_demo.py --once
       ```
   * To run the CSV generator and uploader separately:
     
-    * Run CSV generator. By default it saves the CSV in a folder 
-      `csv_uploader/simulated_exports/pending`:
+    * Run CSV generator. By default it saves the CSV in `csv_uploader/simulated_exports/pending` directory:
       ```sh
-      uv run python run csv_uploader/csv_generator.py
+      uv run python csv_uploader/csv_generator.py
       ```
 
-    * Run CSV uploader. By default it processes all CSV files from 
-      `csv_uploader/simulated_exports/pending` directory and moves them to 
-      `csv_uploader/simulated_exports/uploaded` in case of successful API 
-      request (code 200 or 202) or to `csv_uploader/simulated_exports/failed`
-      if API response indicated error (e.g. 409).
+    * Run CSV uploader. By default, it processes all CSV files from the
+      `csv_uploader/simulated_exports/pending` and moves them to 
+      `csv_uploader/simulated_exports/uploaded` in case of a successful API 
+      response (code 200 or 202) or to `csv_uploader/simulated_exports/failed`
+      if the API response indicated error (e.g., 409).
 
       ```sh
-      uv run python run csv_uploader/csv_uploader.py
+      uv run python csv_uploader/csv_uploader.py
       ```
-6. Stopping the Application
+    4. **Stop the application (and reset the database)**
 ```sh
-docker compose down
+docker compose down -v
 ```
 ## Screenshots 
 
 
-1. *A valid CSV file is generated and uploaded*
+*A valid CSV file is generated and uploaded*
 
   <img src="supporting_docs/screenshots/cli_valid_file_generated_uploaded.png" width="500">
 
+---
 
-
-2. *Data is successfully validated and normalized*
+*Data is successfully validated and normalized*
 
   <img src="supporting_docs/screenshots/cli_ingestion_status_complete.png" width="500">
 
+---
 
-3. *Failed validation. Error details are included for each data row to ensure
-traceability.*
+*Failed validation. Error details are included for each data row to ensure
+traceability*
 
   <img src="supporting_docs/screenshots/cli_ingestion_status_errors.png" width="500">
- 
+
+---
+
+#### Web Demo: Invalid file
+<img src="demo/gifs/live_demo_invalid1.gif" width="500">
 
 
 ## Development Roadmap
 
-* Add an AI enrichment of findings, such as reference ranges, historical context,
-  and clinical guidelines used as a controlled augmentation layer (RAG, schema 
+* Add AI enrichment of findings, such as reference ranges, historical context,
+  and clinical guidelines, used as a controlled augmentation layer (RAG, schema 
   verification, acceptance process, provenance)
 * Replace in-process FastAPI background tasks with more durable workers for 
   enhanced reliability and further throughput increase 
@@ -257,7 +240,10 @@ MIT
 
 ## Version History
 
-* **0.0.1** Pre-release
+### 1.0.0 (2026-04-10)
+* Initial stable release
+
+### **0.0.1** Pre-release
 
 **Last Updated:** April 2026
 
