@@ -1,16 +1,14 @@
 # Validor (Clinical Lab Analyzer)
 
 Validor is a backend service that ingests lab analyzer data, validates and 
-normalizes results, and persists FHIR-shaped data in PostgreSQL database with 
+normalizes results, and persists FHIR-complaint resources in PostgreSQL with 
 full auditability.
 
-I have vast experience with analytical lab results and know how challenging 
-it is to process data, keep it complaint, and preserve auditability.
-My goal is to build a service that validates and normalizes lab data without 
-adding extra complexity.
+Validor makes lab data processing reliable and traceable through deterministic 
+validation, standardized normalization, and explicit provenance tracking.
 
-In the next iterations, I'm planning to add AI enrichment of the findings by 
-implementing controlled, non-authoritative LLM workflows.
+Future iterations will add AI-assisted enrichment via controlled, 
+non-authoritative LLM workflows.
 
 ## Demo
 
@@ -59,11 +57,10 @@ uv run python demo/cli_demo.py --once
 ### In Scope
 
 * Ingestion of canonical analyzer output
-    * The system assumes a canonical analyzer output schema. 
+    * The system assumes a canonical analyzer output schema in CSV format.
       Instrument-specific formats would be handled via adapter layers in 
       production
     * The service models a subset of chemistry analyzer outputs
-* Data ingestion format: CSV
 * Two FHIR resources:
     * Observation (individual analytes)
     * DiagnosticReport (panel-level grouping)
@@ -80,113 +77,97 @@ uv run python demo/cli_demo.py --once
 
 ## Service Architecture
 
-### High-level overview
+### Overview
 
 <img src="supporting_docs/diagrams/service_diagrams/validor_architecture.jpg" width="500">
 
-The service has layered architecture to isolate concerns and ensure that
-each layer has access only to the data appropriate to its responsibility. 
+Validor has a layered architecture to isolate concerns, enforce strict data
+boundaries, and ensure and ensure auditability across the ingestion pipeline.
 
-### External data source: Lab Analyzer Simulator and uploader (middleware)
-* The analyzer CSV generator and CSV uploader are intentionally kept outside 
-the ingestion service. They simulate external systems in the pipeline
-* Data flows into the service through a controlled API boundary. No direct
-  access to database and service-layer is allowed
-* The system assumes a canonical analyzer output schema. 
-* CSV generator creates a file with a randomly selected CSV profile (valid 
-or invalid).
-* An uploader/middleware forms a request to API and sends data to the API 
-  layer
+---
+
+### External Source: Lab Analyzer Simulator and Data Uploader
+* Simulates a canonical lab analyzer output via controlled CSV generation
+* Intentionally external to model real-world system boundaries
+* Sends data only through the API (no direct database and service access)
       
 
 ### API Layer: FastAPI
-* Acts a single entry point
-* Responsible for request orchestration and boundary enforcement
-* API Layer keeps track of each ingestion status
+* Single entry point with strict boundary enforcement
+* Orchestrates ingestion lifecycle and status tracking
 * Any validation error persists nothing in tables containing results. Raw 
 data, metadata and processing events are persisted regardless of validation
 status.
+* Ensures atomicity
+  * Request level: malformed POST-requests or failed pre-ingestion checks (e.g.
+  hash mismatch) are rejected and data is prevented from reaching 
+  validated/normalized layers
+  * Pipeline level: invalid data is rejected before reaching downstream tables.
+  No partial writes to validated and normalized data tables
+  * Raw data, metadata, and processing events are always persisted for
+  auditability
+
 * **API contracts**
   * [POST data to API](api_contracts/raw_csv_api_contract.md)
-  * [Read data from API](api_contracts/read_api_contract.md)
+  * [Read (GET) data from API](api_contracts/read_api_contract.md)
 
 
 ### Service Layer: Domain and Business Logic
-* Responsible for data validation, normalization, and conversion into domain
-  models
-* Data pipeline: raw ingest - parsed relations - validated and normalized 
-FHIR artifacts.
+* Implements validation, normalization, and transformation workflows
+* Data pipeline: raw ingest -> parsed relations -> validated and normalized 
+FHIR artifacts
 
 
-### Persistence Layer: Database
-* Stores raw and normalized data, generated FHIR resources,
-    metadata, and and processing events.
-* Data pipeline:
+### Persistence Layer: PostgreSQL
+<img src="supporting_docs/diagrams/database/data_pipeline.png" width="500">
 
-  <img src="supporting_docs/diagrams/database/data_pipeline.png" width="500">
-
-* At each stage, processing events (for example, VALIDATION_STARTED, 
-  VALIDATION_SUCCEEDED, VALIDATION_FAILED) are persisted in the database to 
-  ensure auditability.
-
-  <img src="supporting_docs/diagrams/database/core_data_provenance.png" width="500">
+* Stores:
+  * Raw data and ingestion metadata
+  * Validated and normalized data
+  * FHIR resource projections (JSONB)
+  * processing events (provenance log)
+* Ensures full auditability via append-only processing events at each stage
+(for example, VALIDATION_STARTED, VALIDATION_SUCCEEDED, VALIDATION_FAILED)
+<img src="supporting_docs/diagrams/database/core_data_provenance.png" width="500">
 
 
 ### Trade-offs
 
-#### Authentication and Trust Model
-For simplicity, the CSV uploader and ingestion API are assumed to operate 
-within a trusted internal network. Authentication is intentionally omitted. 
-In a production setting, this boundary would be enforced via API keys, mTLS, 
-or service identity.
+#### Trust Boundary
+* Authentication is omitted (assumed trusted internal network)
+* Production design would be enforce API keys, mTLS, or service identity
 
-#### FHIR Resources
-We deliberately don’t use a full FHIR object library. Instead, we emit a 
-strictly versioned, minimal R4-compliant projection using Pydantic so the JSON 
-exactly reflects our domain semantics and remains reproducible across pipeline 
-versions.
+#### FHIR Modeling
+* Uses versioned, minimal R4-compliant projections via Pydantic
 
 
 ## Metrics
-* Ingestion validation accuracy
-  * 24 of of 24 invalid files and 6 out of 6 valid files were correctly 
-  identified and processed by the service. For rows with defects, recall was 
-  99.5%, precision was 100.0% with 49,896 rows ingested. 
-* Performance optimization
-    * Optimization steps:
-      * Performance optimization was focused mainly on reducing number of queries
-      per data row and total database time as the service is database 
-      operations heavy. Namely:
-        * fixed N+1 pattern
-        * batched UPDATE statements
-        * batched upsert statements
-      * Additionally, changes were made to reduce API backlog. 
+**Validation accuracy**
+* File-level: 30/30 files correctly classified (24 invalid, 6 valid)
+* Row-level: precision 100.0%, recall 99.5% across 49,896 rows
 
-    * Results:
-       * Median query number per data row was decreased by 92%, median database 
-      time decreased by 80%. 
-      * Throughput was increased 3.8 fold from 88.6 files/min to 333.8
-       files/min.
-* Test coverage
-  * Average test coverage is 94%, median test coverage is 95%. Coverage 
-    tracked for business logic and repositories containing idempotent 
-    persistence paths. End-to-end testing is not included in the metric.
 
-## Features
+**Performance optimization**
+* Query efficiency: query count per row reduced by 92% median (N+1 eliminated, 
+batching applied)
+* Database time: reduced by 80% median database time per ingestion
+* Throughput: 3.8 fold increase (from 88.6 files/min to 333.8 files/min)
 
-### FHIR Resources
 
-The service works with 2 resources: DiagnosticReport and Observation.
-DiagnosticReport resource groups Observation resources and provides clinical 
-context. Observation resource contains individual test result.
+**Test coverage**
+* 94% average, 95% median (business logic and repository layers, focus on 
+idempotent persistence paths)
+* Excludes end-to-end testing
 
-### Idempotency & Data Integrity
 
-* Idempotent ingestion enforced via `(instrument_id, run_id)` uniqueness and 
-content hashing  
-* Duplicate detection using SHA-256 comparison (submitted vs. server-computed)  
-* Conflict protection: mismatched hashes for the same ingestion key are 
+## Data Integrity & Idempotency
+
+* Idempotent ingestion enforced via `(instrument_id, run_id)` uniqueness
+* Content-based deduplication using sha-256 (submitted vs. server-computed)  
+* Conflict detection: mismatched hashes for the same ingestion key are 
 rejected
+* Deterministic outcomes: deduplicate identical, conflict, or new ingestion
+* No silent overwrites or partial normalization writes
 
 
 ## Installation & Setup

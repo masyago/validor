@@ -36,12 +36,5 @@ alembic/versions/__pycache__/
 copilot_outputs/
 .specstory/**
 
-<<<<<<< HEAD
-.specstory/
-
 # Internal docs
-
-=======
-# Internal docs
->>>>>>> main
 dev_only/
