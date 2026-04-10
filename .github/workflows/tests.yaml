@@ -4,6 +4,7 @@ on:
   pull_request:
     branches:
       - main
+  workflow_dispatch:
 
 jobs:
   test:
@@ -11,9 +12,35 @@ jobs:
 
     strategy:
       matrix:
-        python-version: [3.13]
+        python-version: ["3.13"]
+    
+    services:
+    # Label used to access the service container
+      postgres:
+        # Docker Hub image
+        image: postgres:17
+        ports:
+            - 5432:5432
+        env:
+            POSTGRES_USER: postgres
+            POSTGRES_PASSWORD: postgres
+            POSTGRES_DB: test_cla
+        # Set health checks to wait until postgres has started
+        options: >-
+            --health-cmd "pg_isready -U postgres -d test_cla"
+            --health-interval 5s
+            --health-timeout 5s
+            --health-retries 20
+    
+    env:
+      DATABASE_URL: postgresql+psycopg://postgres:postgres@localhost:5432/test_cla
+      TEST_DATABASE_URL: postgresql+psycopg://postgres:postgres@localhost:5432/test_cla
+      ENV: testing
+      # Ensures tests don't hang on interactive prompts
+      CI: "true"
 
     steps:
+     # Downloads a copy of the code in your repository before running CI tests
       - name: Checkout repository
         uses: actions/checkout@v6
       
@@ -24,15 +51,34 @@ jobs:
           python-version: ${{ matrix.python-version }}
       
       - name: Install uv
-        uses: astral-sh/setup-uv@v1
+        uses: astral-sh/setup-uv@v7
         with:
           version: "latest"
 
+      - name: Install Postgres client tools (pg_isready)
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y postgresql-client
+      # Install the project and its dependencies
       - name: Install the project
         run: uv sync --locked --all-extras --dev
 
+      - name: Wait for Postgres to be ready
+        run: |
+          for i in {1..30}; do
+            pg_isready -h localhost -p 5432 -U postgres -d test_cla && exit 0
+            sleep 2
+          done
+          echo "Postgres did not become ready in time" >&2
+          exit 1
+
+      - name: Run DB migrations (Alembic)
+        run: |
+          if [ -f alembic.ini ]; then
+            uv run alembic upgrade head
+          else
+            echo "alembic.ini not found; skipping migrations"
+          fi
+
       - name: Run tests
         run: uv run pytest tests
-
-    #   - name: Test app code
-    #     run: pytest
