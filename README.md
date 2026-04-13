@@ -11,7 +11,7 @@ non-authoritative LLM workflows.
 
 ## Demo
 
-### Web Demo: DEPLOYING SOON
+### Web Demo: [link](https://validor-demo-streamlit.onrender.com/) 
 * Select a file from the dropdown menu and click `Upload`.
 * The uploader output and ingestion status are displayed.
 * If the ingestion completes successfully, use the `DiagnosticReports Data` and `Observations Data` buttons to show/hide persisted results.
@@ -29,7 +29,7 @@ See [Installation & Setup](#installation--setup) for the quickest local run.
 
 * **Backend :** Python, FastAPI, Pydantic
 * **Database:** PostgreSQL, SQLAlchemy (ORM)
-* **DevOps:** Docker
+* **DevOps:** Docker, CI Testing (GitHub Actions)
 * **Healthcare Compliance:** FHIR (Observation and DiagnosticReport resources)
 * **Testing:** Pytest
 * **Environment & Dependency Management:** uv
@@ -128,8 +128,7 @@ FHIR artifacts
 
 **Performance optimization**
 * Query efficiency: query count per row reduced by 92% median to median 0.69 
-queries per row(N+1 eliminated, 
-batching applied)
+queries per row (N+1 eliminated, batching applied)
 * Database time: median database time per ingestion reduced by 80% 
 * Throughput: 3.8-fold increase (from 88.6 files/min to 333.8 files/min)
 
@@ -163,8 +162,8 @@ rejected
 
 1. **Clone the repository**
 ```sh
-git clone <REPO_URL>
-cd clinical_lab_analyzer
+git clone https://github.com/masyago/validor
+cd validor
 ```
 
 2. **Build docker images and start containers**
@@ -175,7 +174,8 @@ docker compose up --build
 ```
 
 3. **Run the CLI demo**
-In a different terminal:
+
+    In a different terminal:
 
   * To generate a CSV and upload it in one command:
       ```sh
@@ -188,19 +188,16 @@ In a different terminal:
       uv run python csv_uploader/csv_generator.py
       ```
 
-    * Run CSV uploader. By default, it processes all CSV files from the
-      `csv_uploader/simulated_exports/pending` and moves them to 
-      `csv_uploader/simulated_exports/uploaded` in case of a successful API 
-      response (code 200 or 202) or to `csv_uploader/simulated_exports/failed`
-      if the API response indicated error (e.g., 409).
+    * Then run CSV uploader:
 
       ```sh
       uv run python csv_uploader/csv_uploader.py
       ```
-    4. **Stop the application (and reset the database)**
-```sh
-docker compose down -v
-```
+
+4. **Stop the application (and reset the database)**
+      ```sh
+      docker compose down -v
+      ```
 ## Screenshots 
 
 
@@ -240,6 +237,10 @@ MIT
 
 
 ## Version History
+
+### 1.0.1 (2026-04-13)
+* Demo deployment on Render
+* CI testing on pull requests
 
 ### 1.0.0 (2026-04-10)
 * Initial stable release
