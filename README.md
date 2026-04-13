@@ -20,6 +20,41 @@ non-authoritative LLM workflows.
 
 * [Invalid file demo](#web-demo-invalid-file)
 
+### Deploy to Render (API + Web Demo)
+
+Render does not run `docker compose` for a single web service. Instead you deploy:
+
+1) **A Postgres database** (Render managed Postgres)
+2) **An API web service** (FastAPI)
+3) **A Web Demo web service** (Streamlit)
+
+#### 1) Create Postgres
+
+Create a Render Postgres instance. You will use its connection string as `DATABASE_URL`.
+
+#### 2) Create the API web service
+
+- **Environment:** Docker
+- **Root directory:** repo root
+- **Start command / Docker command:**
+  - `sh scripts/render_start_api.sh`
+- **Environment variables:**
+  - `DATABASE_URL` = your Render Postgres connection string
+  - `ENV` = `production` (optional)
+
+This start script runs Alembic migrations on deploy and then starts Uvicorn.
+
+#### 3) Create the Streamlit web demo service
+
+- **Environment:** Docker
+- **Root directory:** repo root
+- **Start command / Docker command:**
+  - `sh scripts/render_start_web_demo.sh`
+- **Environment variables:**
+  - `CLA_API_BASE_URL` = your deployed API base URL (e.g. `https://<api-service>.onrender.com`)
+
+The Streamlit app uses `CLA_API_BASE_URL` to call the API (so you don't need to edit `csv_uploader/config.yaml`).
+
 ### Local Demo: Docker & CLI
 See [Installation & Setup](#installation--setup) for the quickest local run.
 
@@ -127,7 +162,8 @@ FHIR artifacts
 
 
 **Performance optimization**
-* Query efficiency: query count per row reduced by 92% median (N+1 eliminated, 
+* Query efficiency: query count per row reduced by 92% median to median 0.69 
+queries per row(N+1 eliminated, 
 batching applied)
 * Database time: median database time per ingestion reduced by 80% 
 * Throughput: 3.8-fold increase (from 88.6 files/min to 333.8 files/min)

@@ -272,8 +272,15 @@ def _parse_args() -> argparse.Namespace:
 def read_config() -> dict:
     """Reads configuration data from a YAML file."""
     with open(CONFIG_FILE_PATH, "r") as file:
-        config_data = yaml.safe_load(file)
-        return config_data
+        config_data = yaml.safe_load(file) or {}
+
+    # Allow environment override so deployments (e.g. Render) can point the
+    # uploader/web demo at the deployed API without changing the repo YAML.
+    api_base_url = os.getenv("CLA_API_BASE_URL")
+    if api_base_url:
+        config_data["api_base_url"] = api_base_url
+
+    return config_data
 
 
 def process_file(

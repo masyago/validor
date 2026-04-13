@@ -20,7 +20,28 @@ def _default_database_url() -> str:
     return "postgresql+psycopg://postgres:postgres@localhost:5432/cla"
 
 
-DATABASE_URL = os.getenv("DATABASE_URL") or _default_database_url()
+def _normalize_database_url(url: str) -> str:
+    """Normalize provider URLs to a SQLAlchemy URL that uses psycopg.
+
+    Many providers emit URLs like `postgres://...` or `postgresql://...`.
+    Without an explicit driver, SQLAlchemy defaults to `psycopg2`, which this
+    project does not depend on.
+    """
+
+    url = url.strip()
+
+    if url.startswith("postgres://"):
+        url = "postgresql://" + url.removeprefix("postgres://")
+
+    if url.startswith("postgresql://"):
+        url = "postgresql+psycopg://" + url.removeprefix("postgresql://")
+
+    return url
+
+
+DATABASE_URL = _normalize_database_url(
+    os.getenv("DATABASE_URL") or _default_database_url()
+)
 
 _default_echo = os.getenv("ENV") != "testing"
 engine = create_engine(
