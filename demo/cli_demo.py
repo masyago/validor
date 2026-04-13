@@ -4,17 +4,17 @@ from pathlib import Path
 from collections.abc import Sequence
 from typing import Any
 
-# Support both `python -m csv_uploader.demo` (preferred) and
-# `python csv_uploader/demo.py` (legacy).
-#
-# In direct-script mode, `sys.path[0]` points at `csv_uploader/`, which means
-# `import csv_uploader` may incorrectly resolve to `csv_uploader/csv_uploader.py`
-# (a module) instead of the `csv_uploader/` package. Ensure the project root is
-# on sys.path before importing any `csv_uploader.*` modules.
-if __package__ in (None, ""):
-    import sys
+import sys
 
-    sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+# Ensure the project root is on sys.path.
+#
+# This makes imports stable across:
+# - local runs
+# - `streamlit run demo/web_demo.py` in containers
+# - `python -m demo.cli_demo`
+project_root = str(Path(__file__).resolve().parents[1])
+if project_root not in sys.path:
+    sys.path.insert(0, project_root)
 
 import argparse
 import json
@@ -25,8 +25,12 @@ from rich.rule import Rule
 
 try:
     from csv_uploader.cli_rich import console
-except ModuleNotFoundError:  # pragma: no cover
-    from cli_rich import console
+except ModuleNotFoundError as e:  # pragma: no cover
+    raise ModuleNotFoundError(
+        "Unable to import csv_uploader.cli_rich. "
+        "Ensure the repository root is on sys.path and that the source "
+        "tree is present in the runtime image."
+    ) from e
 
 from csv_uploader import csv_generator
 from csv_uploader import csv_uploader
