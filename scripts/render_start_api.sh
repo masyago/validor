@@ -11,9 +11,11 @@ echo "Running Alembic migrations (with retries)..."
 max_retries=30
 sleep_seconds=2
 
+python_bin="/app/.venv/bin/python"
+
 attempt=1
 while [ "$attempt" -le "$max_retries" ]; do
-  if alembic upgrade head; then
+  if "$python_bin" -m alembic upgrade head; then
     echo "Migrations complete."
     break
   fi
@@ -29,4 +31,4 @@ if [ "$attempt" -gt "$max_retries" ]; then
 fi
 
 echo "Starting API on port ${PORT}..."
-exec uvicorn app.main:app --host 0.0.0.0 --port "$PORT"
+exec "$python_bin" -m uvicorn app.main:app --host 0.0.0.0 --port "$PORT"
