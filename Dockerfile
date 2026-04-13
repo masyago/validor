@@ -47,6 +47,10 @@ RUN --mount=type=cache,target=/root/.cache/uv \
 # Use the project virtual environment created by uv.
 ENV PATH="/app/.venv/bin:$PATH"
 
+# Ensure local source tree modules (e.g. demo/, csv_uploader/) are importable
+# regardless of the process working directory.
+ENV PYTHONPATH="/app"
+
 # Switch to the non-privileged user to run the application.
 USER appuser
 
