@@ -21,11 +21,11 @@ def _default_database_url() -> str:
 
 
 def _normalize_database_url(url: str) -> str:
-    """Normalize provider URLs to a SQLAlchemy URL that uses psycopg.
+    """
+    Normalize provider URLs to a SQLAlchemy URL that uses psycopg.
+    Render and other providers use either "postgres://" or "postgres://",
+    need to convert them to "postgresql+psycopg://"
 
-    Many providers emit URLs like `postgres://...` or `postgresql://...`.
-    Without an explicit driver, SQLAlchemy defaults to `psycopg2`, which this
-    project does not depend on.
     """
 
     url = url.strip()
