@@ -127,7 +127,8 @@ FHIR artifacts
 
 
 **Performance optimization**
-* Query efficiency: query count per row reduced by 92% median (N+1 eliminated, 
+* Query efficiency: query count per row reduced by 92% median to median 0.69 
+queries per row(N+1 eliminated, 
 batching applied)
 * Database time: median database time per ingestion reduced by 80% 
 * Throughput: 3.8-fold increase (from 88.6 files/min to 333.8 files/min)

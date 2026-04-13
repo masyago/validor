@@ -15,6 +15,18 @@ from app.persistence.models import normalization
 
 from app.persistence.models import provenance
 
+
+def _normalize_database_url(url: str) -> str:
+    url = url.strip()
+
+    if url.startswith("postgres://"):
+        url = "postgresql://" + url.removeprefix("postgres://")
+
+    if url.startswith("postgresql://"):
+        url = "postgresql+psycopg://" + url.removeprefix("postgresql://")
+
+    return url
+
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
 config = context.config
@@ -33,7 +45,7 @@ if not database_url:
     database_url = os.getenv("DATABASE_URL")
 
 if database_url:
-    config.set_main_option("sqlalchemy.url", database_url)
+    config.set_main_option("sqlalchemy.url", _normalize_database_url(database_url))
 
 # Interpret the config file for Python logging.
 # This line sets up loggers basically.
