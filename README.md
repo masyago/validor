@@ -161,27 +161,54 @@ rejected
 ### Quick Start
 
 1. **Clone the repository**
-```sh
-git clone https://github.com/masyago/validor
-cd validor
-```
+    ```sh
+    git clone https://github.com/masyago/validor
+    cd validor
+    ```
 
-2. **Build docker images and start containers**
+2. **Create and activate virtual environment**
+* On Windows:
+  ```sh
+  python -m venv .venv
+  .venv\Scripts\activate
+  ```
+* On macOS/Linus:
+
+  ```sh
+  python3 -m venv .venv
+  source .venv/bin/activate
+  ```
+
+3. **Build docker images and start containers**
 This starts the API and Postgres and runs migrations. It can take a few seconds.
 
-```sh
-docker compose up --build
-```
+    ```sh
+    docker compose up --build
+    ```
 
-3. **Run the CLI demo**
+    #### Troubleshooting: "port is already allocated"
 
-    In a different terminal:
+    If Docker fails with something like `Bind for 0.0.0.0:8000 failed: port is already allocated`, another process is already listening on that port. Likely, a previously started Validor instance, another FastAPI app, or a local Postgres.
+
+    * **Quick fix:** stop the old process (or run `docker compose down` in the other window if you started containers there).
+
+
+4. **Run the CLI demo**
+
+    In a **different** terminal:
+    ```sh
+    cd validor
+    ```
+    Then create and activate virtual environment.
 
   * To generate a CSV and upload it in one command:
-      ```sh
-      uv run python demo/cli_demo.py --once
-      ```
-  * To run the CSV generator and uploader separately:
+    ```sh
+    uv run python demo/cli_demo.py --once
+    ```
+    Terminal output provides details on generated CSV file, its upload and
+    processing status, and links to data.
+
+  * Alternatively, you can run the CSV generator and uploader separately:
     
     * Run CSV generator. By default it saves the CSV in `csv_uploader/simulated_exports/pending` directory:
       ```sh
@@ -193,11 +220,29 @@ docker compose up --build
       ```sh
       uv run python csv_uploader/csv_uploader.py
       ```
+    * Links with the data:
 
-4. **Stop the application (and reset the database)**
-      ```sh
-      docker compose down -v
-      ```
+      Copy `ingestion_id` from API response.
+
+      - Status: http://localhost:8000/v1/ingestions/<ingestion_id>
+
+      View data in web browser. Note that the data persisted only for valid
+      ingestions.
+      - DiagnosticReports: http://localhost:8000/v1/ingestions/<ingestion_id>/diagnostic-reports
+      - Observations: http://localhost:8000/v1/ingestions/<ingestion_id>/observations
+      - FHIR JSON: add `?include_json=1` to DiagnosticReports/Observations.
+
+
+5. **Stop the application and reset the database**
+
+  Stop the processes first: 
+  * On a Mac, `Command+C`
+  * On Windows, `Ctrl+C`
+
+  Then, in the first terminal:
+  ```sh
+  docker compose down -v
+  ```
 ## Screenshots 
 
 
