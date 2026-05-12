@@ -87,6 +87,7 @@ h1 em{font-style:normal;background:linear-gradient(90deg,var(--blue3),var(--cyan
 .demo-tabs{display:flex;border-bottom:1px solid var(--border)}
 .demo-tab{padding:14px 24px;font-size:13px;font-weight:500;cursor:pointer;color:var(--muted);border-bottom:2px solid transparent;margin-bottom:-1px;transition:all .2s;font-family:var(--mono)}
 .demo-tab.active{color:var(--blue3);border-bottom-color:var(--blue3)}
+.demo-tab:first-child{border-right:1px solid var(--border)}
 .demo-body{padding:24px;font-family:var(--mono);font-size:12px;line-height:1.8;color:#a8c4e0}
 .demo-panel{display:none}
 .demo-panel.active{display:block}
@@ -111,16 +112,16 @@ h1 em{font-style:normal;background:linear-gradient(90deg,var(--blue3),var(--cyan
 .spinner{width:14px;height:14px;border:2px solid var(--border2);border-top-color:var(--blue3);border-radius:50%;animation:spin .8s linear infinite;display:inline-block;vertical-align:middle;margin-right:6px}
 @keyframes stagePulse{0%,100%{opacity:1}50%{opacity:0.4}}
 .stage-active{animation:stagePulse 1s ease-in-out infinite}
-.demo-run-btn{margin:0 24px 24px;display:block;width:calc(100% - 48px)}
+.demo-run-btn{margin:12px 0 24px 24px;display:block;width:50%}
 
 /* TRUST / AUDITABILITY */
-.audit-grid{display:grid;grid-template-columns:1fr 1fr;gap:24px;margin-top:0}
+.audit-grid{display:grid;grid-template-columns:1fr;gap:24px;margin-top:0;max-width:800px}
 .audit-card{background:var(--navy2);border:1px solid var(--border);border-radius:12px;padding:24px}
 .audit-title{font-size:13px;font-weight:600;color:var(--muted);margin-bottom:16px;font-family:var(--mono);letter-spacing:0.06em}
 .event-row{display:flex;align-items:center;gap:12px;padding:8px 0;border-bottom:1px solid rgba(58,155,255,0.07);font-size:12px;font-family:var(--mono)}
 .event-row:last-child{border:none}
-.event-ts{color:#3a5a80;min-width:70px}
-.event-stage{min-width:90px;padding:2px 8px;border-radius:4px;text-align:center;font-size:10px;font-weight:600}
+.event-ts{color:#3a5a80;min-width:100px;flex-shrink:0}
+.event-stage{min-width:160px;padding:2px 8px;border-radius:4px;text-align:center;font-size:10px;font-weight:600;flex-shrink:0;white-space:nowrap}
 .es-parse{background:rgba(0,212,255,0.08);color:var(--cyan)}
 .es-valid{background:rgba(0,232,122,0.08);color:var(--success)}
 .es-norm{background:rgba(58,155,255,0.1);color:var(--blue3)}
@@ -166,6 +167,9 @@ export default function Home() {
   const [loadingStage, setLoadingStage] = useState(0);
   const [demoResult, setDemoResult] = useState(null);
   const [demoError, setDemoError] = useState(null);
+  const [showReports, setShowReports] = useState(false);
+  const [showObservations, setShowObservations] = useState(false);
+  const [showErrorDetails, setShowErrorDetails] = useState(false);
   const pollRef = useRef(null);
 
   useEffect(() => () => clearInterval(pollRef.current), []);
@@ -178,6 +182,9 @@ export default function Home() {
     setDemoResult(null);
     setDemoError(null);
     setLoadingStage(0);
+    setShowReports(false);
+    setShowObservations(false);
+    setShowErrorDetails(false);
   }
 
   async function runDemo() {
@@ -245,6 +252,7 @@ export default function Home() {
     setDemoResult({
       ingestionId,
       status: finalStatus?.status,
+      errorDetail: finalStatus?.error_detail,
       events: evRes.status === "fulfilled" ? evRes.value : [],
       reports: rpRes.status === "fulfilled" ? rpRes.value : [],
       observations: obRes.status === "fulfilled" ? obRes.value : [],
@@ -279,10 +287,10 @@ export default function Home() {
           <span className="nav-logo-text">Validor</span>
         </div>
         <div className="nav-links">
-          <a href="#">Pipeline</a>
-          <a href="#">Features</a>
-          <a href="#">Demo</a>
-          <a href="#">Docs</a>
+          <a href="#pipeline">Pipeline</a>
+          <a href="#features">Features</a>
+          <a href="#demo">Demo</a>
+          <a href="https://github.com/masyago/validor" target="_blank" rel="noopener noreferrer">Docs</a>
         </div>
         <a href="#demo" className="nav-cta">
           Try Demo →
@@ -387,6 +395,15 @@ export default function Home() {
           </div>
         </div>
 
+      </div>
+
+      <div className="section" id="features">
+        <div className="section-label">Key Properties</div>
+        <div className="section-title">Built-in guarantees</div>
+        <div className="section-sub">
+          Six core properties that make Validor reliable for healthcare data workflows.
+        </div>
+
         <div className="features">
           <div className="feature">
             <div className="feature-icon blue">🔒</div>
@@ -481,20 +498,20 @@ export default function Home() {
               className={`demo-tab${activeTab === "valid" ? " active" : ""}`}
               onClick={() => handleTabChange("valid")}
             >
-              ✓ valid_01.csv — Success
+              ✓ Valid CSV
             </div>
             <div
               className={`demo-tab${activeTab === "invalid" ? " active" : ""}`}
               onClick={() => handleTabChange("invalid")}
             >
-              ✗ invalid_missing_fields.csv — Failure
+              ✗ Invalid CSV
             </div>
           </div>
           <button
             className="btn-primary demo-run-btn"
             onClick={runDemo}
             disabled={demoPhase === "loading"}
-            style={{ opacity: demoPhase === "loading" ? 0.6 : 1, cursor: demoPhase === "loading" ? "not-allowed" : "pointer" }}
+            style={{ opacity: demoPhase === "loading" ? 0.6 : 1, cursor: demoPhase === "loading" ? "not-allowed" : "pointer", marginTop: 12 }}
           >
             {demoPhase === "loading" ? "Running…" : "Run Demo →"}
           </button>
@@ -580,88 +597,193 @@ export default function Home() {
                         >
                           PERSISTED RESOURCES
                         </div>
-                        <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-                          <span
+                        <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 16 }}>
+                          <button
+                            onClick={() => setShowReports(!showReports)}
                             style={{
-                              background: "rgba(0,212,255,0.08)",
+                              background: showReports ? "rgba(0,212,255,0.15)" : "rgba(0,212,255,0.08)",
                               border: "1px solid rgba(0,212,255,0.2)",
                               color: "var(--cyan)",
                               padding: "4px 12px",
                               borderRadius: 4,
                               fontSize: 11,
                               fontWeight: 600,
+                              cursor: "pointer",
+                              transition: "background 0.2s",
                             }}
                           >
                             DiagnosticReports ×{demoResult.reports.length}
-                          </span>
-                          <span
+                          </button>
+                          <button
+                            onClick={() => setShowObservations(!showObservations)}
                             style={{
-                              background: "rgba(0,212,255,0.08)",
+                              background: showObservations ? "rgba(0,212,255,0.15)" : "rgba(0,212,255,0.08)",
                               border: "1px solid rgba(0,212,255,0.2)",
                               color: "var(--cyan)",
                               padding: "4px 12px",
                               borderRadius: 4,
                               fontSize: 11,
                               fontWeight: 600,
+                              cursor: "pointer",
+                              transition: "background 0.2s",
                             }}
                           >
                             Observations ×{demoResult.observations.length}
-                          </span>
+                          </button>
                         </div>
+                        {showReports && (
+                          <div style={{ marginBottom: 16, maxHeight: 300, overflowY: "auto" }}>
+                            <pre
+                              style={{
+                                background: "rgba(58,155,255,0.05)",
+                                border: "1px solid var(--border)",
+                                borderRadius: 6,
+                                padding: 12,
+                                fontSize: 10,
+                                color: "var(--cyan)",
+                                margin: 0,
+                              }}
+                            >
+                              {JSON.stringify(demoResult.reports, null, 2)}
+                            </pre>
+                          </div>
+                        )}
+                        {showObservations && (
+                          <div style={{ marginBottom: 16, maxHeight: 300, overflowY: "auto" }}>
+                            <pre
+                              style={{
+                                background: "rgba(58,155,255,0.05)",
+                                border: "1px solid var(--border)",
+                                borderRadius: 6,
+                                padding: 12,
+                                fontSize: 10,
+                                color: "var(--cyan)",
+                                margin: 0,
+                              }}
+                            >
+                              {JSON.stringify(demoResult.observations.slice(0, 3), null, 2)}
+                              {demoResult.observations.length > 3 && (
+                                <div style={{ marginTop: 8, color: "var(--muted)" }}>
+                                  ... and {demoResult.observations.length - 3} more
+                                </div>
+                              )}
+                            </pre>
+                          </div>
+                        )}
                         <div
                           style={{
-                            marginTop: 16,
+                            marginTop: 8,
                             color: "var(--muted)",
                             fontSize: 11,
+                            marginBottom: 16,
                           }}
                         >
                           ingestion_id: <span style={{ color: "var(--blue3)" }}>{demoResult.ingestionId}</span>
                         </div>
+                        <a href="#provenance" style={{ display: "inline-block", textDecoration: "none" }}>
+                          <button
+                            style={{
+                              background: "rgba(58,155,255,0.1)",
+                              border: "1px solid rgba(58,155,255,0.3)",
+                              color: "var(--blue3)",
+                              padding: "8px 12px",
+                              borderRadius: 6,
+                              fontSize: 12,
+                              fontWeight: 600,
+                              cursor: "pointer",
+                              transition: "background 0.2s",
+                            }}
+                          >
+                            See audit logs →
+                          </button>
+                        </a>
                       </>
                     ) : (
                       <>
-                        <div
+                        <button
+                          onClick={() => setShowErrorDetails(!showErrorDetails)}
                           style={{
-                            color: "var(--muted)",
-                            fontSize: 11,
-                            marginBottom: 12,
-                            letterSpacing: "0.06em",
-                          }}
-                        >
-                          FAILURE DETAIL
-                        </div>
-                        <div
-                          style={{
-                            padding: 12,
-                            background: "rgba(255,77,106,0.06)",
-                            border: "1px solid rgba(255,77,106,0.2)",
+                            background: "rgba(255,77,106,0.1)",
+                            border: "1px solid rgba(255,77,106,0.3)",
+                            color: "var(--danger)",
+                            padding: "8px 12px",
                             borderRadius: 6,
+                            fontSize: 13,
+                            fontWeight: 600,
+                            cursor: "pointer",
+                            transition: "background 0.2s",
+                            marginBottom: 8,
+                            display: "block",
                           }}
                         >
+                          {showErrorDetails ? "Hide error details ▼" : "See error details →"}
+                        </button>
+                        {showErrorDetails && (
                           <div
                             style={{
-                              color: "var(--danger)",
-                              fontSize: 11,
-                              fontWeight: 600,
-                              marginBottom: 6,
+                              padding: 12,
+                              background: "rgba(255,77,106,0.06)",
+                              border: "1px solid rgba(255,77,106,0.2)",
+                              borderRadius: 6,
+                              maxHeight: 400,
+                              overflowY: "auto",
                             }}
                           >
-                            PIPELINE ERROR
-                          </div>
-                          {demoResult.events
-                            .filter((e) => e.event_type.endsWith("_FAILED"))
-                            .slice(0, 1)
-                            .map((e) => (
-                              <div key={e.event_id}>
-                                <span className="mono-key">stage  </span>
-                                <span className="mono-err">{e.event_type}</span>
-                                <div>
-                                  <span className="mono-key">detail </span>
-                                  <span className="mono-val">{e.message}</span>
-                                </div>
+                            <div
+                              style={{
+                                color: "var(--danger)",
+                                fontSize: 11,
+                                fontWeight: 600,
+                                marginBottom: 8,
+                                borderBottom: "1px solid rgba(255,77,106,0.3)",
+                                paddingBottom: 8,
+                              }}
+                            >
+                              ERRORS
+                            </div>
+                            {demoResult.errorDetail?.validation_errors ? (
+                              <div>
+                                {demoResult.errorDetail.validation_errors.map((err, idx) => (
+                                  <div key={idx} style={{ marginBottom: 10 }}>
+                                    <div>
+                                      <span className="mono-key">row    </span>
+                                      <span className="mono-err">{err.row_number}</span>
+                                    </div>
+                                    <div>
+                                      <span className="mono-key">field  </span>
+                                      <span className="mono-val">{err.field}</span>
+                                    </div>
+                                    <div>
+                                      <span className="mono-key">reason </span>
+                                      <span className="mono-val">{err.message}</span>
+                                    </div>
+                                  </div>
+                                ))}
                               </div>
-                            ))}
-                        </div>
+                            ) : (
+                              <div>
+                                <span className="mono-val">{demoResult.errorDetail?.message || "No error details available"}</span>
+                              </div>
+                            )}
+                          </div>
+                        )}
+                        <a href="#provenance" style={{ display: "inline-block", textDecoration: "none", marginTop: showErrorDetails ? 8 : 0 }}>
+                          <button
+                            style={{
+                              background: "rgba(58,155,255,0.1)",
+                              border: "1px solid rgba(58,155,255,0.3)",
+                              color: "var(--blue3)",
+                              padding: "8px 12px",
+                              borderRadius: 6,
+                              fontSize: 13,
+                              fontWeight: 600,
+                              cursor: "pointer",
+                              transition: "background 0.2s",
+                            }}
+                          >
+                            See audit logs →
+                          </button>
+                        </a>
                       </>
                     )}
                   </div>
@@ -672,7 +794,7 @@ export default function Home() {
         </div>
       </div>
 
-      <div className="section">
+      <div className="section" id="provenance">
         <div className="section-label">Provenance</div>
         <div className="section-title">Full audit trail, by design</div>
         <div className="section-sub">
@@ -681,82 +803,95 @@ export default function Home() {
         </div>
 
         <div className="audit-grid">
-          <div className="audit-card">
-            <div className="audit-title">PROCESSING EVENTS — valid_01</div>
-            <div className="event-row">
-              <span className="event-ts">09:14:00.012</span>
-              <span className="event-stage es-parse">PARSE</span>
-              <span className="event-msg">file parsed → 1 panel, 12 tests</span>
+          {demoPhase === "done" && demoResult?.events ? (
+            <div className="audit-card">
+              <div className="audit-title">PROCESSING EVENTS — {activeTab === "valid" ? "Valid CSV" : "Invalid CSV"}</div>
+              {demoResult.events.map((evt) => {
+                const timestampStr = evt.occurred_at || evt.timestamp || evt.created_at || "";
+                const date = new Date(timestampStr);
+                const ts = !isNaN(date.getTime())
+                  ? `${date.toLocaleTimeString("en-US", { hour12: false })}.${String(date.getMilliseconds()).padStart(3, "0")}`
+                  : "N/A";
+                const isSuccess = evt.event_type.endsWith("_SUCCEEDED");
+                const isFailed = evt.event_type.endsWith("_FAILED");
+                let stageClass = "es-parse";
+                if (evt.event_type.includes("VALIDATION")) stageClass = "es-valid";
+                else if (evt.event_type.includes("NORMALIZATION")) stageClass = "es-norm";
+                else if (evt.event_type.includes("FHIR")) stageClass = "es-fhir";
+
+                return (
+                  <div key={evt.event_id} className="event-row">
+                    <span className="event-ts">{ts}</span>
+                    <span
+                      className={`event-stage ${!isFailed ? stageClass : ""}`}
+                      style={
+                        isFailed
+                          ? {
+                              background: "rgba(255,77,106,0.08)",
+                              color: "var(--danger)",
+                            }
+                          : {}
+                      }
+                    >
+                      {evt.event_type.replace(/_SUCCEEDED|_FAILED/g, "").replace(/_/g, " ")}
+                    </span>
+                    <span className="event-msg" style={isFailed ? { color: "var(--danger)" } : {}}>
+                      {evt.message}
+                    </span>
+                  </div>
+                );
+              })}
             </div>
-            <div className="event-row">
-              <span className="event-ts">09:14:00.098</span>
-              <span className="event-stage es-valid">VALIDATION</span>
-              <span className="event-msg">all rules passed</span>
-            </div>
-            <div className="event-row">
-              <span className="event-ts">09:14:00.134</span>
-              <span className="event-stage es-norm">NORMALIZE</span>
-              <span className="event-msg">FHIR mapping applied</span>
-            </div>
-            <div className="event-row">
-              <span className="event-ts">09:14:00.201</span>
-              <span className="event-stage es-fhir">PERSIST</span>
-              <span className="event-msg">DiagnosticReport + 12 Observations written</span>
-            </div>
-          </div>
-          <div className="audit-card">
-            <div className="audit-title">PROCESSING EVENTS — invalid_missing_fields</div>
-            <div className="event-row">
-              <span className="event-ts">09:21:04.011</span>
-              <span className="event-stage es-parse">PARSE</span>
-              <span className="event-msg">file parsed → 1 panel, 11 tests</span>
-            </div>
-            <div className="event-row">
-              <span className="event-ts">09:21:04.089</span>
-              <span
-                className="event-stage"
-                style={{
-                  background: "rgba(255,77,106,0.08)",
-                  color: "var(--danger)",
-                }}
-              >
-                VALIDATION
-              </span>
-              <span className="event-msg" style={{ color: "var(--danger)" }}>
-                failed: missing 'unit' on row 3
-              </span>
-            </div>
-            <div className="event-row">
-              <span className="event-ts">09:21:04.090</span>
-              <span
-                className="event-stage"
-                style={{
-                  background: "rgba(120,120,120,0.08)",
-                  color: "#555",
-                }}
-              >
-                NORMALIZE
-              </span>
-              <span className="event-msg" style={{ color: "#444" }}>
-                skipped
-              </span>
-            </div>
-            <div className="event-row">
-              <span className="event-ts">09:21:04.090</span>
-              <span
-                className="event-stage"
-                style={{
-                  background: "rgba(120,120,120,0.08)",
-                  color: "#555",
-                }}
-              >
-                PERSIST
-              </span>
-              <span className="event-msg" style={{ color: "#444" }}>
-                skipped — raw ingestion record retained
-              </span>
-            </div>
-          </div>
+          ) : (
+            <>
+              <div className="audit-card">
+                <div className="audit-title">PROCESSING EVENTS — Valid CSV</div>
+                <div className="event-row">
+                  <span className="event-ts">09:14:00.012</span>
+                  <span className="event-stage es-parse">PARSE</span>
+                  <span className="event-msg">file parsed → 1 panel, 12 tests</span>
+                </div>
+                <div className="event-row">
+                  <span className="event-ts">09:14:00.098</span>
+                  <span className="event-stage es-valid">VALIDATION</span>
+                  <span className="event-msg">all rules passed</span>
+                </div>
+                <div className="event-row">
+                  <span className="event-ts">09:14:00.134</span>
+                  <span className="event-stage es-norm">NORMALIZE</span>
+                  <span className="event-msg">FHIR mapping applied</span>
+                </div>
+                <div className="event-row">
+                  <span className="event-ts">09:14:00.201</span>
+                  <span className="event-stage es-fhir">PERSIST</span>
+                  <span className="event-msg">DiagnosticReport + 12 Observations written</span>
+                </div>
+              </div>
+              <div className="audit-card">
+                <div className="audit-title">PROCESSING EVENTS — Invalid CSV</div>
+                <div className="event-row">
+                  <span className="event-ts">09:21:04.011</span>
+                  <span className="event-stage es-parse">PARSE</span>
+                  <span className="event-msg">file parsed → 1 panel, 11 tests</span>
+                </div>
+                <div className="event-row">
+                  <span className="event-ts">09:21:04.089</span>
+                  <span
+                    className="event-stage"
+                    style={{
+                      background: "rgba(255,77,106,0.08)",
+                      color: "var(--danger)",
+                    }}
+                  >
+                    VALIDATION
+                  </span>
+                  <span className="event-msg" style={{ color: "var(--danger)" }}>
+                    failed: missing 'unit' on row 3
+                  </span>
+                </div>
+              </div>
+            </>
+          )}
         </div>
       </div>
 
@@ -768,10 +903,10 @@ export default function Home() {
         </h2>
         <p>Explore the full pipeline, read the source, or connect to the live API.</p>
         <div style={{ display: "flex", gap: 16, justifyContent: "center", flexWrap: "wrap" }}>
-          <a href="#" className="btn-primary">
+          <a href="#demo" className="btn-primary">
             Open Live Demo →
           </a>
-          <a href="#" className="btn-ghost">
+          <a href="https://github.com/masyago/validor" target="_blank" rel="noopener noreferrer" className="btn-ghost">
             View on GitHub
           </a>
         </div>
