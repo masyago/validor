@@ -1,5 +1,5 @@
 import Head from "next/head";
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 
 const globalCss = `*{box-sizing:border-box;margin:0;padding:0}
 :root{
@@ -106,6 +106,13 @@ h1 em{font-style:normal;background:linear-gradient(90deg,var(--blue3),var(--cyan
 .badge-fail{background:rgba(255,77,106,0.1);color:var(--danger);border:1px solid rgba(255,77,106,0.2)}
 .badge-skip{background:rgba(120,120,120,0.1);color:#666;border:1px solid rgba(120,120,120,0.15)}
 
+/* DEMO LOADING STATES */
+@keyframes spin{to{transform:rotate(360deg)}}
+.spinner{width:14px;height:14px;border:2px solid var(--border2);border-top-color:var(--blue3);border-radius:50%;animation:spin .8s linear infinite;display:inline-block;vertical-align:middle;margin-right:6px}
+@keyframes stagePulse{0%,100%{opacity:1}50%{opacity:0.4}}
+.stage-active{animation:stagePulse 1s ease-in-out infinite}
+.demo-run-btn{margin:0 24px 24px;display:block;width:calc(100% - 48px)}
+
 /* TRUST / AUDITABILITY */
 .audit-grid{display:grid;grid-template-columns:1fr 1fr;gap:24px;margin-top:0}
 .audit-card{background:var(--navy2);border:1px solid var(--border);border-radius:12px;padding:24px}
@@ -132,8 +139,118 @@ footer{border-top:1px solid var(--border);padding:32px 48px;display:flex;justify
 body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(var(--border) 1px,transparent 1px),linear-gradient(90deg,var(--border) 1px,transparent 1px);background-size:60px 60px;opacity:0.5;pointer-events:none;z-index:0}
 body>*{position:relative;z-index:1}`;
 
+const STAGE_MAP = [
+  { label: "PARSE", ok: "PARSE_SUCCEEDED", fail: "PARSE_FAILED" },
+  { label: "VALIDATE", ok: "VALIDATION_SUCCEEDED", fail: "VALIDATION_FAILED" },
+  { label: "NORMALIZE", ok: "NORMALIZATION_SUCCEEDED", fail: "NORMALIZATION_FAILED" },
+  { label: "PERSIST", ok: "FHIR_JSON_GENERATION_SUCCEEDED", fail: "FHIR_JSON_GENERATION_FAILED" },
+];
+
+function deriveStageSummary(events) {
+  const types = new Set((events || []).map((e) => e.event_type));
+  let hitFail = false;
+  return STAGE_MAP.map(({ label, ok, fail }) => {
+    if (hitFail) return { label, state: "skip" };
+    if (types.has(fail)) {
+      hitFail = true;
+      return { label, state: "fail" };
+    }
+    if (types.has(ok)) return { label, state: "pass" };
+    return { label, state: "skip" };
+  });
+}
+
 export default function Home() {
   const [activeTab, setActiveTab] = useState("valid");
+  const [demoPhase, setDemoPhase] = useState("idle");
+  const [loadingStage, setLoadingStage] = useState(0);
+  const [demoResult, setDemoResult] = useState(null);
+  const [demoError, setDemoError] = useState(null);
+  const pollRef = useRef(null);
+
+  useEffect(() => () => clearInterval(pollRef.current), []);
+
+  function handleTabChange(tab) {
+    if (tab === activeTab) return;
+    clearInterval(pollRef.current);
+    setActiveTab(tab);
+    setDemoPhase("idle");
+    setDemoResult(null);
+    setDemoError(null);
+    setLoadingStage(0);
+  }
+
+  async function runDemo() {
+    clearInterval(pollRef.current);
+    setDemoPhase("loading");
+    setDemoResult(null);
+    setDemoError(null);
+    setLoadingStage(0);
+
+    const csvPath = activeTab === "valid" ? "/demo-csv/valid_01.csv" : "/demo-csv/invalid_missing_fields.csv";
+    const instrumentId = activeTab === "valid" ? "demo-instrument-01" : "demo-instrument-02";
+    const fileName = activeTab === "valid" ? "valid_01.csv" : "invalid_missing_fields.csv";
+
+    const csvBlob = await fetch(csvPath)
+      .then((r) => r.blob())
+      .catch((err) => {
+        setDemoError("Could not load demo file: " + err.message);
+        setDemoPhase("idle");
+        return null;
+      });
+    if (!csvBlob) return;
+
+    const form = new FormData();
+    form.append("file", csvBlob, fileName);
+    form.append("uploader_id", "web-demo");
+    form.append("spec_version", "analyzer_csv_v1");
+    form.append("instrument_id", instrumentId);
+    form.append("run_id", "demo-run-" + Date.now());
+    form.append("uploader_received_at", new Date().toISOString());
+
+    const postRes = await fetch("/v1/ingestions", { method: "POST", body: form }).catch(() => null);
+    const postData = postRes ? await postRes.json().catch(() => null) : null;
+    const ingestionId = postData?.ingestion_id;
+    if (!ingestionId) {
+      setDemoError("Upload failed. Is the API running?");
+      setDemoPhase("idle");
+      return;
+    }
+    setLoadingStage(1);
+
+    const TERMINAL = new Set(["COMPLETED", "FAILED VALIDATION", "FAILED"]);
+    let finalStatus = null;
+    await new Promise((resolve) => {
+      pollRef.current = setInterval(async () => {
+        const res = await fetch(`/v1/ingestions/${ingestionId}`).catch(() => null);
+        if (!res) return;
+        const body = await res.json().catch(() => null);
+        if (!body) return;
+        if (body.status === "PROCESSING") setLoadingStage((s) => Math.min(s + 1, 3));
+        if (TERMINAL.has(body.status)) {
+          finalStatus = body;
+          clearInterval(pollRef.current);
+          resolve();
+        }
+      }, 1000);
+    });
+    setLoadingStage(4);
+
+    const [evRes, rpRes, obRes] = await Promise.allSettled([
+      fetch(`/v1/ingestions/${ingestionId}/processing-events`).then((r) => r.json()),
+      fetch(`/v1/ingestions/${ingestionId}/diagnostic-reports?include_json=1`).then((r) => r.json()),
+      fetch(`/v1/ingestions/${ingestionId}/observations?include_json=1`).then((r) => r.json()),
+    ]);
+
+    setDemoResult({
+      ingestionId,
+      status: finalStatus?.status,
+      events: evRes.status === "fulfilled" ? evRes.value : [],
+      reports: rpRes.status === "fulfilled" ? rpRes.value : [],
+      observations: obRes.status === "fulfilled" ? obRes.value : [],
+    });
+    setDemoPhase("done");
+  }
 
   return (
     <>
@@ -362,254 +479,195 @@ export default function Home() {
           <div className="demo-tabs">
             <div
               className={`demo-tab${activeTab === "valid" ? " active" : ""}`}
-              onClick={() => setActiveTab("valid")}
+              onClick={() => handleTabChange("valid")}
             >
               ✓ valid_01.csv — Success
             </div>
             <div
               className={`demo-tab${activeTab === "invalid" ? " active" : ""}`}
-              onClick={() => setActiveTab("invalid")}
+              onClick={() => handleTabChange("invalid")}
             >
               ✗ invalid_missing_fields.csv — Failure
             </div>
           </div>
+          <button
+            className="btn-primary demo-run-btn"
+            onClick={runDemo}
+            disabled={demoPhase === "loading"}
+            style={{ opacity: demoPhase === "loading" ? 0.6 : 1, cursor: demoPhase === "loading" ? "not-allowed" : "pointer" }}
+          >
+            {demoPhase === "loading" ? "Running…" : "Run Demo →"}
+          </button>
           <div className="demo-body">
-            <div
-              className={`demo-panel${activeTab === "valid" ? " active" : ""}`}
-              id="tab-valid"
-            >
-              <div className="status-banner status-success">✓ FINAL STATUS: COMPLETED</div>
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 24 }}>
-                <div>
-                  <div
-                    style={{
-                      color: "var(--muted)",
-                      fontSize: 11,
-                      marginBottom: 12,
-                      letterSpacing: "0.06em",
-                    }}
-                  >
-                    UPLOAD REQUEST
-                  </div>
-                  <div>
-                    <span className="mono-key">file            </span>
-                    <span className="mono-val">valid_01.csv</span>
-                  </div>
-                  <div>
-                    <span className="mono-key">instrument_id   </span>
-                    <span className="mono-val">CANONICAL_CHEM_ANALYZER_V1</span>
-                  </div>
-                  <div>
-                    <span className="mono-key">run_id          </span>
-                    <span className="mono-val">valid_01</span>
-                  </div>
-                  <div>
-                    <span className="mono-key">sha256          </span>
-                    <span className="mono-val">e6efc3...35c0</span>
-                  </div>
-                  <div>
-                    <span className="mono-key">size            </span>
-                    <span className="mono-val" style={{ color: "var(--blue3)" }}>
-                      2.5 KB
-                    </span>
-                  </div>
-                  <div
-                    style={{
-                      marginTop: 16,
-                      color: "var(--muted)",
-                      fontSize: 11,
-                    }}
-                  >
-                    POST <span className="mono-path">/v1/ingestions</span> →{" "}
-                    <span className="mono-ok">200 OK</span>
-                  </div>
-                  <div>
-                    <span className="mono-key">status          </span>
-                    <span className="mono-ok">ACCEPTED</span>
-                  </div>
-                </div>
-                <div>
-                  <div
-                    style={{
-                      color: "var(--muted)",
-                      fontSize: 11,
-                      marginBottom: 12,
-                      letterSpacing: "0.06em",
-                    }}
-                  >
-                    PIPELINE STATUS
-                  </div>
-                  <div className="stage">
-                    <span className="stage-badge badge-pass">PARSE</span>
-                    <span className="mono-ok">✓ completed</span>
-                  </div>
-                  <div className="stage">
-                    <span className="stage-badge badge-pass">VALIDATION</span>
-                    <span className="mono-ok">✓ completed</span>
-                  </div>
-                  <div className="stage">
-                    <span className="stage-badge badge-pass">NORMALIZATION</span>
-                    <span className="mono-ok">✓ completed</span>
-                  </div>
-                  <div className="stage">
-                    <span className="stage-badge badge-pass">FHIR</span>
-                    <span className="mono-ok">✓ completed</span>
-                  </div>
-                  <div
-                    style={{
-                      marginTop: 20,
-                      color: "var(--muted)",
-                      fontSize: 11,
-                      marginBottom: 8,
-                      letterSpacing: "0.06em",
-                    }}
-                  >
-                    PERSISTED RESOURCES
-                  </div>
-                  <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-                    <span
-                      style={{
-                        background: "rgba(0,212,255,0.08)",
-                        border: "1px solid rgba(0,212,255,0.2)",
-                        color: "var(--cyan)",
-                        padding: "4px 12px",
-                        borderRadius: 4,
-                        fontSize: 11,
-                        fontWeight: 600,
-                      }}
-                    >
-                      DiagnosticReport
-                    </span>
-                    <span
-                      style={{
-                        background: "rgba(0,212,255,0.08)",
-                        border: "1px solid rgba(0,212,255,0.2)",
-                        color: "var(--cyan)",
-                        padding: "4px 12px",
-                        borderRadius: 4,
-                        fontSize: 11,
-                        fontWeight: 600,
-                      }}
-                    >
-                      Observations ×12
-                    </span>
-                  </div>
-                </div>
+            {demoPhase === "idle" && (
+              <div style={{ padding: 24, color: "var(--muted)", fontSize: 13, fontFamily: "var(--mono)" }}>
+                <p>Select a scenario above, then click <strong style={{ color: "var(--white)" }}>Run Demo</strong> to call the live API.</p>
               </div>
-            </div>
+            )}
 
-            <div
-              className={`demo-panel${activeTab === "invalid" ? " active" : ""}`}
-              id="tab-invalid"
-            >
-              <div className="status-banner status-fail">✗ FINAL STATUS: FAILED VALIDATION</div>
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 24 }}>
-                <div>
-                  <div
-                    style={{
-                      color: "var(--muted)",
-                      fontSize: 11,
-                      marginBottom: 12,
-                      letterSpacing: "0.06em",
-                    }}
-                  >
-                    UPLOAD REQUEST
-                  </div>
-                  <div>
-                    <span className="mono-key">file            </span>
-                    <span className="mono-val">invalid_missing_fields.csv</span>
-                  </div>
-                  <div>
-                    <span className="mono-key">instrument_id   </span>
-                    <span className="mono-val">CANONICAL_CHEM_ANALYZER_V1</span>
-                  </div>
-                  <div>
-                    <span className="mono-key">run_id          </span>
-                    <span className="mono-val">invalid_missing_fields</span>
-                  </div>
-                  <div>
-                    <span className="mono-key">sha256          </span>
-                    <span className="mono-val">3598ad...643a</span>
-                  </div>
-                  <div>
-                    <span className="mono-key">size            </span>
-                    <span className="mono-val" style={{ color: "var(--blue3)" }}>
-                      3.9 KB
+            {demoPhase === "loading" && (
+              <div style={{ padding: 24 }}>
+                <div style={{ color: "var(--muted)", fontSize: 12, marginBottom: 16, fontFamily: "var(--mono)" }}>
+                  <span className="spinner" /> Processing through pipeline...
+                </div>
+                {["Parse", "Validate", "Normalize", "Persist"].map((name, i) => (
+                  <div className="stage" key={name}>
+                    <span
+                      className={`stage-badge ${
+                        i < loadingStage ? "badge-pass" : i === loadingStage ? "badge-pass stage-active" : "badge-skip"
+                      }`}
+                    >
+                      {name.toUpperCase()}
+                    </span>
+                    <span
+                      className={i < loadingStage ? "mono-ok" : i === loadingStage ? "mono-val stage-active" : "mono-skip"}
+                    >
+                      {i < loadingStage ? "✓ completed" : i === loadingStage ? "● running…" : "· waiting"}
                     </span>
                   </div>
-                  <div
-                    style={{
-                      marginTop: 16,
-                      color: "var(--muted)",
-                      fontSize: 11,
-                    }}
-                  >
-                    POST <span className="mono-path">/v1/ingestions</span> →{" "}
-                    <span className="mono-ok">200 OK</span>
-                  </div>
-                  <div>
-                    <span className="mono-key">status          </span>
-                    <span className="mono-ok">ACCEPTED</span>
-                  </div>
+                ))}
+              </div>
+            )}
+
+            {demoPhase === "done" && demoResult && (
+              <>
+                <div
+                  className={`status-banner ${
+                    demoResult.status === "COMPLETED" ? "status-success" : "status-fail"
+                  }`}
+                >
+                  {demoResult.status === "COMPLETED" ? "✓" : "✗"} FINAL STATUS: {demoResult.status}
                 </div>
-                <div>
-                  <div
-                    style={{
-                      color: "var(--muted)",
-                      fontSize: 11,
-                      marginBottom: 12,
-                      letterSpacing: "0.06em",
-                    }}
-                  >
-                    PIPELINE STATUS
-                  </div>
-                  <div className="stage">
-                    <span className="stage-badge badge-pass">PARSE</span>
-                    <span className="mono-ok">✓ completed</span>
-                  </div>
-                  <div className="stage">
-                    <span className="stage-badge badge-fail">VALIDATION</span>
-                    <span className="mono-err">✗ failed</span>
-                  </div>
-                  <div className="stage">
-                    <span className="stage-badge badge-skip">NORMALIZATION</span>
-                    <span className="mono-skip">↷ skipped</span>
-                  </div>
-                  <div className="stage">
-                    <span className="stage-badge badge-skip">FHIR</span>
-                    <span className="mono-skip">↷ skipped</span>
-                  </div>
-                  <div
-                    style={{
-                      marginTop: 20,
-                      padding: 12,
-                      background: "rgba(255,77,106,0.06)",
-                      border: "1px solid rgba(255,77,106,0.2)",
-                      borderRadius: 6,
-                    }}
-                  >
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 24 }}>
+                  <div>
                     <div
                       style={{
-                        color: "var(--danger)",
+                        color: "var(--muted)",
                         fontSize: 11,
-                        fontWeight: 600,
-                        marginBottom: 6,
+                        marginBottom: 12,
+                        letterSpacing: "0.06em",
                       }}
                     >
-                      VALIDATION ERROR
+                      PIPELINE STAGES
                     </div>
-                    <div>
-                      <span className="mono-key">code   </span>
-                      <span className="mono-err">validation_error</span>
-                    </div>
-                    <div>
-                      <span className="mono-key">detail </span>
-                      <span className="mono-val">required field 'unit' missing on row 3</span>
-                    </div>
+                    {deriveStageSummary(demoResult.events).map(({ label, state }) => (
+                      <div className="stage" key={label}>
+                        <span
+                          className={`stage-badge ${
+                            state === "pass" ? "badge-pass" : state === "fail" ? "badge-fail" : "badge-skip"
+                          }`}
+                        >
+                          {label}
+                        </span>
+                        <span
+                          className={state === "pass" ? "mono-ok" : state === "fail" ? "mono-err" : "mono-skip"}
+                        >
+                          {state === "pass" ? "✓ completed" : state === "fail" ? "✗ failed" : "↷ skipped"}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                  <div>
+                    {demoResult.status === "COMPLETED" ? (
+                      <>
+                        <div
+                          style={{
+                            color: "var(--muted)",
+                            fontSize: 11,
+                            marginBottom: 12,
+                            letterSpacing: "0.06em",
+                          }}
+                        >
+                          PERSISTED RESOURCES
+                        </div>
+                        <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+                          <span
+                            style={{
+                              background: "rgba(0,212,255,0.08)",
+                              border: "1px solid rgba(0,212,255,0.2)",
+                              color: "var(--cyan)",
+                              padding: "4px 12px",
+                              borderRadius: 4,
+                              fontSize: 11,
+                              fontWeight: 600,
+                            }}
+                          >
+                            DiagnosticReports ×{demoResult.reports.length}
+                          </span>
+                          <span
+                            style={{
+                              background: "rgba(0,212,255,0.08)",
+                              border: "1px solid rgba(0,212,255,0.2)",
+                              color: "var(--cyan)",
+                              padding: "4px 12px",
+                              borderRadius: 4,
+                              fontSize: 11,
+                              fontWeight: 600,
+                            }}
+                          >
+                            Observations ×{demoResult.observations.length}
+                          </span>
+                        </div>
+                        <div
+                          style={{
+                            marginTop: 16,
+                            color: "var(--muted)",
+                            fontSize: 11,
+                          }}
+                        >
+                          ingestion_id: <span style={{ color: "var(--blue3)" }}>{demoResult.ingestionId}</span>
+                        </div>
+                      </>
+                    ) : (
+                      <>
+                        <div
+                          style={{
+                            color: "var(--muted)",
+                            fontSize: 11,
+                            marginBottom: 12,
+                            letterSpacing: "0.06em",
+                          }}
+                        >
+                          FAILURE DETAIL
+                        </div>
+                        <div
+                          style={{
+                            padding: 12,
+                            background: "rgba(255,77,106,0.06)",
+                            border: "1px solid rgba(255,77,106,0.2)",
+                            borderRadius: 6,
+                          }}
+                        >
+                          <div
+                            style={{
+                              color: "var(--danger)",
+                              fontSize: 11,
+                              fontWeight: 600,
+                              marginBottom: 6,
+                            }}
+                          >
+                            PIPELINE ERROR
+                          </div>
+                          {demoResult.events
+                            .filter((e) => e.event_type.endsWith("_FAILED"))
+                            .slice(0, 1)
+                            .map((e) => (
+                              <div key={e.event_id}>
+                                <span className="mono-key">stage  </span>
+                                <span className="mono-err">{e.event_type}</span>
+                                <div>
+                                  <span className="mono-key">detail </span>
+                                  <span className="mono-val">{e.message}</span>
+                                </div>
+                              </div>
+                            ))}
+                        </div>
+                      </>
+                    )}
                   </div>
                 </div>
-              </div>
-            </div>
+              </>
+            )}
           </div>
         </div>
       </div>
