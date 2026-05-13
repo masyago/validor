@@ -11,10 +11,8 @@ non-authoritative LLM workflows.
 
 ## Demo
 
-### Web Demo: [link](https://validor-demo-streamlit.onrender.com/) 
-* Select a file from the dropdown menu and click `Upload`.
-* The uploader output and ingestion status are displayed.
-* If the ingestion completes successfully, use the `DiagnosticReports Data` and `Observations Data` buttons to show/hide persisted results.
+### Web Demo: [link](https://getvalidor.com/) 
+* See service in action: from CSV ingestion through the pipeline.
 
 <img src="demo/gifs/live_demo_valid1.gif" width="500">
 
@@ -29,10 +27,11 @@ See [Installation & Setup](#installation--setup) for the quickest local run.
 
 * **Backend :** Python, FastAPI, Pydantic
 * **Database:** PostgreSQL, SQLAlchemy (ORM)
-* **DevOps:** Docker, CI Testing (GitHub Actions)
+* **DevOps:** AWS EC2, Docker, CI Testing (GitHub Actions)
 * **Healthcare Compliance:** FHIR (Observation and DiagnosticReport resources)
 * **Testing:** Pytest
 * **Environment & Dependency Management:** uv
+* **Demo:** Next.js (web UI), Nginx
 
 ## Scope
 ### In Scope
@@ -283,6 +282,10 @@ MIT
 
 ## Version History
 
+### 1.0.2 (2026-05-13)
+* Demo deployment on AWS EC2
+* New improved demo UI
+
 ### 1.0.1 (2026-04-13)
 * Demo deployment on Render
 * CI testing on pull requests
@@ -292,7 +295,7 @@ MIT
 
 ### **0.0.1** Pre-release
 
-**Last Updated:** April 2026
+**Last Updated:** May 2026
 
 
 
