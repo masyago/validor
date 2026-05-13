@@ -49,7 +49,7 @@ h1 em{font-style:normal;background:linear-gradient(90deg,var(--blue3),var(--cyan
 .btn-ghost:hover{border-color:var(--blue3);color:var(--blue3)}
 
 /* STATS STRIP */
-.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:var(--border);border:1px solid var(--border);border-radius:12px;overflow:hidden;max-width:1100px;margin:0 auto 80px;padding:0 48px;box-sizing:content-box;margin-left:48px;margin-right:48px}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:var(--border);border:1px solid var(--border);border-radius:12px;overflow:hidden;max-width:1100px;margin:0 auto 80px;padding:0 48px}
 .stat{background:var(--navy2);padding:28px 32px}
 .stat-num{font-size:28px;font-weight:700;color:var(--blue3);font-family:var(--mono);letter-spacing:-0.02em}
 .stat-label{font-size:13px;color:var(--muted);margin-top:4px}
@@ -133,12 +133,44 @@ h1 em{font-style:normal;background:linear-gradient(90deg,var(--blue3),var(--cyan
 .cta-band h2{font-size:36px;font-weight:700;letter-spacing:-0.02em;margin-bottom:16px}
 .cta-band p{font-size:16px;color:var(--muted);max-width:440px;margin:0 auto 40px}
 
-footer{border-top:1px solid var(--border);padding:32px 48px;display:flex;justify-content:space-between;align-items:center;font-size:13px;color:var(--muted)}
-.footer-logo{font-weight:700;font-size:15px;color:var(--white)}
+footer{border-top:1px solid var(--border);padding:32px 48px;display:grid;grid-template-columns:1fr 1fr;gap:24px;font-size:13px;color:var(--muted)}
+.footer-logo{font-weight:700;font-size:15px;color:var(--white);grid-column:1/-1;text-align:left;margin-bottom:16px}
+footer > span:nth-child(3){text-align:right}
+
+/* Result Grid */
+.result-grid{display:grid;grid-template-columns:1fr 1fr;gap:24px}
 
 /* Grid BG */
 body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(var(--border) 1px,transparent 1px),linear-gradient(90deg,var(--border) 1px,transparent 1px);background-size:60px 60px;opacity:0.5;pointer-events:none;z-index:0}
-body>*{position:relative;z-index:1}`;
+body>*{position:relative;z-index:1}
+
+/* Mobile Responsive (max-width: 640px) */
+@media (max-width:640px){
+  nav{flex-wrap:wrap;padding:12px 16px;gap:20px}
+  .nav-logo{order:1}
+  .nav-cta{order:2}
+  .nav-links{order:3;width:100%;justify-content:center;gap:16px}
+
+  .stats{display:none}
+
+  .section{padding:32px 16px}
+
+  .pipeline{flex-direction:column;align-items:stretch;overflow-x:unset;gap:2px}
+  .pipe-arrow{transform:rotate(90deg);text-align:center;margin-top:0;margin-bottom:-4px;padding:0;font-size:16px}
+  .pipe-step{width:100%}
+  .pipe-box{width:100%;box-sizing:border-box}
+
+  .audit-grid{max-width:100%;padding-right:8px}
+  .event-row{align-items:flex-start;flex-wrap:wrap}
+  .event-msg{flex:1;min-width:150px}
+
+  footer{gap:16px;align-items:center}
+  .footer-logo{grid-column:1;grid-row:1;margin-bottom:0;font-size:13px}
+  footer > span:nth-child(2){grid-column:1/-1;grid-row:2;text-align:center}
+  footer > span:nth-child(3){grid-column:2;grid-row:1;text-align:right}
+
+  .result-grid{grid-template-columns:1fr}
+}`;
 
 const STAGE_MAP = [
   { label: "PARSE", ok: "PARSE_SUCCEEDED", fail: "PARSE_FAILED" },
@@ -272,7 +304,7 @@ export default function Home() {
       <style dangerouslySetInnerHTML={{ __html: globalCss }} />
 
       <nav>
-        <div className="nav-logo">
+        <a href="#" onClick={(e) => { e.preventDefault(); window.scrollTo({ top: 0, behavior: 'smooth' }); }} className="nav-logo" style={{ textDecoration: 'none', cursor: 'pointer' }}>
           <div className="nav-logo-icon">
             <svg viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
               <path
@@ -285,7 +317,7 @@ export default function Home() {
             </svg>
           </div>
           <span className="nav-logo-text">Validor</span>
-        </div>
+        </a>
         <div className="nav-links">
           <a href="#pipeline">Pipeline</a>
           <a href="#features">Features</a>
@@ -555,7 +587,7 @@ export default function Home() {
                 >
                   {demoResult.status === "COMPLETED" ? "✓" : "✗"} FINAL STATUS: {demoResult.status}
                 </div>
-                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 24 }}>
+                <div className="result-grid">
                   <div>
                     <div
                       style={{
