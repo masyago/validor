@@ -268,17 +268,32 @@ def _parse_args() -> argparse.Namespace:
     )
     return parser.parse_args()
 
+def _read_api_port_from_dotenv() -> str | None:
+    env_file = Path(".env")
+    if not env_file.exists():
+        return None
+    for line in env_file.read_text().splitlines():
+        line = line.strip()
+        if line.startswith("API_PORT="):
+            return line.split("=", 1)[1].strip()
+    return None
+
+
 
 def read_config() -> dict:
     """Reads configuration data from a YAML file."""
     with open(CONFIG_FILE_PATH, "r") as file:
         config_data = yaml.safe_load(file) or {}
 
-    # Allow environment override so deployments (e.g. Render) can point the
-    # uploader/web demo at the deployed API without changing the repo YAML.
     api_base_url = os.getenv("CLA_API_BASE_URL")
     if api_base_url:
         config_data["api_base_url"] = api_base_url
+
+        return config_data
+    # Build URL from API_PORT so the local .env overrides the hardcoded port in config.yaml.
+    api_port = os.getenv("API_PORT") or _read_api_port_from_dotenv()
+    if api_port:
+        config_data["api_base_url"] = f"http://localhost:{api_port}/"
 
     return config_data
 
