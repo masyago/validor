@@ -6,12 +6,6 @@ from typing import Any
 
 import sys
 
-# Ensure the project root is on sys.path.
-#
-# This makes imports stable across:
-# - local runs
-# - `streamlit run demo/web_demo.py` in containers
-# - `python -m demo.cli_demo`
 project_root = str(Path(__file__).resolve().parents[1])
 if project_root not in sys.path:
     sys.path.insert(0, project_root)
@@ -78,7 +72,7 @@ def _print_ingestion_processing_status(
         )
     )
 
-    base_url = str(config.get("api_base_url", "http://localhost:8000")).rstrip(
+    base_url = str(config.get("api_base_url", "http://localhost:3000")).rstrip(
         "/"
     )
     events_url = f"{base_url}/v1/ingestions/{ingestion_id}/processing-events"
