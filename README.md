@@ -11,7 +11,8 @@ non-authoritative LLM workflows.
 
 ## Demo
 
-### Web Demo: [link](https://getvalidor.com/) 
+### Live Demo: [link](https://getvalidor.com/) 
+* Dockerized app (hosted on AWS EC2 instance) with live API.
 * See service in action: from CSV ingestion through the pipeline.
 
 <img src="demo/gifs/live_demo_valid1.gif" width="500">
