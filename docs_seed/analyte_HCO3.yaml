@@ -1,0 +1,49 @@
+test_name: Bicarbonate
+synonyms:
+  - serum bicarbonate
+  - bicarb
+  - total CO2
+  - carbon dioxide content
+  - HCO3 level
+test_code: HCO3
+panel_code: BMP
+analyte_type: electrolyte
+clinical_use: "Bicarbonate is the primary blood buffer and a direct measure
+  of the metabolic component of acid-base balance. It is used to evaluate
+  metabolic acidosis and alkalosis, monitor patients with diabetes, renal
+  disease, or respiratory conditions, and as part of anion gap calculation.
+  On standard chemistry panels, total CO2 is reported as a surrogate for
+  serum bicarbonate."
+reference_ranges:
+  adult_generic:
+    low: 22
+    high: 29
+    units: mEq/L
+interpretation_summary:
+  high: "Elevated bicarbonate (metabolic alkalosis) may be associated with
+    prolonged vomiting, nasogastric suctioning, diuretic use, or
+    mineralocorticoid excess. Respiratory compensation results in
+    hypoventilation."
+  low: "Low bicarbonate (metabolic acidosis) may be associated with
+    diabetic ketoacidosis, lactic acidosis, renal failure, diarrhea, or
+    ingestion of certain substances. Anion gap should be calculated to
+    guide further evaluation."
+  critical_high: 40  # mEq/L — may warrant urgent clinical review
+  critical_low: 10   # mEq/L — may warrant urgent clinical review
+confounders:
+  - "Total CO2 measured on chemistry panels is slightly higher than true
+    bicarbonate due to inclusion of dissolved CO2 and carbonic acid."
+  - "Prolonged sample exposure to air causes CO2 loss and falsely lowers
+    bicarbonate."
+  - "Metabolic and respiratory processes interact; bicarbonate must be
+    interpreted alongside pH and pCO2 for full acid-base assessment."
+  - "Vomiting or hyperventilation prior to draw can acutely alter values."
+aliases:
+  - HCO3
+  - HCO3-
+  - bicarb
+  - CO2
+  - tCO2
+  - total CO2
+# DISCLAIMER: For demo/development use only. Not intended for clinical
+# decision-making or patient care.

@@ -1,0 +1,53 @@
+test_name: Creatinine
+synonyms:
+  - serum creatinine
+  - creatinine level
+  - blood creatinine
+  - plasma creatinine
+  - Cr level
+test_code: Cr
+panel_code: BMP
+analyte_type: metabolic_waste
+clinical_use: "Creatinine is a byproduct of muscle creatine metabolism and is
+  excreted at a relatively constant rate by the kidneys. It is the standard
+  marker for estimating glomerular filtration rate (eGFR) and monitoring
+  kidney function. Creatinine is more specific to renal filtration than BUN
+  and is less affected by diet or catabolism, making it a preferred marker
+  for longitudinal kidney function tracking."
+reference_ranges:
+  adult_generic:
+    low: 0.6
+    high: 1.3
+    units: mg/dL
+    note: "The upper limit may differ between males and females in
+      sex-specific reference ranges; 1.3 mg/dL reflects a general adult
+      upper bound."
+interpretation_summary:
+  high: "Elevated creatinine may be associated with acute kidney injury,
+    chronic kidney disease, reduced renal perfusion, or urinary obstruction.
+    Trending creatinine over time is more informative than a single value.
+    eGFR should be calculated using a validated equation (e.g., CKD-EPI)."
+  low: "Low creatinine is most commonly seen with reduced muscle mass,
+    cachexia, or advanced liver disease. It is generally not clinically
+    concerning in isolation but may mask reduced GFR by keeping creatinine
+    within the normal range."
+  critical_high: 10.0  # mg/dL — may warrant urgent clinical review
+  critical_low: null
+confounders:
+  - "Muscle mass significantly affects baseline creatinine; values must be
+    interpreted in the context of body habitus."
+  - "Certain medications (e.g., cimetidine, trimethoprim) block tubular
+    secretion of creatinine and can raise serum levels without affecting
+    true GFR."
+  - "Ketoacidosis and certain cephalosporins can interfere with
+    colorimetric creatinine assays (Jaffe method), causing false elevation."
+  - "Acute muscle injury (rhabdomyolysis) causes rapid creatinine rise
+    disproportionate to underlying renal function."
+aliases:
+  - Cr
+  - Cre
+  - SCr
+  - serum Cr
+  - creat
+# DISCLAIMER: For demo/development use only. Not intended for clinical
+# decision-making or patient care.

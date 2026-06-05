@@ -1,0 +1,54 @@
+test_name: Alanine Aminotransferase
+synonyms:
+  - ALT
+  - serum ALT
+  - alanine transaminase
+  - SGPT
+  - glutamic pyruvic transaminase
+test_code: ALT
+panel_code: LFT
+analyte_type: enzyme
+clinical_use: "ALT is an intracellular enzyme found predominantly in
+  hepatocytes, making it more liver-specific than AST. It is the primary
+  marker for hepatocellular injury and is used to screen for and monitor
+  liver disease, assess hepatotoxicity, and evaluate treatment response
+  in conditions such as viral hepatitis, non-alcoholic fatty liver disease,
+  and drug-induced liver injury. ALT is preferred over AST as a standalone
+  hepatic marker due to its greater hepatic specificity."
+reference_ranges:
+  adult_generic:
+    low: 7
+    high: 56
+    units: U/L
+    note: "Some guidelines recommend sex-specific upper limits of normal
+      (approximately 35 U/L for females, 45–56 U/L for males); the value
+      here reflects a general adult upper bound."
+interpretation_summary:
+  high: "Elevated ALT indicates hepatocellular injury. Mild elevation
+    (1–3× ULN) is seen with non-alcoholic fatty liver disease, medication
+    effects, or early viral hepatitis. Moderate elevation (3–10× ULN)
+    suggests active hepatitis or drug toxicity. Marked elevation (>10× ULN)
+    is associated with acute viral hepatitis, ischemic hepatitis, or
+    drug-induced liver injury. An AST:ALT ratio below 1 is typical of
+    non-alcoholic or viral etiologies."
+  low: "Low ALT is generally not clinically significant. As with AST,
+    very low values may occur with advanced cirrhosis or vitamin B6
+    deficiency."
+  critical_high: 1000  # U/L — may warrant urgent clinical review
+  critical_low: null
+confounders:
+  - "ALT has diurnal variation and may be up to 45% higher in the
+    afternoon than in the morning."
+  - "Obesity and metabolic syndrome are associated with chronically mildly
+    elevated ALT independent of discrete liver pathology."
+  - "Strenuous exercise causes less ALT elevation than AST, making
+    exercise-related ALT rises relatively modest."
+  - "Many common medications — including statins, NSAIDs, and herbal
+    supplements — can cause transient or persistent ALT elevation."
+aliases:
+  - ALT
+  - SGPT
+  - alanine transaminase
+  - serum glutamic pyruvic transaminase
+# DISCLAIMER: For demo/development use only. Not intended for clinical
+# decision-making or patient care.

@@ -1,0 +1,43 @@
+panel_code: BMP
+panel_name: Basic Metabolic Panel
+panel_type: chemistry
+includes_analytes: [Na, K, Cl, HCO3, BUN, Cr, GLU, Ca]
+synonyms:
+  - chemistry panel
+  - chemistry screen
+  - chem 7
+  - electrolyte panel
+  - metabolic panel
+  - basic chemistry panel
+  - SMA-7
+clinical_use: "The Basic Metabolic Panel includes glucose, electrolytes, and
+  markers of kidney function. It is used to assess overall health status or
+  monitor ongoing treatment. The panel provides important information about
+  the body's fluid balance, acid-base status, metabolism, and kidney
+  function. It is commonly ordered in emergency, inpatient, and outpatient
+  settings as a broad initial or follow-up screen."
+interpretation_summary:
+  overview: "Results are interpreted collectively alongside clinical context.
+    Abnormalities in multiple analytes may suggest related underlying
+    conditions such as renal impairment, electrolyte imbalances, or
+    metabolic disorders."
+  common_patterns:
+    renal_impairment: "Elevated BUN and creatinine with electrolyte
+      disturbances may indicate acute or chronic kidney disease."
+    metabolic_acidosis: "Low bicarbonate with elevated BUN/Cr may suggest
+      renal tubular acidosis or uremia."
+    hyperglycemia: "Elevated glucose in context of electrolyte shifts may
+      suggest diabetic ketoacidosis or hyperosmolar state."
+confounders:
+  - "Hemolysis can falsely elevate potassium."
+  - "Prolonged tourniquet use may affect electrolyte values."
+  - "Recent IV fluid administration may dilute or shift electrolyte
+    results."
+  - "Timing relative to meals affects glucose interpretation."
+aliases:
+  - blood test
+  - basic blood test
+  - BMP
+  - basic met panel
+# DISCLAIMER: For demo/development use only. Not intended for clinical
+# decision-making or patient care.

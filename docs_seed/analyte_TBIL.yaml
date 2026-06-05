@@ -1,0 +1,59 @@
+test_name: Total Bilirubin
+synonyms:
+  - total bilirubin level
+  - serum bilirubin
+  - T. bili
+  - bilirubin total
+  - TBIL level
+test_code: TBIL
+panel_code: LFT
+analyte_type: bile_pigment
+clinical_use: "Total bilirubin is the sum of conjugated (direct) and
+  unconjugated (indirect) bilirubin in the serum. It is a marker of
+  hepatic conjugation capacity, biliary excretion, and red blood cell
+  turnover. Total bilirubin is used to evaluate jaundice, monitor
+  hepatic and biliary disease, and assess disease severity in conditions
+  such as cirrhosis (as part of MELD and Child-Pugh scoring). Fractionation
+  into direct and indirect components helps localize the etiology when
+  elevation is present."
+reference_ranges:
+  adult_generic:
+    low: 0.1
+    high: 1.2
+    units: mg/dL
+    note: "Jaundice typically becomes clinically visible at levels above
+      2.5–3.0 mg/dL. Direct (conjugated) bilirubin normally represents
+      less than 30% of total bilirubin."
+interpretation_summary:
+  high: "Elevated total bilirubin (hyperbilirubinemia) may be caused by
+    increased production (hemolysis), impaired hepatic uptake or
+    conjugation (Gilbert syndrome, hepatocellular disease), or impaired
+    biliary excretion (intrahepatic or extrahepatic cholestasis).
+    Fractionation distinguishes predominantly unconjugated causes
+    (hemolysis, Gilbert syndrome) from predominantly conjugated causes
+    (hepatocellular injury, biliary obstruction)."
+  low: "Very low bilirubin has no established clinical significance and
+    is not routinely interpreted as a pathologic finding."
+  critical_high: 15.0  # mg/dL — may warrant urgent clinical review
+  critical_low: null
+confounders:
+  - "Hemolysis is both a pathologic cause of elevated bilirubin and a
+    preanalytical confound; in vitro hemolysis of the specimen can
+    falsely alter results."
+  - "Light exposure degrades bilirubin in the sample tube; specimens
+    should be protected from light and processed promptly."
+  - "Gilbert syndrome causes benign intermittent unconjugated
+    hyperbilirubinemia triggered by fasting, stress, or illness, and
+    is a common incidental finding."
+  - "Certain medications (rifampin, probenecid) can interfere with
+    hepatic bilirubin uptake and raise unconjugated bilirubin without
+    hepatocellular injury."
+aliases:
+  - TBIL
+  - T. bili
+  - total bili
+  - bilirubin
+  - serum bilirubin
+  - bili total
+# DISCLAIMER: For demo/development use only. Not intended for clinical
+# decision-making or patient care.

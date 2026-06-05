@@ -1,0 +1,46 @@
+test_name: Potassium
+synonyms:
+  - serum potassium
+  - potassium level
+  - potassium blood test
+  - plasma potassium
+  - K level
+test_code: K
+panel_code: BMP
+analyte_type: electrolyte
+clinical_use: "Potassium is the primary intracellular cation and is essential
+  for cardiac and skeletal muscle function, nerve conduction, and acid-base
+  balance. Serum potassium is measured to evaluate electrolyte disorders,
+  monitor patients on diuretics, digoxin, or ACE inhibitors, and assess
+  kidney function. It is a critical safety analyte due to its narrow
+  therapeutic window and cardiac implications."
+reference_ranges:
+  adult_generic:
+    low: 3.5
+    high: 5.1
+    units: mEq/L
+interpretation_summary:
+  high: "Elevated potassium (hyperkalemia) may be associated with renal
+    insufficiency, adrenal insufficiency, acidosis, or potassium-sparing
+    medications. Cardiac arrhythmia risk increases at higher levels."
+  low: "Low potassium (hypokalemia) may be associated with diuretic use,
+    vomiting, diarrhea, poor dietary intake, or metabolic alkalosis.
+    Hypokalemia can potentiate digitalis toxicity and cause muscle weakness."
+  critical_high: 6.5  # mEq/L — may warrant urgent clinical review
+  critical_low: 2.5   # mEq/L — may warrant urgent clinical review
+confounders:
+  - "Hemolysis is the most common cause of spurious hyperkalemia; always
+    assess specimen quality."
+  - "Prolonged tourniquet use or fist clenching during venipuncture can
+    falsely elevate potassium."
+  - "Thrombocytosis or leukocytosis may cause pseudohyperkalemia in serum
+    samples."
+  - "Acidosis shifts potassium extracellularly, raising measured serum
+    levels independent of total body stores."
+aliases:
+  - K
+  - K+
+  - serum K
+  - potassium ion
+# DISCLAIMER: For demo/development use only. Not intended for clinical
+# decision-making or patient care.

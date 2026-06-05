@@ -1,0 +1,55 @@
+test_name: Triglycerides
+synonyms:
+  - serum triglycerides
+  - triglyceride level
+  - TG level
+  - triacylglycerols
+  - blood triglycerides
+  - fasting triglycerides
+test_code: TG
+panel_code: LIPID
+analyte_type: lipid
+clinical_use: "Triglycerides are the primary storage form of dietary fat and
+  are transported in the blood via VLDL and chylomicrons. Serum triglycerides
+  are measured as part of cardiovascular risk assessment, metabolic syndrome
+  evaluation, and to monitor response to dietary or pharmacologic
+  interventions. Markedly elevated triglycerides are also a risk factor for
+  acute pancreatitis. Fasting status is critical for accurate interpretation."
+reference_ranges:
+  adult_generic:
+    low: 0
+    high: 150
+    units: mg/dL
+    note: "Below 150 mg/dL is considered normal. 150–199 mg/dL is
+      borderline high; 200–499 mg/dL high; ≥500 mg/dL very high and
+      associated with pancreatitis risk."
+interpretation_summary:
+  high: "Elevated triglycerides may be associated with metabolic syndrome,
+    type 2 diabetes, obesity, hypothyroidism, excessive alcohol intake,
+    or certain medications. Severely elevated levels (≥500 mg/dL) increase
+    the risk of acute pancreatitis and render Friedewald LDL calculation
+    unreliable."
+  low: "Very low triglycerides are generally not clinically significant.
+    They may be seen with malnutrition, malabsorption, or hyperthyroidism,
+    but rarely require independent follow-up."
+  critical_high: 500  # mg/dL — pancreatitis risk threshold
+  critical_low: null
+confounders:
+  - "Non-fasting status is the most common cause of elevated triglycerides;
+    fasting 9–12 hours is required for accurate measurement."
+  - "Alcohol consumption within 24 hours of the draw can significantly
+    elevate triglycerides."
+  - "Estrogen therapy, corticosteroids, beta-blockers, and retinoids are
+    common medications that raise triglycerides."
+  - "Uncontrolled diabetes and hypothyroidism are frequent secondary causes
+    that should be excluded before attributing hypertriglyceridemia to
+    primary dyslipidemia."
+aliases:
+  - TG
+  - TGs
+  - trigs
+  - triglyceride
+  - TRIG
+  - serum TG
+# DISCLAIMER: For demo/development use only. Not intended for clinical
+# decision-making or patient care.

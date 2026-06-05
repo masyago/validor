@@ -1,0 +1,54 @@
+test_name: Low-Density Lipoprotein
+synonyms:
+  - LDL cholesterol
+  - LDL-C
+  - bad cholesterol
+  - LDL level
+  - low density lipoprotein cholesterol
+test_code: LDL
+panel_code: LIPID
+analyte_type: lipoprotein
+clinical_use: "LDL cholesterol is the primary atherogenic lipoprotein and
+  the main target of lipid-lowering therapy. It is used to assess
+  cardiovascular risk, guide initiation of statin therapy, and monitor
+  treatment response. LDL is typically calculated via the Friedewald
+  equation from total cholesterol, HDL, and triglycerides, though direct
+  measurement is used when triglycerides are elevated. LDL targets vary by
+  individual risk category per current cardiovascular guidelines."
+reference_ranges:
+  adult_generic:
+    low: 0
+    high: 100
+    units: mg/dL
+    note: "Below 100 mg/dL is considered optimal for most adults. Target
+      thresholds differ by cardiovascular risk: <70 mg/dL for high-risk
+      patients; <55 mg/dL for very high-risk patients per current
+      guidelines."
+interpretation_summary:
+  high: "Elevated LDL is associated with increased risk of atherosclerotic
+    cardiovascular disease. Levels of 100–129 mg/dL are near-optimal;
+    130–159 mg/dL borderline high; 160–189 mg/dL high; ≥190 mg/dL very
+    high, which may suggest familial hypercholesterolemia."
+  low: "Very low LDL (below 40 mg/dL) may be seen with malnutrition,
+    hyperthyroidism, or extreme lipid-lowering therapy. Very low LDL from
+    pharmacologic treatment is generally considered safe in current
+    evidence."
+  critical_high: 190  # mg/dL — may suggest familial hypercholesterolemia
+  critical_low: null
+confounders:
+  - "Friedewald-calculated LDL is unreliable when triglycerides exceed
+    400 mg/dL; direct LDL measurement should be used."
+  - "Acute illness, surgery, or hospitalization can transiently lower LDL
+    for several weeks."
+  - "Non-fasting samples reduce Friedewald equation accuracy due to
+    variable triglyceride levels."
+  - "Hypothyroidism is a common reversible secondary cause of elevated
+    LDL."
+aliases:
+  - LDL
+  - LDL-C
+  - LDL chol
+  - bad cholesterol
+  - low density lipoprotein
+# DISCLAIMER: For demo/development use only. Not intended for clinical
+# decision-making or patient care.
