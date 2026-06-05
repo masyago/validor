@@ -1,0 +1,53 @@
+test_name: Glucose
+synonyms:
+  - blood sugar test
+  - blood sugar level
+  - blood glucose level
+  - serum glucose
+  - fasting glucose
+test_code: GLU
+panel_code: BMP
+analyte_type: carbohydrate
+clinical_use: "Glucose is the primary circulating energy substrate and is
+  tightly regulated by insulin and glucagon. Serum glucose is used for
+  screening and monitoring of diabetes mellitus, hypoglycemic conditions,
+  and metabolic emergencies such as diabetic ketoacidosis and hyperosmolar
+  hyperglycemic state. Fasting status at the time of draw significantly
+  affects interpretation."
+reference_ranges:
+  adult_generic:
+    low: 70
+    high: 99
+    units: mg/dL
+    note: "Reflects fasting reference range. Non-fasting values up to
+      140 mg/dL may be within expected limits depending on meal timing."
+interpretation_summary:
+  high: "Elevated glucose (hyperglycemia) may be associated with diabetes
+    mellitus, impaired glucose tolerance, physiologic stress, corticosteroid
+    use, or acute illness. Fasting values of 100–125 mg/dL suggest impaired
+    fasting glucose; values ≥126 mg/dL on repeat testing are consistent with
+    diabetes per standard diagnostic criteria."
+  low: "Low glucose (hypoglycemia) may be associated with insulin or
+    sulfonylurea use, prolonged fasting, adrenal insufficiency, liver
+    failure, or insulinoma. Symptomatic hypoglycemia typically occurs below
+    60 mg/dL."
+  critical_high: 500  # mg/dL — may warrant urgent clinical review
+  critical_low: 50    # mg/dL — may warrant urgent clinical review
+confounders:
+  - "Fasting status is the most important preanalytical variable; always
+    note whether the sample is fasting or non-fasting."
+  - "Prolonged sample storage without glycolysis inhibitor (e.g., fluoride
+    tube) causes in vitro glucose consumption and falsely lowers results."
+  - "Stress hyperglycemia in hospitalized or critically ill patients may
+    not reflect baseline glucose metabolism."
+  - "Certain medications (corticosteroids, thiazide diuretics, atypical
+    antipsychotics) can raise fasting glucose."
+aliases:
+  - blood sugar
+  - BS
+  - sugar level
+  - sugar test
+  - GLU
+  - serum glucose
+# DISCLAIMER: For demo/development use only. Not intended for clinical
+# decision-making or patient care.

@@ -1,0 +1,55 @@
+test_name: High-Density Lipoprotein
+synonyms:
+  - HDL cholesterol
+  - HDL-C
+  - good cholesterol
+  - HDL level
+  - high density lipoprotein cholesterol
+test_code: HDL
+panel_code: LIPID
+analyte_type: lipoprotein
+clinical_use: "HDL cholesterol is considered cardioprotective due to its role
+  in reverse cholesterol transport, facilitating removal of cholesterol from
+  peripheral tissues to the liver. HDL is used as part of overall
+  cardiovascular risk assessment and is incorporated into risk calculators
+  such as the Pooled Cohort Equations. Unlike LDL, HDL is inversely
+  associated with cardiovascular risk; low HDL is an independent risk factor
+  regardless of LDL level."
+reference_ranges:
+  adult_generic:
+    low: 40
+    high: 100
+    units: mg/dL
+    note: "Below 40 mg/dL is considered low and a cardiovascular risk
+      factor. Above 60 mg/dL is considered protective. Values above
+      100 mg/dL are uncommon and may reflect genetic variants or secondary
+      causes."
+interpretation_summary:
+  high: "Markedly elevated HDL (above 100 mg/dL) is uncommon and may be
+    associated with genetic conditions such as CETP deficiency or familial
+    hyperalphalipoproteinemia. Very high HDL does not confer proportionally
+    greater cardiovascular protection and may in some contexts be associated
+    with dysfunctional HDL particles."
+  low: "Low HDL (below 40 mg/dL) is associated with increased
+    cardiovascular risk and is commonly seen with metabolic syndrome,
+    type 2 diabetes, obesity, physical inactivity, smoking, and
+    hypertriglyceridemia. Low HDL often co-occurs with elevated
+    triglycerides in atherogenic dyslipidemia."
+  critical_high: null
+  critical_low: 25  # mg/dL — may warrant urgent clinical review
+confounders:
+  - "Smoking, obesity, and physical inactivity are modifiable lifestyle
+    factors that consistently lower HDL."
+  - "Androgens and anabolic steroids lower HDL; estrogens tend to raise
+    it."
+  - "Hypertriglyceridemia is inversely correlated with HDL; elevated TG
+    often accompanies low HDL."
+  - "Beta-blockers and some antihypertensive agents can modestly lower HDL."
+aliases:
+  - HDL
+  - HDL-C
+  - HDL chol
+  - good cholesterol
+  - high density lipoprotein
+# DISCLAIMER: For demo/development use only. Not intended for clinical
+# decision-making or patient care.

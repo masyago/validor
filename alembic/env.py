@@ -15,6 +15,8 @@ from app.persistence.models import normalization
 
 from app.persistence.models import provenance
 
+from app.persistence.models import ai
+
 
 def _normalize_database_url(url: str) -> str:
     url = url.strip()

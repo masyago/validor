@@ -1,0 +1,48 @@
+test_name: Blood Urea Nitrogen
+synonyms:
+  - BUN
+  - urea nitrogen
+  - serum urea nitrogen
+  - blood urea
+  - urea level
+test_code: BUN
+panel_code: BMP
+analyte_type: metabolic_waste
+clinical_use: "Blood urea nitrogen reflects the end-product of protein
+  catabolism and is filtered by the kidneys. BUN is used to assess kidney
+  function, hydration status, and protein metabolism. It is most informative
+  when interpreted alongside creatinine as the BUN:Cr ratio, which can help
+  differentiate prerenal, intrinsic renal, and postrenal causes of
+  azotemia."
+reference_ranges:
+  adult_generic:
+    low: 7
+    high: 20
+    units: mg/dL
+interpretation_summary:
+  high: "Elevated BUN (azotemia) may be associated with decreased renal
+    perfusion, intrinsic kidney disease, high protein intake, GI bleeding,
+    or catabolic states. A BUN:Cr ratio above 20 suggests a prerenal
+    etiology; a ratio below 10 may indicate intrinsic renal disease or low
+    protein intake."
+  low: "Low BUN may be associated with malnutrition, severe liver disease,
+    low protein diet, or overhydration. It is generally less clinically
+    significant in isolation."
+  critical_high: 100  # mg/dL — may warrant urgent clinical review
+  critical_low: null
+confounders:
+  - "High dietary protein intake or GI bleeding can raise BUN
+    disproportionately to creatinine."
+  - "Liver disease impairs urea synthesis and may lower BUN independent of
+    renal function."
+  - "Volume depletion increases BUN more than creatinine, elevating the
+    BUN:Cr ratio."
+  - "Corticosteroids and tetracyclines can increase BUN through enhanced
+    protein catabolism."
+aliases:
+  - BUN
+  - urea N
+  - blood urea N
+  - serum BUN
+# DISCLAIMER: For demo/development use only. Not intended for clinical
+# decision-making or patient care.

@@ -1,0 +1,52 @@
+test_name: Total Protein
+synonyms:
+  - total serum protein
+  - serum total protein
+  - TP level
+  - blood protein
+  - protein total
+test_code: TP
+panel_code: LFT
+analyte_type: protein
+clinical_use: "Total protein reflects the sum of albumin and globulins in
+  the serum and serves as a broad indicator of nutritional status, hepatic
+  synthetic function, and immunologic activity. It is used in conjunction
+  with albumin to calculate the albumin:globulin (A:G) ratio, which helps
+  characterize the nature of protein abnormalities. Total protein alone has
+  limited specificity; protein electrophoresis (SPEP) is required for
+  detailed fractionation when abnormalities are present."
+reference_ranges:
+  adult_generic:
+    low: 6.0
+    high: 8.3
+    units: g/dL
+interpretation_summary:
+  high: "Elevated total protein (hyperproteinemia) may be associated with
+    dehydration, chronic inflammation, or elevated immunoglobulins as seen
+    in multiple myeloma, chronic infections, or autoimmune conditions.
+    A disproportionately high globulin fraction (low A:G ratio) warrants
+    further evaluation with SPEP."
+  low: "Low total protein (hypoproteinemia) may be associated with
+    malnutrition, malabsorption, hepatic synthetic failure, nephrotic
+    syndrome, or protein-losing enteropathy. Low total protein driven
+    primarily by low albumin has different implications than a
+    pan-reduction of all fractions."
+  critical_high: null
+  critical_low: 4.0  # g/dL — may warrant urgent clinical review
+confounders:
+  - "Posture affects results; values measured supine may be up to 0.5 g/dL
+    lower than those measured upright due to fluid redistribution."
+  - "Prolonged tourniquet use causes hemoconcentration and can falsely
+    elevate total protein."
+  - "IV fluid administration and overhydration dilute serum proteins and
+    lower measured values."
+  - "Total protein does not distinguish between albumin and globulin
+    fractions; the A:G ratio or SPEP is needed for characterization."
+aliases:
+  - TP
+  - total prot
+  - serum protein
+  - protein total
+  - total serum protein
+# DISCLAIMER: For demo/development use only. Not intended for clinical
+# decision-making or patient care.

@@ -1,0 +1,54 @@
+test_name: Albumin
+synonyms:
+  - serum albumin
+  - albumin level
+  - blood albumin
+  - ALB level
+  - plasma albumin
+test_code: ALB
+panel_code: LFT
+analyte_type: protein
+clinical_use: "Albumin is the most abundant serum protein, synthesized
+  exclusively by the liver. It maintains oncotic pressure, transports
+  hormones, drugs, and fatty acids, and is a sensitive marker of hepatic
+  synthetic function and nutritional status. Serum albumin is used to
+  assess chronic liver disease severity, malnutrition, nephrotic syndrome,
+  and protein-losing states. It is also required for correcting calcium
+  values in the setting of hypoalbuminemia."
+reference_ranges:
+  adult_generic:
+    low: 3.5
+    high: 5.0
+    units: g/dL
+interpretation_summary:
+  high: "Elevated albumin is almost exclusively caused by dehydration
+    and hemoconcentration. It is not associated with hepatic
+    overproduction and rarely requires independent clinical workup beyond
+    hydration assessment."
+  low: "Low albumin (hypoalbuminemia) may reflect decreased hepatic
+    synthesis (cirrhosis, acute liver failure), increased loss (nephrotic
+    syndrome, protein-losing enteropathy, burns), increased catabolism
+    (sepsis, malignancy), or inadequate nutritional intake. Albumin has a
+    half-life of approximately 20 days, making it a marker of subacute to
+    chronic processes rather than acute hepatic injury."
+  critical_high: null
+  critical_low: 2.0  # g/dL — may warrant urgent clinical review
+confounders:
+  - "Albumin is a negative acute-phase reactant; levels fall during
+    inflammation or acute illness independent of liver synthetic capacity
+    or nutritional status."
+  - "Hypoalbuminemia lowers total calcium measurements without affecting
+    ionized calcium; corrected calcium should be calculated."
+  - "Overhydration and IV fluid administration dilute albumin and lower
+    measured values."
+  - "Long half-life (~20 days) means albumin responds slowly to acute
+    changes in hepatic function; it is a better marker of chronic than
+    acute disease."
+aliases:
+  - ALB
+  - alb
+  - serum alb
+  - albumin level
+  - human serum albumin
+# DISCLAIMER: For demo/development use only. Not intended for clinical
+# decision-making or patient care.

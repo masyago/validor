@@ -1,0 +1,50 @@
+test_name: Aspartate Aminotransferase
+synonyms:
+  - AST
+  - serum AST
+  - aspartate transaminase
+  - SGOT
+  - glutamic oxaloacetic transaminase
+test_code: AST
+panel_code: LFT
+analyte_type: enzyme
+clinical_use: "AST is an intracellular enzyme present in the liver, cardiac
+  muscle, skeletal muscle, kidneys, and red blood cells. Elevation indicates
+  cellular injury in one or more of these tissues. In the hepatic context,
+  AST is used alongside ALT to assess hepatocellular damage. Because of its
+  non-hepatic sources, AST is less liver-specific than ALT and is most
+  informative when interpreted as part of the full LFT panel and in the
+  context of the AST:ALT ratio."
+reference_ranges:
+  adult_generic:
+    low: 10
+    high: 40
+    units: U/L
+interpretation_summary:
+  high: "Elevated AST may be associated with hepatocellular injury, acute
+    myocardial infarction, skeletal muscle damage, hemolysis, or strenuous
+    exercise. Marked elevation (>10× upper limit of normal) suggests acute
+    viral hepatitis, ischemic hepatitis, or drug-induced liver injury. An
+    AST:ALT ratio >2:1 is associated with alcoholic liver disease."
+  low: "Low AST is generally not clinically significant. It may be seen
+    with vitamin B6 deficiency, which is required for aminotransferase
+    activity, or with advanced liver disease where hepatic enzyme-producing
+    mass is depleted."
+  critical_high: 1000  # U/L — may warrant urgent clinical review
+  critical_low: null
+confounders:
+  - "Hemolysis releases AST from red blood cells and is a common cause of
+    spurious elevation; specimen quality should be assessed."
+  - "Strenuous physical exercise can raise AST from skeletal muscle injury
+    for 24–48 hours."
+  - "Myocardial infarction elevates AST independent of liver pathology;
+    concurrent troponin measurement helps differentiate."
+  - "Vitamin B6 deficiency may suppress AST activity and mask true
+    hepatocellular injury."
+aliases:
+  - AST
+  - SGOT
+  - aspartate transaminase
+  - serum glutamic oxaloacetic transaminase
+# DISCLAIMER: For demo/development use only. Not intended for clinical
+# decision-making or patient care.

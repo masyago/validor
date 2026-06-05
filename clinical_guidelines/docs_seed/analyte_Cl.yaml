@@ -1,0 +1,44 @@
+test_name: Chloride
+synonyms:
+  - serum chloride
+  - chloride level
+  - chloride blood test
+  - plasma chloride
+  - Cl level
+test_code: Cl
+panel_code: BMP
+analyte_type: electrolyte
+clinical_use: "Chloride is the primary extracellular anion and plays a key
+  role in maintaining osmotic pressure, fluid balance, and acid-base
+  homeostasis. Serum chloride is used in conjunction with other electrolytes
+  to evaluate acid-base disorders, assess hydration status, and calculate the
+  anion gap. It is rarely interpreted in isolation."
+reference_ranges:
+  adult_generic:
+    low: 98
+    high: 107
+    units: mEq/L
+interpretation_summary:
+  high: "Elevated chloride (hyperchloremia) may be associated with
+    hyperchloremic metabolic acidosis, dehydration, excessive saline
+    administration, or renal tubular acidosis. A high chloride with low
+    bicarbonate is a common pattern in non-anion gap acidosis."
+  low: "Low chloride (hypochloremia) may be associated with vomiting,
+    nasogastric suctioning, diuretic use, or metabolic alkalosis. It often
+    mirrors sodium changes but can be disproportionately low in
+    contraction alkalosis."
+  critical_high: 115  # mEq/L — may warrant urgent clinical review
+  critical_low: 80    # mEq/L — may warrant urgent clinical review
+confounders:
+  - "Bromide ingestion can cause falsely elevated chloride with certain
+    measurement methods."
+  - "Chloride values should be interpreted alongside sodium, bicarbonate,
+    and the anion gap for meaningful acid-base assessment."
+  - "IV normal saline infusion can acutely raise serum chloride."
+aliases:
+  - Cl
+  - Cl-
+  - serum Cl
+  - chloride ion
+# DISCLAIMER: For demo/development use only. Not intended for clinical
+# decision-making or patient care.

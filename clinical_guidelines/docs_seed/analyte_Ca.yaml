@@ -1,0 +1,53 @@
+test_name: Calcium
+synonyms:
+  - serum calcium
+  - calcium level
+  - blood calcium
+  - total calcium
+  - Ca level
+test_code: Ca
+panel_code: BMP
+analyte_type: electrolyte
+clinical_use: "Calcium is essential for bone mineralization, neuromuscular
+  transmission, cardiac function, and coagulation. Serum total calcium is
+  used to evaluate disorders of calcium metabolism, parathyroid function,
+  malignancy-related hypercalcemia, and vitamin D status. Because
+  approximately 40% of serum calcium is albumin-bound, total calcium should
+  be corrected for albumin when hypoalbuminemia is present, or ionized
+  calcium should be measured directly."
+reference_ranges:
+  adult_generic:
+    low: 8.6
+    high: 10.2
+    units: mg/dL
+    note: "Reflects total serum calcium. Corrected calcium = measured Ca
+      + 0.8 × (4.0 − albumin g/dL) when hypoalbuminemia is present."
+interpretation_summary:
+  high: "Elevated calcium (hypercalcemia) may be associated with primary
+    hyperparathyroidism, malignancy, vitamin D toxicity, granulomatous
+    disease, or thiazide diuretic use. Symptoms range from fatigue and
+    constipation to altered mental status and cardiac arrhythmias at higher
+    levels."
+  low: "Low calcium (hypocalcemia) may be associated with
+    hypoparathyroidism, vitamin D deficiency, hypomagnesemia, chronic kidney
+    disease, or acute pancreatitis. Neuromuscular irritability (Chvostek and
+    Trousseau signs) may be present."
+  critical_high: 13.0  # mg/dL — may warrant urgent clinical review
+  critical_low: 7.0    # mg/dL — may warrant urgent clinical review
+confounders:
+  - "Hypoalbuminemia is the most common cause of low total calcium without
+    true hypocalcemia; albumin-corrected or ionized calcium should be used."
+  - "Prolonged tourniquet use or limb positioning can cause
+    hemoconcentration and falsely elevate total calcium."
+  - "Alkalosis increases calcium binding to albumin and lowers ionized
+    calcium without changing total calcium."
+  - "Certain contrast agents and anticoagulants (EDTA) used in sample
+    collection can chelate calcium and falsely lower results."
+aliases:
+  - Ca
+  - Ca2+
+  - total Ca
+  - serum Ca
+  - calcium ion
+# DISCLAIMER: For demo/development use only. Not intended for clinical
+# decision-making or patient care.

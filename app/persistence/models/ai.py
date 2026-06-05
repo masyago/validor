@@ -23,7 +23,8 @@ from typing import Optional
 from sqlalchemy.dialects.postgresql import JSONB, ENUM
 import enum
 from datetime import datetime
-from pgvector.sqlalchemy import Vector
+
+# from pgvector.sqlalchemy import Vector
 from app.persistence.base import Base
 
 # Replace with CheckConstraint
@@ -40,42 +41,42 @@ from app.persistence.base import Base
 # )
 
 
-class VectorStore(Base):
-    __tablename__ = "vector_store"
-    __table_args__ = (
-        UniqueConstraint(
-            "source_type",
-            "source_id",
-            "chunk_index",
-            "embedding_model",
-            "pipeline_version",
-            name="unique_vector_source_chunk_model_pipeline",
-        ),
-    )
+# class VectorStore(Base):
+#     __tablename__ = "vector_store"
+#     __table_args__ = (
+#         UniqueConstraint(
+#             "source_type",
+#             "source_id",
+#             "chunk_index",
+#             "embedding_model",
+#             "pipeline_version",
+#             name="unique_vector_source_chunk_model_pipeline",
+#         ),
+#     )
 
-    embedding_id: Mapped[uuid.UUID] = mapped_column(
-        Uuid, primary_key=True, default=uuid.uuid4
-    )
-    embedding: Mapped[list[float]] = mapped_column(
-        Vector(768), nullable=False
-    )  # change vector dimension depending on the model
+#     embedding_id: Mapped[uuid.UUID] = mapped_column(
+#         Uuid, primary_key=True, default=uuid.uuid4
+#     )
+#     embedding: Mapped[list[float]] = mapped_column(
+#         Vector(768), nullable=False
+#     )  # change vector dimension depending on the model
 
-    # Update with CheckConstraint
-    source_type: Mapped[VectorSourceType] = mapped_column(
-        vector_source_type_enum, nullable=False
-    )
-    source_id: Mapped[uuid.UUID] = mapped_column(Uuid, nullable=False)
-    chunk_index: Mapped[int] = mapped_column(
-        Integer, nullable=False, default=0
-    )
-    chunk_text: Mapped[str] = mapped_column(Text, nullable=False)
-    content_hash: Mapped[str] = mapped_column(Text, nullable=False)
+#     # Update with CheckConstraint
+#     source_type: Mapped[VectorSourceType] = mapped_column(
+#         vector_source_type_enum, nullable=False
+#     )
+#     source_id: Mapped[uuid.UUID] = mapped_column(Uuid, nullable=False)
+#     chunk_index: Mapped[int] = mapped_column(
+#         Integer, nullable=False, default=0
+#     )
+#     chunk_text: Mapped[str] = mapped_column(Text, nullable=False)
+#     content_hash: Mapped[str] = mapped_column(Text, nullable=False)
 
-    embedding_model: Mapped[str] = mapped_column(Text, nullable=False)
-    pipeline_version: Mapped[str] = mapped_column(Text, nullable=False)
-    created_at: Mapped[datetime] = mapped_column(
-        TIMESTAMP(timezone=True), nullable=False
-    )
+#     embedding_model: Mapped[str] = mapped_column(Text, nullable=False)
+#     pipeline_version: Mapped[str] = mapped_column(Text, nullable=False)
+#     created_at: Mapped[datetime] = mapped_column(
+#         TIMESTAMP(timezone=True), nullable=False
+#     )
 
 
 class DocumentTargetType(enum.Enum):
@@ -111,7 +112,9 @@ class Document(Base):
     last_updated_at: Mapped[datetime] = mapped_column(
         TIMESTAMP(timezone=True), nullable=False
     )
-    content_hash: Mapped[str] = mapped_column(Text, nullable=False)
+    content_hash: Mapped[str] = mapped_column(
+        Text, nullable=False, unique=True
+    )
 
 
 # AI Annotation model and supporting classes
@@ -156,56 +159,56 @@ class Document(Base):
 # )
 
 
-class AiAnnotation(Base):
-    __tablename__ = "ai_annotation"
-    __table_args__ = (
-        Index("ix_ai_annotation_target_type_id", "target_type", "target_id"),
-        Index("ix_ai_annotation_annotation_type", "annotation_type"),
-        Index("ix_ai_annotation_validation_status", "validation_status"),
-    )
+# class AiAnnotation(Base):
+#     __tablename__ = "ai_annotation"
+#     __table_args__ = (
+#         Index("ix_ai_annotation_target_type_id", "target_type", "target_id"),
+#         Index("ix_ai_annotation_annotation_type", "annotation_type"),
+#         Index("ix_ai_annotation_validation_status", "validation_status"),
+#     )
 
-    # Identifiers
-    ai_annotation_id: Mapped[uuid.UUID] = mapped_column(
-        Uuid, primary_key=True, default=uuid.uuid4
-    )
-    ingestion_id: Mapped[uuid.UUID] = mapped_column(
-        Uuid, ForeignKey("ingestion.ingestion_id"), nullable=False
-    )
+#     # Identifiers
+#     ai_annotation_id: Mapped[uuid.UUID] = mapped_column(
+#         Uuid, primary_key=True, default=uuid.uuid4
+#     )
+#     ingestion_id: Mapped[uuid.UUID] = mapped_column(
+#         Uuid, ForeignKey("ingestion.ingestion_id"), nullable=False
+#     )
 
-    # Update with CheckConstraint
-    target_type: Mapped[Optional[AIAnnotationTargetType]] = mapped_column(
-        ai_annotation_target_type_enum, nullable=True
-    )
-    target_id: Mapped[Optional[uuid.UUID]] = mapped_column(Uuid, nullable=True)
+#     # Update with CheckConstraint
+#     target_type: Mapped[Optional[AIAnnotationTargetType]] = mapped_column(
+#         ai_annotation_target_type_enum, nullable=True
+#     )
+#     target_id: Mapped[Optional[uuid.UUID]] = mapped_column(Uuid, nullable=True)
 
-    # Annotation
+#     # Annotation
 
-    # Update with CheckConstraint
-    annotation_type: Mapped[Optional[AIAnnotationType]] = mapped_column(
-        ai_annotation_type_enum, nullable=True
-    )
-    content_json: Mapped[dict] = mapped_column(JSONB, nullable=False)
+#     # Update with CheckConstraint
+#     annotation_type: Mapped[Optional[AIAnnotationType]] = mapped_column(
+#         ai_annotation_type_enum, nullable=True
+#     )
+#     content_json: Mapped[dict] = mapped_column(JSONB, nullable=False)
 
-    # Traceability
-    provider: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
-    model_id: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
-    prompt_version: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
-    temperature: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
-    content_schema_version: Mapped[str] = mapped_column(Text, nullable=False)
-    input_hash: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
-    created_at: Mapped[Optional[datetime]] = mapped_column(
-        TIMESTAMP(timezone=True), nullable=True
-    )
+#     # Traceability
+#     provider: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+#     model_id: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+#     prompt_version: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+#     temperature: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+#     content_schema_version: Mapped[str] = mapped_column(Text, nullable=False)
+#     input_hash: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+#     created_at: Mapped[Optional[datetime]] = mapped_column(
+#         TIMESTAMP(timezone=True), nullable=True
+#     )
 
-    # Status
+#     # Status
 
-    # Update with CheckConstraint
-    validation_status: Mapped[Optional[AIAnnotationValidationStatus]] = (
-        mapped_column(ai_annotation_validation_status_enum, nullable=True)
-    )
-    validated_at: Mapped[Optional[datetime]] = mapped_column(
-        TIMESTAMP(timezone=True), nullable=True
-    )
-    rejection_reason: Mapped[Optional[str]] = mapped_column(
-        Text, nullable=True
-    )
+#     # Update with CheckConstraint
+#     validation_status: Mapped[Optional[AIAnnotationValidationStatus]] = (
+#         mapped_column(ai_annotation_validation_status_enum, nullable=True)
+#     )
+#     validated_at: Mapped[Optional[datetime]] = mapped_column(
+#         TIMESTAMP(timezone=True), nullable=True
+#     )
+#     rejection_reason: Mapped[Optional[str]] = mapped_column(
+#         Text, nullable=True
+#     )

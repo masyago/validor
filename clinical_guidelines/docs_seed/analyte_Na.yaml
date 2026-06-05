@@ -1,0 +1,48 @@
+test_name: Sodium
+synonyms:
+  - serum sodium
+  - sodium level
+  - sodium blood test
+  - plasma sodium
+  - Na level
+test_code: Na
+panel_code: BMP
+analyte_type: electrolyte
+clinical_use: "Sodium is the primary extracellular cation and plays a central
+  role in fluid balance, nerve conduction, and muscle function. Serum sodium
+  is measured to evaluate and monitor electrolyte disorders, hydration
+  status, kidney function, and conditions affecting the pituitary or adrenal
+  glands. It is a key component of both the Basic Metabolic Panel and the
+  Comprehensive Metabolic Panel."
+reference_ranges:
+  adult_generic:
+    low: 135
+    high: 145
+    units: mEq/L
+  pediatric_note: "Reference ranges in neonates and infants may differ
+    slightly; consult age-specific references."
+interpretation_summary:
+  high: "Elevated sodium (hypernatremia) may be associated with dehydration,
+    inadequate fluid intake, excessive sodium ingestion, or conditions
+    affecting antidiuretic hormone regulation. Interpretation depends on
+    volume status and clinical context."
+  low: "Low sodium (hyponatremia) may be associated with excess fluid
+    retention, kidney or liver disease, adrenal insufficiency, SIADH, or
+    certain medications. It is one of the most common electrolyte
+    abnormalities in hospitalized patients."
+  critical_high: 155  # mEq/L — may warrant urgent clinical review
+  critical_low: 125   # mEq/L — may warrant urgent clinical review
+confounders:
+  - "Pseudohyponatremia can occur with severe hyperlipidemia or
+    hyperproteinemia when using older measurement methods."
+  - "Hyperglycemia causes a dilutional shift; corrected sodium should be
+    calculated in the setting of elevated glucose."
+  - "Prolonged sample storage or delayed processing may affect values."
+  - "IV fluid type and rate can acutely shift serum sodium."
+aliases:
+  - Na
+  - Na+
+  - serum Na
+  - sodium ion
+# DISCLAIMER: For demo/development use only. Not intended for clinical
+# decision-making or patient care.
