@@ -42,3 +42,6 @@ copilot_outputs/
 
 # Internal docs
 dev_only/
+
+# Secrets, API keys
+.env

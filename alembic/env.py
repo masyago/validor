@@ -7,6 +7,8 @@ from sqlalchemy import pool
 
 from alembic import context
 
+import pgvector
+
 from app.persistence.base import Base
 from app.persistence.models import core
 from app.persistence.models import parsing
@@ -29,6 +31,7 @@ def _normalize_database_url(url: str) -> str:
 
     return url
 
+
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
 config = context.config
@@ -39,15 +42,19 @@ config = context.config
 # To make test DB migrations easy, we honor both:
 # - DATABASE_URL (global override)
 # - <SECTION>_DATABASE_URL (section-specific override), e.g. TEST_DATABASE_URL
-section_name = (getattr(config, "config_ini_section", None) or "")
-section_env_var = f"{section_name.upper()}_DATABASE_URL" if section_name else None
+section_name = getattr(config, "config_ini_section", None) or ""
+section_env_var = (
+    f"{section_name.upper()}_DATABASE_URL" if section_name else None
+)
 
 database_url = os.getenv(section_env_var) if section_env_var else None
 if not database_url:
     database_url = os.getenv("DATABASE_URL")
 
 if database_url:
-    config.set_main_option("sqlalchemy.url", _normalize_database_url(database_url))
+    config.set_main_option(
+        "sqlalchemy.url", _normalize_database_url(database_url)
+    )
 
 # Interpret the config file for Python logging.
 # This line sets up loggers basically.

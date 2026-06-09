@@ -17,6 +17,7 @@ from sqlalchemy import (
     Numeric,
     UniqueConstraint,
     Index,
+    Boolean,
 )
 import uuid
 from typing import Optional
@@ -24,59 +25,82 @@ from sqlalchemy.dialects.postgresql import JSONB, ENUM
 import enum
 from datetime import datetime
 
-# from pgvector.sqlalchemy import Vector
+from pgvector.sqlalchemy import Vector
 from app.persistence.base import Base
 
-# Replace with CheckConstraint
-# class VectorSourceType(enum.Enum):
-#     DOCUMENT = "DOCUMENT"
-#     OBSERVATION = "OBSERVATION"
-#     DIAGNOSTIC_REPORT = "DIAGNOSTIC_REPORT"
+
+class ChunkType(enum.Enum):
+    IDENTITY = "IDENTITY"
+    CLINICAL_CONTEXT = "CLINICAL_CONTEXT"
+    REF_RANGES = "REF_RANGES"
+    INTERPRETATION = "INTERPRETATION"
+    CONFOUNDERS = "CONFOUNDERS"
 
 
-# vector_source_type_enum = SqlEnum(
-#     VectorSourceType,
-#     name="vector_source_type_enum",
-#     create_type=True,  # Set to False after first migration
-# )
+chunk_type_enum = SqlEnum(
+    ChunkType,
+    name="chunk_type_enum",
+    create_type=True,  # Set to False after first migration
+)
 
 
-# class VectorStore(Base):
-#     __tablename__ = "vector_store"
-#     __table_args__ = (
-#         UniqueConstraint(
-#             "source_type",
-#             "source_id",
-#             "chunk_index",
-#             "embedding_model",
-#             "pipeline_version",
-#             name="unique_vector_source_chunk_model_pipeline",
-#         ),
-#     )
+# Index note: Default params ok for demo corpus; tune m and ef_construction
+# based on recall benchmarks before scaling beyond 10k rows.
+class VectorStore(Base):
+    __tablename__ = "vector_store"
+    __table_args__ = (
+        UniqueConstraint(
+            "source_id",
+            "chunk_index",
+            "embedding_model",
+            "pipeline_version",
+            name="uq_vector_chunk_model_pipeline",
+        ),
+        Index(
+            "ix_vector_store_embedding_hnsw",
+            "embedding",
+            postgresql_using="hnsw",
+            postgresql_with={"m": 16, "ef_construction": 64},
+            postgresql_ops={"embedding": "vector_cosine_ops"},
+        ),
+    )
 
-#     embedding_id: Mapped[uuid.UUID] = mapped_column(
-#         Uuid, primary_key=True, default=uuid.uuid4
-#     )
-#     embedding: Mapped[list[float]] = mapped_column(
-#         Vector(768), nullable=False
-#     )  # change vector dimension depending on the model
+    embedding_id: Mapped[uuid.UUID] = mapped_column(
+        Uuid, primary_key=True, default=uuid.uuid4
+    )
+    embedding: Mapped[list[float]] = mapped_column(
+        Vector(1536), nullable=False
+    )  # model: text-embedding-3-small
 
-#     # Update with CheckConstraint
-#     source_type: Mapped[VectorSourceType] = mapped_column(
-#         vector_source_type_enum, nullable=False
-#     )
-#     source_id: Mapped[uuid.UUID] = mapped_column(Uuid, nullable=False)
-#     chunk_index: Mapped[int] = mapped_column(
-#         Integer, nullable=False, default=0
-#     )
-#     chunk_text: Mapped[str] = mapped_column(Text, nullable=False)
-#     content_hash: Mapped[str] = mapped_column(Text, nullable=False)
+    source_id: Mapped[uuid.UUID] = mapped_column(Uuid, nullable=False)
+    chunk_index: Mapped[int] = mapped_column(
+        Integer, nullable=False, default=0
+    )
+    chunk_type: Mapped[ChunkType] = mapped_column(
+        chunk_type_enum, nullable=False
+    )
+    chunk_text: Mapped[str] = mapped_column(Text, nullable=False)
+    content_hash: Mapped[str] = mapped_column(
+        String(64), nullable=False, index=True
+    )
 
-#     embedding_model: Mapped[str] = mapped_column(Text, nullable=False)
-#     pipeline_version: Mapped[str] = mapped_column(Text, nullable=False)
-#     created_at: Mapped[datetime] = mapped_column(
-#         TIMESTAMP(timezone=True), nullable=False
-#     )
+    embedding_model: Mapped[str] = mapped_column(Text, nullable=False)
+    pipeline_version: Mapped[str] = mapped_column(Text, nullable=False)
+    created_at: Mapped[datetime] = mapped_column(
+        TIMESTAMP(timezone=True), nullable=False, server_default=func.now()
+    )
+    is_current: Mapped[bool] = mapped_column(
+        Boolean, nullable=False, default=True
+    )
+
+    embedding_model: Mapped[str] = mapped_column(Text, nullable=False)
+    pipeline_version: Mapped[str] = mapped_column(Text, nullable=False)
+    created_at: Mapped[datetime] = mapped_column(
+        TIMESTAMP(timezone=True), nullable=False, server_default=func.now()
+    )
+    is_current: Mapped[bool] = mapped_column(
+        Boolean, nullable=False, default=True
+    )
 
 
 class DocumentTargetType(enum.Enum):
