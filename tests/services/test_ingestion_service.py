@@ -15,10 +15,12 @@ from sqlalchemy.exc import MultipleResultsFound, SQLAlchemyError
 from app.core.ingestion_status_enums import IngestionStatus
 from app.persistence.models.core import Ingestion, RawData
 from app.persistence.models.parsing import Panel
+from app.persistence.repositories.observation_repo import ObservationRepository
 from app.persistence.repositories.panel_repo import PanelRepository
 from app.persistence.repositories.test_repo import (
     TestRepository as LabTestRepository,
 )
+from app.services import ingestion_service as ingestion_service_mod
 from app.services.ingestion_service import IngestionService
 from app.services.validator import RowValidationError
 from app.services.utils import NormalizationError
@@ -703,6 +705,80 @@ class TestIngestionServiceIntegration:
         ).one()
         assert ingestion.status == IngestionStatus.COMPLETED
         assert ingestion.error_detail is None
+
+    def test_process_ingestion_passes_current_and_historical_observations_to_ai_orchestration(
+        self,
+        db_session,
+        ingestion_service,
+        uploader_id,
+        spec_version,
+        instrument_id,
+        run_id,
+        monkeypatch,
+    ):
+        prior_ingestion_id = uuid.uuid4()
+        prior_csv_bytes = _read_fixture_bytes("valid_csv_20260128_004.csv")
+        _seed_ingestion_and_raw_data(
+            db_session,
+            ingestion_id=prior_ingestion_id,
+            csv_bytes=prior_csv_bytes,
+            uploader_id=uploader_id,
+            spec_version=spec_version,
+            instrument_id=instrument_id,
+            run_id=f"{run_id}-prior",
+            source_filename="valid_csv_20260128_004.csv",
+        )
+        ingestion_service.process_ingestion(prior_ingestion_id)
+
+        prior_observations = ObservationRepository(
+            db_session
+        ).get_by_ingestion_id(prior_ingestion_id)
+        assert prior_observations
+
+        ingestion_id = uuid.uuid4()
+        csv_bytes = _read_fixture_bytes("valid_csv_20260128_004.csv")
+        _seed_ingestion_and_raw_data(
+            db_session,
+            ingestion_id=ingestion_id,
+            csv_bytes=csv_bytes,
+            uploader_id=uploader_id,
+            spec_version=spec_version,
+            instrument_id=instrument_id,
+            run_id=run_id,
+            source_filename="valid_csv_20260128_004.csv",
+        )
+
+        captured: dict[str, Any] = {}
+
+        def _capture_ai_request(request):
+            captured["request"] = request
+
+        monkeypatch.setattr(
+            ingestion_service_mod,
+            "orchestrate_ai_enrichment",
+            _capture_ai_request,
+        )
+
+        ingestion_service.process_ingestion(ingestion_id)
+
+        current_observations = ObservationRepository(
+            db_session
+        ).get_by_ingestion_id(ingestion_id)
+        assert current_observations
+
+        request = captured["request"]
+        assert request.ingestion_id == ingestion_id
+        assert request.patient_id == current_observations[0].patient_id
+        assert request.current_observations == [
+            obs.resource_json
+            for obs in current_observations
+            if obs.resource_json is not None
+        ]
+        assert request.historical_observations == [
+            obs.resource_json
+            for obs in prior_observations
+            if obs.resource_json is not None
+        ]
 
     def test_process_ingestion_validation_failure_persists_nothing_and_marks_failed_validation(
         self,

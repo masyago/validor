@@ -6,10 +6,15 @@ from app.services.validator import (
 )
 from app.persistence.repositories.raw_data_repo import RawDataRepository
 from app.persistence.repositories.ingestion_repo import IngestionRepository
+from app.persistence.repositories.observation_repo import ObservationRepository
 from app.persistence.repositories.panel_repo import PanelRepository
 from app.persistence.repositories.test_repo import TestRepository
 from app.persistence.models.parsing import Panel, Test
 from app.services.normalizer import NormalizationJob
+from app.ai.ai_orchestration import (
+    AIEnrichmentRequest,
+    orchestrate_ai_enrichment,
+)
 
 import uuid
 from dataclasses import asdict, dataclass, is_dataclass
@@ -54,6 +59,7 @@ class IngestionService:
         self.session = session  # not sure if it's ok
         self.raw_repo = RawDataRepository(session)
         self.ingestion_repo = IngestionRepository(session)
+        self.observation_repo = ObservationRepository(session)
         self.panel_repo = PanelRepository(session)
         self.test_repo = TestRepository(session)
         self.pe_repo = ProcessingEventRepository(session)
@@ -187,6 +193,47 @@ class IngestionService:
             return None, validation_errors
 
         return panel_packages, []
+
+    def _get_ai_enrichment_request(
+        self, ingestion_id: uuid.UUID
+    ) -> AIEnrichmentRequest:
+        current_observations = self.observation_repo.get_by_ingestion_id(
+            ingestion_id
+        )
+        if not current_observations:
+            raise RuntimeError(
+                "Normalization succeeded but no Observation rows were found"
+            )
+
+        patient_ids = {obs.patient_id for obs in current_observations}
+        if len(patient_ids) != 1:
+            raise RuntimeError(
+                "Expected exactly one patient_id for AI enrichment"
+            )
+
+        patient_id = next(iter(patient_ids))
+        historical_observations = (
+            self.observation_repo.get_latest_by_patient_id(
+                patient_id,
+                exclude_ingestion_id=ingestion_id,
+                limit=10,
+            )
+        )
+
+        return AIEnrichmentRequest(
+            ingestion_id=ingestion_id,
+            patient_id=patient_id,
+            current_observations=[
+                obs.resource_json
+                for obs in current_observations
+                if obs.resource_json is not None
+            ],
+            historical_observations=[
+                obs.resource_json
+                for obs in historical_observations
+                if obs.resource_json is not None
+            ],
+        )
 
     def insert_panel_test_data(
         self,
@@ -548,7 +595,11 @@ class IngestionService:
                 return
 
             # Normalization succeeded (warnings are still a success path).
-            self.ingestion_repo.mark_completed(ingestion_id)
+            ai_request = self._get_ai_enrichment_request(ingestion_id)
+            orchestrate_ai_enrichment(ai_request)
+
+            # Don't mark ingestion as completed until AI_ENRICHMENT_SUCCEEDED/FAILED/SKIPPED
+            # self.ingestion_repo.mark_completed(ingestion_id)
             self.session.commit()
             return
 

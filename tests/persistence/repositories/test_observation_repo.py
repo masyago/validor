@@ -274,3 +274,132 @@ def test_upsert_many_from_payload_raises_runtime_error_if_unresolved(
     # Sanity: the existing observation is still present in-session.
     db_session.expire_all()
     assert repo.get_by_test_id(setup_two_test_rows.test_id_1) is not None
+
+
+def test_get_latest_by_patient_id_excludes_current_ingestion_and_limits_results(
+    db_session, setup_two_test_rows
+):
+    repo = ObservationRepository(db_session)
+
+    current_payload = _payload_for_test(
+        obs_setup=setup_two_test_rows,
+        test_id=setup_two_test_rows.test_id_1,
+        code="CURR",
+        resource_json={"id": "current"},
+    )
+    repo.upsert_from_payload(current_payload)
+
+    historical_ids: list[str] = []
+    for index in range(12):
+        ingestion_id = uuid.uuid4()
+        db_session.add(_make_ingestion(ingestion_id=ingestion_id))
+        db_session.flush()
+
+        panel_id = uuid.uuid4()
+        db_session.add(
+            Panel(
+                panel_id=panel_id,
+                ingestion_id=ingestion_id,
+                sample_id=f"SAM-{index}",
+                patient_id=setup_two_test_rows.patient_id,
+                panel_code="BMP",
+                collection_timestamp=datetime(
+                    2026,
+                    2,
+                    15,
+                    12,
+                    index,
+                    tzinfo=timezone.utc,
+                ),
+            )
+        )
+        db_session.flush()
+
+        test_id = uuid.uuid4()
+        db_session.add(
+            Test(
+                test_id=test_id,
+                panel_id=panel_id,
+                row_number=1,
+                test_code=f"H{index}",
+                test_name=None,
+                analyte_type=None,
+                result_raw=str(index),
+                units_raw=None,
+                result_value_num=float(index),
+                result_comparator=None,
+                ref_low_raw=None,
+                ref_high_raw=None,
+                flag=None,
+            )
+        )
+        diagnostic_report_id = uuid.uuid4()
+        db_session.add(
+            DiagnosticReport(
+                diagnostic_report_id=diagnostic_report_id,
+                ingestion_id=ingestion_id,
+                panel_id=panel_id,
+                patient_id=setup_two_test_rows.patient_id,
+                panel_code="BMP",
+                effective_at=datetime(
+                    2026,
+                    2,
+                    15,
+                    12,
+                    index,
+                    tzinfo=timezone.utc,
+                ),
+                normalized_at=setup_two_test_rows.normalized_at,
+                resource_json=None,
+                status="FINAL",
+            )
+        )
+        db_session.flush()
+
+        db_session.add(
+            Observation(
+                test_id=test_id,
+                diagnostic_report_id=diagnostic_report_id,
+                ingestion_id=ingestion_id,
+                patient_id=setup_two_test_rows.patient_id,
+                code=f"H{index}",
+                display="Historical",
+                effective_at=datetime(
+                    2026,
+                    2,
+                    15,
+                    12,
+                    index,
+                    tzinfo=timezone.utc,
+                ),
+                normalized_at=setup_two_test_rows.normalized_at,
+                value_num=float(index),
+                value_text=None,
+                comparator=None,
+                unit="mg/dL",
+                ref_low_num=None,
+                ref_high_num=None,
+                flag_analyzer_interpretation=None,
+                flag_system_interpretation=None,
+                discrepancy=None,
+                status="FINAL",
+                resource_json={"id": f"historical-{index}"},
+            )
+        )
+        historical_ids.append(f"historical-{index}")
+
+    db_session.flush()
+
+    rows = repo.get_latest_by_patient_id(
+        setup_two_test_rows.patient_id,
+        exclude_ingestion_id=setup_two_test_rows.ingestion_id,
+        limit=10,
+    )
+
+    assert len(rows) == 10
+    assert all(
+        row.ingestion_id != setup_two_test_rows.ingestion_id for row in rows
+    )
+    assert [row.resource_json["id"] for row in rows] == list(
+        reversed(historical_ids[-10:])
+    )

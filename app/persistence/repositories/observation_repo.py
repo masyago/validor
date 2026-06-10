@@ -217,3 +217,22 @@ class ObservationRepository:
             )
         )
         return list(self.session.scalars(stmt).all())
+
+    def get_latest_by_patient_id(
+        self,
+        patient_id: PatientId,
+        *,
+        exclude_ingestion_id: UUID | None = None,
+        limit: int = 10,
+    ) -> list[Observation]:
+        stmt = select(Observation).where(Observation.patient_id == patient_id)
+
+        if exclude_ingestion_id is not None:
+            stmt = stmt.where(Observation.ingestion_id != exclude_ingestion_id)
+
+        stmt = stmt.order_by(
+            desc(Observation.effective_at),
+            asc(Observation.observation_id),
+        ).limit(limit)
+
+        return list(self.session.scalars(stmt).all())
