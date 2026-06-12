@@ -393,13 +393,31 @@ def test_get_latest_by_patient_id_excludes_current_ingestion_and_limits_results(
     rows = repo.get_latest_by_patient_id(
         setup_two_test_rows.patient_id,
         exclude_ingestion_id=setup_two_test_rows.ingestion_id,
-        limit=10,
+        codes=[
+            "H0",
+            "H1",
+            "H2",
+            "H3",
+            "H4",
+            "H5",
+            "H6",
+            "H7",
+            "H8",
+            "H9",
+            "H10",
+            "H11",
+        ],
+        per_code_limit=1,
+        limit=None,
     )
 
-    assert len(rows) == 10
+    assert len(rows) == 12
     assert all(
         row.ingestion_id != setup_two_test_rows.ingestion_id for row in rows
     )
+    assert [row.code for row in rows] == list(
+        reversed([f"H{index}" for index in range(12)])
+    )
     assert [row.resource_json["id"] for row in rows] == list(
-        reversed(historical_ids[-10:])
+        reversed(historical_ids)
     )

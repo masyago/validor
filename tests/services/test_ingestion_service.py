@@ -16,6 +16,10 @@ from app.core.ingestion_status_enums import IngestionStatus
 from app.persistence.models.core import Ingestion, RawData
 from app.persistence.models.parsing import Panel
 from app.persistence.repositories.observation_repo import ObservationRepository
+from app.ai.ai_orchestration import ObservationContext
+from app.persistence.repositories.diagnostic_report_repo import (
+    DiagnosticReportRepository,
+)
 from app.persistence.repositories.panel_repo import PanelRepository
 from app.persistence.repositories.test_repo import (
     TestRepository as LabTestRepository,
@@ -764,20 +768,47 @@ class TestIngestionServiceIntegration:
         current_observations = ObservationRepository(
             db_session
         ).get_by_ingestion_id(ingestion_id)
+        current_diagnostic_reports = DiagnosticReportRepository(
+            db_session
+        ).get_by_ingestion_id(ingestion_id)
         assert current_observations
 
         request = captured["request"]
         assert request.ingestion_id == ingestion_id
         assert request.patient_id == current_observations[0].patient_id
+        assert request.panel_codes == [
+            report.panel_code for report in current_diagnostic_reports
+        ]
+        assert request.collected_at == max(
+            obs.effective_at for obs in current_observations
+        )
         assert request.current_observations == [
-            obs.resource_json
+            ObservationContext(
+                code=obs.code,
+                display=obs.display,
+                value_num=obs.value_num,
+                value_text=obs.value_text,
+                unit=obs.unit,
+                ref_low_num=obs.ref_low_num,
+                ref_high_num=obs.ref_high_num,
+                interpretation=obs.flag_system_interpretation,
+                effective_at=obs.effective_at,
+            )
             for obs in current_observations
-            if obs.resource_json is not None
         ]
         assert request.historical_observations == [
-            obs.resource_json
+            ObservationContext(
+                code=obs.code,
+                display=obs.display,
+                value_num=obs.value_num,
+                value_text=obs.value_text,
+                unit=obs.unit,
+                ref_low_num=obs.ref_low_num,
+                ref_high_num=obs.ref_high_num,
+                interpretation=obs.flag_system_interpretation,
+                effective_at=obs.effective_at,
+            )
             for obs in prior_observations
-            if obs.resource_json is not None
         ]
 
     def test_process_ingestion_validation_failure_persists_nothing_and_marks_failed_validation(

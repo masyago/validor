@@ -6,6 +6,9 @@ from app.services.validator import (
 )
 from app.persistence.repositories.raw_data_repo import RawDataRepository
 from app.persistence.repositories.ingestion_repo import IngestionRepository
+from app.persistence.repositories.diagnostic_report_repo import (
+    DiagnosticReportRepository,
+)
 from app.persistence.repositories.observation_repo import ObservationRepository
 from app.persistence.repositories.panel_repo import PanelRepository
 from app.persistence.repositories.test_repo import TestRepository
@@ -13,6 +16,7 @@ from app.persistence.models.parsing import Panel, Test
 from app.services.normalizer import NormalizationJob
 from app.ai.ai_orchestration import (
     AIEnrichmentRequest,
+    ObservationContext,
     orchestrate_ai_enrichment,
 )
 
@@ -59,6 +63,7 @@ class IngestionService:
         self.session = session  # not sure if it's ok
         self.raw_repo = RawDataRepository(session)
         self.ingestion_repo = IngestionRepository(session)
+        self.diagnostic_report_repo = DiagnosticReportRepository(session)
         self.observation_repo = ObservationRepository(session)
         self.panel_repo = PanelRepository(session)
         self.test_repo = TestRepository(session)
@@ -212,26 +217,51 @@ class IngestionService:
             )
 
         patient_id = next(iter(patient_ids))
+        diagnostic_reports = self.diagnostic_report_repo.get_by_ingestion_id(
+            ingestion_id
+        )
+        analyte_codes = sorted({obs.code for obs in current_observations})
         historical_observations = (
             self.observation_repo.get_latest_by_patient_id(
                 patient_id,
                 exclude_ingestion_id=ingestion_id,
-                limit=10,
+                codes=analyte_codes,
+                per_code_limit=10,
             )
         )
 
         return AIEnrichmentRequest(
             ingestion_id=ingestion_id,
             patient_id=patient_id,
+            panel_codes=[report.panel_code for report in diagnostic_reports],
+            collected_at=max(obs.effective_at for obs in current_observations),
             current_observations=[
-                obs.resource_json
+                ObservationContext(
+                    code=obs.code,
+                    display=obs.display,
+                    value_num=obs.value_num,
+                    value_text=obs.value_text,
+                    unit=obs.unit,
+                    ref_low_num=obs.ref_low_num,
+                    ref_high_num=obs.ref_high_num,
+                    interpretation=obs.flag_system_interpretation,
+                    effective_at=obs.effective_at,
+                )
                 for obs in current_observations
-                if obs.resource_json is not None
             ],
             historical_observations=[
-                obs.resource_json
+                ObservationContext(
+                    code=obs.code,
+                    display=obs.display,
+                    value_num=obs.value_num,
+                    value_text=obs.value_text,
+                    unit=obs.unit,
+                    ref_low_num=obs.ref_low_num,
+                    ref_high_num=obs.ref_high_num,
+                    interpretation=obs.flag_system_interpretation,
+                    effective_at=obs.effective_at,
+                )
                 for obs in historical_observations
-                if obs.resource_json is not None
             ],
         )
 
