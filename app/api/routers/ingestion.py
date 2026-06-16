@@ -26,6 +26,7 @@ from app.schemas.ingestion import (
     ReadDiagnosticReportsOkResponse,
     ReadObservationsOkResponse,
     ReadProcessingEventOkResponse,
+    ReadAiAnnotationOkResponse,
 )
 
 from app.schemas.identifiers import PatientId
@@ -53,6 +54,9 @@ from app.persistence.repositories.diagnostic_report_repo import (
     DiagnosticReportRepository,
 )
 from app.persistence.repositories.observation_repo import ObservationRepository
+from app.persistence.repositories.ai_annotation_repo import (
+    AiAnnotationRepository,
+)
 
 from app.services.ingestion_service import IngestionService
 from app.persistence.repositories.processing_event_repo import (
@@ -639,6 +643,67 @@ def read_processing_events_for_ingestion_id(
                 severity=row.severity.value,
                 message=row.message,
                 details=row.details,
+            )
+        )
+    return out
+
+
+@router.get(
+    "/ingestions/{ingestion_id}/ai_annotation",
+    response_model=list[ReadAiAnnotationOkResponse],
+    response_model_exclude_unset=True,
+    responses={
+        status.HTTP_404_NOT_FOUND: {
+            "model": PathResourceNotFoundResponse,
+            "description": "Item not found",
+        },
+    },
+)
+def read_ai_annotations_for_ingestion_id(
+    ingestion_id: UUID,
+    db: Session = Depends(get_session),
+) -> list[ReadAiAnnotationOkResponse]:
+    ai_repo = AiAnnotationRepository(db)
+    ai_rows = ai_repo.get_by_ingestion_id(ingestion_id)
+
+    if not ai_rows:
+        ingestion_repo = IngestionRepository(db)
+        ingestion_row = ingestion_repo.get_by_ingestion_id(ingestion_id)
+        if ingestion_row is None:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=PathResourceNotFoundResponse(
+                    ingestion_id=ingestion_id,
+                    detail="Item not found",
+                ).model_dump(mode="json", exclude_none=True),
+            )
+
+    out: list[ReadAiAnnotationOkResponse] = []
+    for row in ai_rows:
+        out.append(
+            ReadAiAnnotationOkResponse(
+                ai_annotation_id=row.ai_annotation_id,
+                ingestion_id=row.ingestion_id,
+                annotation_type=(
+                    row.annotation_type.value
+                    if row.annotation_type is not None
+                    else None
+                ),
+                content_json=row.content_json,
+                provider=row.provider,
+                model_id=row.model_id,
+                prompt_version=row.prompt_version,
+                temperature=row.temperature,
+                content_schema_version=row.content_schema_version,
+                input_hash=row.input_hash,
+                created_at=row.created_at,
+                validation_status=(
+                    row.validation_status.value
+                    if row.validation_status is not None
+                    else None
+                ),
+                validated_at=row.validated_at,
+                rejection_reason=row.rejection_reason,
             )
         )
     return out

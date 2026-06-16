@@ -50,6 +50,305 @@ def _has_any_event_type(
     )
 
 
+def _fetch_ai_annotations(
+    *,
+    ingestion_id: str,
+    base_url: str,
+    session: requests.Session,
+) -> tuple[list[dict[str, Any]], str | None, str]:
+    ai_url = f"{base_url}/v1/ingestions/{ingestion_id}/ai_annotation"
+    try:
+        response = session.get(
+            ai_url,
+            timeout=csv_uploader.REQUEST_TIMEOUT_SECONDS,
+        )
+        if response.status_code == 404:
+            return [], "API missing /ai_annotation", ai_url
+        if not response.ok:
+            return [], f"HTTP {response.status_code}", ai_url
+
+        payload = response.json()
+        if not isinstance(payload, list):
+            return [], "invalid response", ai_url
+
+        rows = [row for row in payload if isinstance(row, dict)]
+        return rows, None, ai_url
+    except requests.RequestException:
+        return [], "unreachable", ai_url
+
+
+def _fetch_observations_by_code(
+    *,
+    ingestion_id: str,
+    base_url: str,
+    session: requests.Session,
+) -> tuple[dict[str, dict[str, Any]], str | None]:
+    observations_url = f"{base_url}/v1/ingestions/{ingestion_id}/observations?limit=200&offset=0"
+    try:
+        response = session.get(
+            observations_url,
+            timeout=csv_uploader.REQUEST_TIMEOUT_SECONDS,
+        )
+        if not response.ok:
+            return {}, f"HTTP {response.status_code}"
+
+        payload = response.json()
+        if not isinstance(payload, list):
+            return {}, "invalid response"
+
+        rows = [row for row in payload if isinstance(row, dict)]
+        by_code: dict[str, dict[str, Any]] = {}
+        for row in rows:
+            code = row.get("code")
+            if isinstance(code, str) and code and code not in by_code:
+                by_code[code] = row
+        return by_code, None
+    except requests.RequestException:
+        return {}, "unreachable"
+
+
+def _print_labeled_value(
+    *,
+    out,
+    label: str,
+    value: str,
+    value_style: str | None = None,
+) -> None:
+    out.print(f"{label:<18}", end="")
+    if value_style:
+        out.print(value, style=value_style)
+    else:
+        out.print(value)
+
+
+def _format_bool_word(value: Any) -> str:
+    return "yes" if bool(value) else "no"
+
+
+def _format_confidence(value: Any) -> str | None:
+    if isinstance(value, (int, float)):
+        return f"confidence {float(value):.2f}"
+    return None
+
+
+def _format_reference_range(observation: dict[str, Any]) -> str | None:
+    low = observation.get("ref_low_num")
+    high = observation.get("ref_high_num")
+    if low is None and high is None:
+        return None
+    low_str = "?" if low is None else f"{low:g}"
+    high_str = "?" if high is None else f"{high:g}"
+    return f"(ref {low_str}-{high_str})"
+
+
+def _format_observation_value(observation: dict[str, Any]) -> str | None:
+    value_num = observation.get("value_num")
+    value_text = observation.get("value_text")
+    unit = observation.get("unit")
+
+    if isinstance(value_num, (int, float)):
+        base = f"{float(value_num):g}"
+    elif isinstance(value_text, str) and value_text.strip():
+        base = value_text.strip()
+    else:
+        return None
+
+    if isinstance(unit, str) and unit.strip():
+        return f"{base} {unit.strip()}"
+    return base
+
+
+def _format_interpretation(
+    observation: dict[str, Any],
+) -> tuple[str | None, str | None]:
+    raw = observation.get("flag_system_interpretation") or observation.get(
+        "flag_analyzer_interpretation"
+    )
+    if not isinstance(raw, str) or not raw.strip():
+        return None, None
+
+    value = raw.strip().upper()
+    if value == "HIGH":
+        return "[error]▲ HIGH[/error]", value
+    if value == "LOW":
+        return "[warning]▼ LOW[/warning]", value
+    if value == "NORMAL":
+        return "[warning]● NORMAL[/warning]", value
+    return value, value
+
+
+def _print_finding_block(
+    *,
+    out,
+    finding: dict[str, Any],
+    observation: dict[str, Any] | None,
+) -> None:
+    analyte_code = str(finding.get("analyte_code") or "UNKNOWN")
+    confidence = _format_confidence(finding.get("confidence"))
+    trend = finding.get("trend_direction")
+    description = finding.get("description")
+
+    headline_parts: list[str] = [f"{analyte_code:<6}"]
+    if observation is not None:
+        interpretation_markup, _ = _format_interpretation(observation)
+        if interpretation_markup is not None:
+            headline_parts.append(interpretation_markup)
+
+        observation_value = _format_observation_value(observation)
+        if observation_value:
+            headline_parts.append(observation_value)
+
+        ref_range = _format_reference_range(observation)
+        if ref_range:
+            headline_parts.append(ref_range)
+
+    if confidence:
+        headline_parts.append(confidence)
+
+    out.print("  ".join(headline_parts))
+
+    if isinstance(trend, str) and trend.strip():
+        out.print(f"        trend: {trend}")
+    if isinstance(description, str) and description.strip():
+        out.print(f"        {description}")
+
+
+def _print_ai_annotation_section(
+    *,
+    ingestion_id: str,
+    base_url: str,
+    session: requests.Session,
+    console_out,
+) -> None:
+    out = console_out
+    ai_rows, ai_warning, ai_url = _fetch_ai_annotations(
+        ingestion_id=ingestion_id,
+        base_url=base_url,
+        session=session,
+    )
+    observations_by_code, observations_warning = _fetch_observations_by_code(
+        ingestion_id=ingestion_id,
+        base_url=base_url,
+        session=session,
+    )
+
+    out.print("")
+    out.print("AI ANNOTATION", style="bold")
+    out.print(Rule(style="white"))
+
+    if ai_warning:
+        out.print(
+            f"AI annotation unavailable ({ai_warning})",
+            style="warning",
+        )
+        return
+
+    if not ai_rows:
+        out.print("No persisted AI annotations for this ingestion.")
+        return
+
+    for index, row in enumerate(ai_rows, start=1):
+        if index > 1:
+            out.print("")
+
+        validation_status = str(row.get("validation_status") or "UNKNOWN")
+        validation_style = (
+            "success"
+            if validation_status == "ACCEPTED"
+            else "error" if validation_status == "REJECTED" else None
+        )
+
+        _print_labeled_value(
+            out=out,
+            label="annotation_id",
+            value=str(row.get("ai_annotation_id") or "UNKNOWN"),
+        )
+        _print_labeled_value(
+            out=out,
+            label="validation_status",
+            value=validation_status,
+            value_style=validation_style,
+        )
+        _print_labeled_value(
+            out=out,
+            label="annotation_type",
+            value=str(row.get("annotation_type") or "n/a"),
+        )
+
+        provider = row.get("provider")
+        model_id = row.get("model_id")
+        if provider or model_id:
+            _print_labeled_value(
+                out=out,
+                label="provider / model",
+                value=(provider or "UNKNOWN")
+                + " / "
+                + (model_id or "UNKNOWN"),
+            )
+
+        content_json = row.get("content_json")
+        if isinstance(content_json, dict):
+            if "requires_review" in content_json:
+                _print_labeled_value(
+                    out=out,
+                    label="requires_review",
+                    value=_format_bool_word(
+                        content_json.get("requires_review")
+                    ),
+                )
+            if content_json.get("review_priority"):
+                _print_labeled_value(
+                    out=out,
+                    label="review_priority",
+                    value=str(content_json.get("review_priority")),
+                )
+
+            summary = content_json.get("summary")
+            if isinstance(summary, str) and summary.strip():
+                out.print("")
+                out.print("Summary")
+                out.print(summary)
+
+            analyte_findings = content_json.get("analyte_findings")
+            if isinstance(analyte_findings, list) and analyte_findings:
+                out.print("")
+                for finding in analyte_findings:
+                    if not isinstance(finding, dict):
+                        continue
+                    observation = observations_by_code.get(
+                        str(finding.get("analyte_code") or "")
+                    )
+                    _print_finding_block(
+                        out=out,
+                        finding=finding,
+                        observation=observation,
+                    )
+                    out.print("")
+            elif validation_status == "ACCEPTED":
+                out.print("")
+                out.print("content_json:")
+                out.print(
+                    json.dumps(
+                        content_json,
+                        indent=2,
+                        sort_keys=True,
+                        default=str,
+                    ),
+                    style="white",
+                    highlight=False,
+                )
+
+        rejection_reason = row.get("rejection_reason")
+        if isinstance(rejection_reason, str) and rejection_reason.strip():
+            out.print(f"rejection_reason: {rejection_reason}", style="warning")
+
+        if observations_warning and index == 1:
+            out.print(
+                f"Observation context unavailable ({observations_warning})",
+                style="warning",
+            )
+
+
 def _print_ingestion_processing_status(
     *,
     ingestion_id: str,
@@ -254,9 +553,19 @@ def _print_ingestion_processing_status(
         )
         out.print("")
         out.print(
+            f"AI annotations: {base_url}/v1/ingestions/{ingestion_id}/ai_annotation"
+        )
+        out.print("")
+        out.print(
             "FHIR JSON: add `?include_json=1` to DiagnosticReports/Observations."
         )
         out.print("")
+        _print_ai_annotation_section(
+            ingestion_id=ingestion_id,
+            base_url=base_url,
+            session=session,
+            console_out=out,
+        )
 
     if isinstance(final_status, str) and final_status.upper().startswith(
         "FAILED"

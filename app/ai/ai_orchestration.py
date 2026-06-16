@@ -41,6 +41,7 @@ DEFAULT_EMBEDDING_MODEL = "text-embedding-3-small"
 DEFAULT_OPENAI_BASE_URL = "https://api.openai.com/v1"
 DEFAULT_RETRIEVER_TOP_K = 5
 DEFAULT_BEDROCK_TEMPERATURE = 0.0
+DEFAULT_BEDROCK_PROVIDER = "anthropic"
 
 _ABNORMAL_INTERPRETATIONS = {"HIGH", "LOW", "ABNORMAL", "CRITICAL"}
 
@@ -356,6 +357,7 @@ def build_default_llm() -> BaseChatModel | None:
     region_name = os.getenv("AWS_REGION") or os.getenv("AWS_DEFAULT_REGION")
     llm_kwargs: dict[str, Any] = {
         "model_id": model_id,
+        "provider": DEFAULT_BEDROCK_PROVIDER,
         "model_kwargs": {"temperature": DEFAULT_BEDROCK_TEMPERATURE},
     }
     if region_name:
@@ -450,12 +452,33 @@ def _infer_temperature(active_llm: BaseChatModel | Any | None) -> str | None:
     return None
 
 
+def _strip_json_code_fences(text: str) -> str:
+    stripped = text.strip()
+    if not stripped.startswith("```"):
+        return stripped
+
+    lines = stripped.splitlines()
+    if not lines:
+        return stripped
+
+    first_line = lines[0].strip().lower()
+    if first_line not in {"```", "```json"}:
+        return stripped
+
+    if len(lines) >= 2 and lines[-1].strip() == "```":
+        return "\n".join(lines[1:-1]).strip()
+
+    return stripped
+
+
 def parse_annotation_response(
     llm_response_text: str | None,
 ) -> AIAnnotationContent | None:
     if llm_response_text is None:
         return None
-    return parse_ai_annotation_content(llm_response_text)
+    return parse_ai_annotation_content(
+        _strip_json_code_fences(llm_response_text)
+    )
 
 
 def orchestrate_ai_enrichment(
@@ -498,9 +521,7 @@ def orchestrate_ai_enrichment(
     rejection_reason: str | None = None
     if llm_response_text is not None:
         try:
-            llm_response_content = parse_annotation_response(
-                llm_response_text
-            )
+            llm_response_content = parse_annotation_response(llm_response_text)
         except ValidationError as exc:
             rejection_reason = str(exc)
     return AIEnrichmentResult(

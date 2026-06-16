@@ -269,6 +269,34 @@ def test_build_default_llm_uses_bedrock_env(
     assert isinstance(llm, StubBedrockLLM)
     assert llm.kwargs == {
         "model_id": "anthropic.test-model-v1:0",
+        "provider": "anthropic",
+        "model_kwargs": {"temperature": 0.0},
+        "region_name": "us-east-1",
+    }
+
+
+def test_build_default_llm_uses_provider_for_inference_profile_arn(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setenv(
+        "BEDROCK_MODEL_ID",
+        (
+            "arn:aws:bedrock:us-east-1:123456789012:"
+            "inference-profile/us.anthropic.claude-haiku-4-5-20251001-v1:0"
+        ),
+    )
+    monkeypatch.setenv("AWS_REGION", "us-east-1")
+    monkeypatch.setattr("app.ai.ai_orchestration.ChatBedrock", StubBedrockLLM)
+
+    llm = build_default_llm()
+
+    assert isinstance(llm, StubBedrockLLM)
+    assert llm.kwargs == {
+        "model_id": (
+            "arn:aws:bedrock:us-east-1:123456789012:"
+            "inference-profile/us.anthropic.claude-haiku-4-5-20251001-v1:0"
+        ),
+        "provider": "anthropic",
         "model_kwargs": {"temperature": 0.0},
         "region_name": "us-east-1",
     }
@@ -306,6 +334,15 @@ def test_parse_annotation_response_validates_json_schema() -> None:
 
     assert content is not None
     assert content.analyte_findings[0].analyte_code == "GLU"
+
+
+def test_parse_annotation_response_accepts_fenced_json() -> None:
+    content = parse_annotation_response(
+        '```json\n{\n  "annotation_type": "anomaly_flag",\n  "secondary_types": [],\n  "summary": "Abnormal lipid result reviewed.",\n  "analyte_findings": [\n    {\n      "analyte_code": "LDL",\n      "description": "LDL is elevated above the reference range.",\n      "trend_direction": "increasing",\n      "confidence": 0.82\n    }\n  ],\n  "requires_review": true,\n  "review_priority": "urgent"\n}\n```'
+    )
+
+    assert content is not None
+    assert content.analyte_findings[0].analyte_code == "LDL"
 
 
 def test_parse_annotation_response_rejects_invalid_json() -> None:

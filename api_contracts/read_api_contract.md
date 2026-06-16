@@ -135,6 +135,67 @@ The list MAY be empty (e.g., the ingestion exists but no events have been emitte
 ### Error responses
 See Common Error Responses (404, 422)
 
+## `GET /v1/ingestions/{ingestion_id}/ai_annotation`
+
+### Description
+Retrieves persisted AI annotation rows for the specified `ingestion_id`.
+
+This endpoint exposes the output of the controlled AI enrichment stage. A row may represent either:
+- an accepted annotation whose `content_json` matches the internal annotation schema
+- a rejected annotation audit payload when an LLM response was received but failed schema validation
+
+The list MAY be empty. For example, the ingestion may exist but AI enrichment may have been skipped, may have failed before an annotation was produced, or may not yet have persisted an annotation row.
+
+### URL Parameters
+`ingestion_id`: UUID. Required parameter.
+
+### Responses
+
+#### `200 OK`
+Returns a list of AI annotation rows associated with `ingestion_id`.
+
+**Content-Type:** `application/json`
+
+**Body:**
+
+```json
+[
+  {
+    "ai_annotation_id": "1f2f3a4b-5c6d-7e8f-9012-34567890abcd",
+    "ingestion_id": "a7b1c3d4-e5f6-7890-1234-567890abcdef",
+    "annotation_type": "anomaly_flag",
+    "content_json": {
+      "annotation_type": "anomaly_flag",
+      "secondary_types": ["followup_suggestion"],
+      "summary": "Lipid abnormalities were detected and reviewed.",
+      "analyte_findings": [
+        {
+          "analyte_code": "TC",
+          "description": "Total cholesterol is elevated above the reference range.",
+          "trend_direction": "increasing",
+          "confidence": 0.86
+        }
+      ],
+      "requires_review": true,
+      "review_priority": "urgent"
+    },
+    "provider": "amazon_bedrock",
+    "model_id": "anthropic.claude-3-5-haiku-20241022-v1:0",
+    "prompt_version": "v1.0.0",
+    "temperature": "0.0",
+    "content_schema_version": "v1.0.0",
+    "input_hash": "7f6f8e4f9bc5c1f9f0f8d6c8ab1234567890abcdef1234567890abcdef1234",
+    "created_at": "2026-01-12T14:35:31.123Z",
+    "validation_status": "ACCEPTED",
+    "validated_at": "2026-01-12T14:35:31.123Z",
+    "rejection_reason": null
+  }
+]
+```
+
+### Error responses
+See Common Error Responses (404, 422)
+
 ## `GET /v1/ingestions/{ingestion_id}/diagnostic-reports?include_json=1`
 
 ### Description

@@ -10,7 +10,6 @@ import requests
 
 from tests.e2e.conftest import E2EConfig
 
-
 pytestmark = pytest.mark.e2e
 
 
@@ -496,6 +495,72 @@ def test_e2e_read_endpoints_observations_pagination_limit_offset(
     assert isinstance(rows1, list)
     assert len(rows1) == 1
     assert rows0[0]["observation_id"] != rows1[0]["observation_id"]
+
+
+def test_e2e_ai_annotation_endpoint_matches_ai_stage_outcome(
+    e2e_config: E2EConfig,
+    completed_ingestion: dict[str, str],
+) -> None:
+    ingestion_id = completed_ingestion["ingestion_id"]
+
+    events_response = requests.get(
+        f"{e2e_config.api_v1_url}/ingestions/{ingestion_id}/processing-events",
+        timeout=10,
+    )
+    assert events_response.status_code == 200, events_response.text
+    events = events_response.json()
+    assert isinstance(events, list)
+
+    ai_event_types = [
+        row["event_type"]
+        for row in events
+        if row.get("event_type", "").startswith("AI_ENRICHMENT_")
+    ]
+    assert "AI_ENRICHMENT_STARTED" in ai_event_types
+
+    terminal_ai_event_types = {
+        "AI_ENRICHMENT_SUCCEEDED",
+        "AI_ENRICHMENT_FAILED",
+        "AI_ENRICHMENT_SKIPPED",
+    }
+    terminal_ai_events = [
+        row
+        for row in events
+        if row.get("event_type") in terminal_ai_event_types
+    ]
+    assert len(terminal_ai_events) == 1
+    terminal_event = terminal_ai_events[0]
+
+    annotation_response = requests.get(
+        f"{e2e_config.api_v1_url}/ingestions/{ingestion_id}/ai_annotation",
+        timeout=10,
+    )
+    assert annotation_response.status_code == 200, annotation_response.text
+    annotations = annotation_response.json()
+    assert isinstance(annotations, list)
+
+    if terminal_event["event_type"] == "AI_ENRICHMENT_SUCCEEDED":
+        assert len(annotations) >= 1
+        first = annotations[0]
+        assert first["ingestion_id"] == ingestion_id
+        assert first["validation_status"] == "ACCEPTED"
+        assert isinstance(first["content_json"], dict)
+        assert first["content_json"].get("annotation_type") is not None
+        return
+
+    if annotations:
+        first = annotations[0]
+        assert first["ingestion_id"] == ingestion_id
+        assert first["validation_status"] == "REJECTED"
+        assert isinstance(first["content_json"], dict)
+        assert first["rejection_reason"] is not None
+        assert terminal_event["event_type"] == "AI_ENRICHMENT_FAILED"
+        return
+
+    assert terminal_event["event_type"] in {
+        "AI_ENRICHMENT_FAILED",
+        "AI_ENRICHMENT_SKIPPED",
+    }
 
 
 def test_e2e_contract_unknown_ingestion_id_returns_404(

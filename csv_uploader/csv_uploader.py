@@ -26,10 +26,12 @@ from requests.exceptions import ConnectionError as RequestsConnectionError
 from requests.exceptions import Timeout as RequestsTimeout
 from requests.exceptions import RequestException
 
-WATCH_DIR = Path("csv_uploader/simulated_exports/pending")
-PROCESSED_DIR = Path("csv_uploader/simulated_exports/uploaded")
-FAILED_DIR = Path("csv_uploader/simulated_exports/failed")
-CONFIG_FILE_PATH = Path("csv_uploader/config.yaml")
+PACKAGE_DIR = Path(__file__).resolve().parent
+
+WATCH_DIR = PACKAGE_DIR / "simulated_exports" / "pending"
+PROCESSED_DIR = PACKAGE_DIR / "simulated_exports" / "uploaded"
+FAILED_DIR = PACKAGE_DIR / "simulated_exports" / "failed"
+CONFIG_FILE_PATH = PACKAGE_DIR / "config.yaml"
 
 STABILITY_DELAY_SECONDS = 5  # Time to wait for file to be stable
 POLL_INTERVAL_SECONDS = 20
@@ -268,6 +270,7 @@ def _parse_args() -> argparse.Namespace:
     )
     return parser.parse_args()
 
+
 def _read_api_port_from_dotenv() -> str | None:
     env_file = Path(".env")
     if not env_file.exists():
@@ -279,9 +282,13 @@ def _read_api_port_from_dotenv() -> str | None:
     return None
 
 
-
 def read_config() -> dict:
     """Reads configuration data from a YAML file."""
+    if not CONFIG_FILE_PATH.exists():
+        raise FileNotFoundError(
+            f"Configuration file not found at {CONFIG_FILE_PATH}"
+        )
+
     with open(CONFIG_FILE_PATH, "r") as file:
         config_data = yaml.safe_load(file) or {}
 
@@ -927,8 +934,8 @@ def main() -> None:
             time.sleep(args.poll_interval_seconds)
     except KeyboardInterrupt:
         print("\nWatcher stopped.")
-    except FileNotFoundError:
-        print(f"Error: Configuration file not found at {CONFIG_FILE_PATH}")
+    except FileNotFoundError as e:
+        print(f"Error: {e}")
     except Exception as e:
         print(f"An unexpected error occurred: {e}")
 

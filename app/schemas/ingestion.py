@@ -122,6 +122,23 @@ class ReadProcessingEventOkResponse(BaseModel):
     details: dict[str, Any] | None = None
 
 
+class ReadAiAnnotationOkResponse(BaseModel):
+    ai_annotation_id: UUID
+    ingestion_id: UUID
+    annotation_type: str | None = None
+    content_json: dict[str, Any]
+    provider: str | None = None
+    model_id: str | None = None
+    prompt_version: str | None = None
+    temperature: str | None = None
+    content_schema_version: str
+    input_hash: str | None = None
+    created_at: datetime | None = None
+    validation_status: str | None = None
+    validated_at: datetime | None = None
+    rejection_reason: str | None = None
+
+
 class ReadDiagnosticReportsOkResponse(BaseModel):
     diagnostic_report_id: UUID
     patient_id: PatientId
