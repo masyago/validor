@@ -11,6 +11,7 @@ from pydantic import ValidationError
 from app.ai.ai_orchestration import (
     AIEnrichmentRequest,
     ObservationContext,
+    build_default_llm,
     build_semantic_search_query,
     orchestrate_ai_enrichment,
     parse_annotation_response,
@@ -46,6 +47,16 @@ class StubLLM:
         return AIMessage(
             content='{"annotation_type":"anomaly_flag","secondary_types":[],"summary":"Glucose is elevated and historical data was reviewed.","analyte_findings":[{"analyte_code":"GLU","description":"Glucose is 145 mg/dL, above the reference range and higher than the prior result.","trend_direction":"increasing","confidence":0.88}],"requires_review":true,"review_priority":"urgent"}'
         )
+
+
+class InvalidStubLLM:
+    def invoke(self, messages):
+        return AIMessage(content='{"summary":"invalid"}')
+
+
+class StubBedrockLLM:
+    def __init__(self, **kwargs) -> None:
+        self.kwargs = kwargs
 
 
 def test_build_semantic_search_query_only_includes_abnormal_observations() -> (
@@ -209,6 +220,83 @@ def test_orchestrate_ai_enrichment_builds_prompt_and_invokes_llm() -> None:
     human_message = llm.messages[0][1]
     assert "Panels: BMP, LIPID" in str(human_message.content)
     assert "guideline chunk" in str(human_message.content)
+
+
+def test_orchestrate_ai_enrichment_returns_rejected_result_for_invalid_llm_output() -> (
+    None
+):
+    request = AIEnrichmentRequest(
+        ingestion_id=uuid4(),
+        patient_id="PAT-1",
+        panel_codes=["LIPID"],
+        collected_at=datetime(2026, 6, 11, 12, 0, tzinfo=timezone.utc),
+        current_observations=[
+            ObservationContext(
+                code="TC",
+                display="Total Cholesterol",
+                value_num=245,
+                value_text=None,
+                unit="mg/dL",
+                ref_low_num=0,
+                ref_high_num=200,
+                interpretation="HIGH",
+                effective_at=datetime(2026, 6, 11, 12, 0, tzinfo=timezone.utc),
+            )
+        ],
+        historical_observations=[],
+    )
+
+    result = orchestrate_ai_enrichment(
+        request,
+        retriever=StubRetriever(),
+        llm=InvalidStubLLM(),
+    )
+
+    assert result.llm_response_text == '{"summary":"invalid"}'
+    assert result.llm_response_content is None
+    assert result.rejection_reason is not None
+
+
+def test_build_default_llm_uses_bedrock_env(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setenv("BEDROCK_MODEL_ID", "anthropic.test-model-v1:0")
+    monkeypatch.setenv("AWS_REGION", "us-east-1")
+    monkeypatch.setattr("app.ai.ai_orchestration.ChatBedrock", StubBedrockLLM)
+
+    llm = build_default_llm()
+
+    assert isinstance(llm, StubBedrockLLM)
+    assert llm.kwargs == {
+        "model_id": "anthropic.test-model-v1:0",
+        "model_kwargs": {"temperature": 0.0},
+        "region_name": "us-east-1",
+    }
+
+
+def test_orchestrate_ai_enrichment_returns_failure_reason_when_bedrock_config_missing(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.delenv("BEDROCK_MODEL_ID", raising=False)
+    monkeypatch.delenv("AWS_REGION", raising=False)
+    monkeypatch.delenv("AWS_DEFAULT_REGION", raising=False)
+
+    request = AIEnrichmentRequest(
+        ingestion_id=uuid4(),
+        patient_id="PAT-1",
+        panel_codes=["BMP"],
+        collected_at=datetime.now(timezone.utc),
+        current_observations=[],
+        historical_observations=[],
+    )
+
+    result = orchestrate_ai_enrichment(request)
+
+    assert result.failure_reason is not None
+    assert "BEDROCK_MODEL_ID" in result.failure_reason
+    assert result.guideline_context == []
+    assert result.prompt_messages == []
+    assert result.llm_response_text is None
 
 
 def test_parse_annotation_response_validates_json_schema() -> None:

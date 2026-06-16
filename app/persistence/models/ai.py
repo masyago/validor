@@ -144,95 +144,72 @@ class Document(Base):
 # AI Annotation model and supporting classes
 
 
-# Replace with CheckConstraints
-# class AIAnnotationTargetType(enum.Enum):
-#     DIAGNOSTIC_REPORT = "DIAGNOSTIC_REPORT"
-#     OBSERVATION = "OBSERVATION"
+class AIAnnotationType(enum.Enum):
+    ANOMALY_FLAG = "anomaly_flag"
+    POSSIBLE_INTERFERENCE = "possible_interference"
+    FOLLOWUP_SUGGESTION = "followup_suggestion"
 
 
-# ai_annotation_target_type_enum = SqlEnum(
-#     AIAnnotationTargetType,
-#     name="ai_annotation_target_type_enum",
-#     create_type=True,
-# )
+ai_annotation_type_enum = SqlEnum(
+    AIAnnotationType,
+    name="ai_annotation_type_enum",
+    create_type=True,
+)
 
 
-# class AIAnnotationType(enum.Enum):
-#     ANOMALY_FLAG = "anomaly_flag"
-#     POSSIBLE_INTERFERENCE = "possible_interference"
-#     FOLLOWUP_SUGGESTION = "followup_suggestion"
+class AIAnnotationValidationStatus(enum.Enum):
+    PENDING = "PENDING"
+    ACCEPTED = "ACCEPTED"
+    REJECTED = "REJECTED"
 
 
-# ai_annotation_type_enum = SqlEnum(
-#     AIAnnotationType,
-#     name="ai_annotation_type_enum",
-#     create_type=True,
-# )
+ai_annotation_validation_status_enum = SqlEnum(
+    AIAnnotationValidationStatus,
+    name="ai_annotation_validation_status_enum",
+    create_type=True,
+)
 
 
-# class AIAnnotationValidationStatus(enum.Enum):
-#     PENDING = "PENDING"
-#     ACCEPTED = "ACCEPTED"
-#     REJECTED = "REJECTED"
+class AiAnnotation(Base):
+    __tablename__ = "ai_annotation"
+    __table_args__ = (
+        Index("ix_ai_annotation_annotation_type", "annotation_type"),
+        Index("ix_ai_annotation_validation_status", "validation_status"),
+    )
 
+    # Identifiers
+    ai_annotation_id: Mapped[uuid.UUID] = mapped_column(
+        Uuid, primary_key=True, default=uuid.uuid4
+    )
+    ingestion_id: Mapped[uuid.UUID] = mapped_column(
+        Uuid, ForeignKey("ingestion.ingestion_id"), nullable=False
+    )
 
-# ai_annotation_validation_status_enum = SqlEnum(
-#     AIAnnotationValidationStatus,
-#     name="ai_annotation_validation_status_enum",
-#     create_type=True,
-# )
+    # Annotation
+    annotation_type: Mapped[Optional[AIAnnotationType]] = mapped_column(
+        ai_annotation_type_enum, nullable=True
+    )
+    content_json: Mapped[dict] = mapped_column(JSONB, nullable=False)
 
+    # Traceability
+    provider: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    model_id: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    prompt_version: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    temperature: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    content_schema_version: Mapped[str] = mapped_column(Text, nullable=False)
+    input_hash: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    created_at: Mapped[Optional[datetime]] = mapped_column(
+        TIMESTAMP(timezone=True), nullable=True
+    )
 
-# class AiAnnotation(Base):
-#     __tablename__ = "ai_annotation"
-#     __table_args__ = (
-#         Index("ix_ai_annotation_target_type_id", "target_type", "target_id"),
-#         Index("ix_ai_annotation_annotation_type", "annotation_type"),
-#         Index("ix_ai_annotation_validation_status", "validation_status"),
-#     )
+    # Status
 
-#     # Identifiers
-#     ai_annotation_id: Mapped[uuid.UUID] = mapped_column(
-#         Uuid, primary_key=True, default=uuid.uuid4
-#     )
-#     ingestion_id: Mapped[uuid.UUID] = mapped_column(
-#         Uuid, ForeignKey("ingestion.ingestion_id"), nullable=False
-#     )
-
-#     # Update with CheckConstraint
-#     target_type: Mapped[Optional[AIAnnotationTargetType]] = mapped_column(
-#         ai_annotation_target_type_enum, nullable=True
-#     )
-#     target_id: Mapped[Optional[uuid.UUID]] = mapped_column(Uuid, nullable=True)
-
-#     # Annotation
-
-#     # Update with CheckConstraint
-#     annotation_type: Mapped[Optional[AIAnnotationType]] = mapped_column(
-#         ai_annotation_type_enum, nullable=True
-#     )
-#     content_json: Mapped[dict] = mapped_column(JSONB, nullable=False)
-
-#     # Traceability
-#     provider: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
-#     model_id: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
-#     prompt_version: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
-#     temperature: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
-#     content_schema_version: Mapped[str] = mapped_column(Text, nullable=False)
-#     input_hash: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
-#     created_at: Mapped[Optional[datetime]] = mapped_column(
-#         TIMESTAMP(timezone=True), nullable=True
-#     )
-
-#     # Status
-
-#     # Update with CheckConstraint
-#     validation_status: Mapped[Optional[AIAnnotationValidationStatus]] = (
-#         mapped_column(ai_annotation_validation_status_enum, nullable=True)
-#     )
-#     validated_at: Mapped[Optional[datetime]] = mapped_column(
-#         TIMESTAMP(timezone=True), nullable=True
-#     )
-#     rejection_reason: Mapped[Optional[str]] = mapped_column(
-#         Text, nullable=True
-#     )
+    validation_status: Mapped[Optional[AIAnnotationValidationStatus]] = (
+        mapped_column(ai_annotation_validation_status_enum, nullable=True)
+    )
+    validated_at: Mapped[Optional[datetime]] = mapped_column(
+        TIMESTAMP(timezone=True), nullable=True
+    )
+    rejection_reason: Mapped[Optional[str]] = mapped_column(
+        Text, nullable=True
+    )

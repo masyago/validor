@@ -1,4 +1,4 @@
-from app.ai.ai_annotation_prompt import (
+from app.ai.prompt_versions.ai_annotation_prompt_v1_0_0 import (
     HistoricalObservation,
     ObservationRow,
     build_annotation_prompt_inputs,

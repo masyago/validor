@@ -1,8 +1,9 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from datetime import datetime
+from datetime import datetime, timezone
 from decimal import Decimal
+import hashlib
 import os
 from typing import Any
 from uuid import UUID
@@ -14,18 +15,22 @@ from langchain_core.embeddings import Embeddings
 from langchain_core.language_models import BaseChatModel
 from langchain_core.messages import BaseMessage
 from langchain_core.retrievers import BaseRetriever
-from pydantic import ConfigDict
+from pydantic import ConfigDict, ValidationError
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from app.ai.ai_annotation_prompt import (
+from app.ai.content_versions.ai_annotation_content_v1_0_0 import (
     AIAnnotationContent,
+    CONTENT_SCHEMA_VERSION,
+    parse_ai_annotation_content,
+)
+from app.ai.prompt_versions.ai_annotation_prompt_v1_0_0 import (
     ANNOTATION_PROMPT,
     HistoricalObservation,
     ObservationRow,
     RagChunk,
     build_annotation_prompt_inputs,
-    parse_ai_annotation_content,
+    PROMPT_VERSION,
 )
 from app.persistence.db import engine
 from app.persistence.models.ai import VectorStore
@@ -69,6 +74,15 @@ class AIEnrichmentResult:
     prompt_messages: list[BaseMessage]
     llm_response_text: str | None
     llm_response_content: AIAnnotationContent | None
+    provider: str | None
+    model_id: str | None
+    prompt_version: str
+    temperature: str | None
+    content_schema_version: str
+    input_hash: str
+    created_at: datetime
+    rejection_reason: str | None
+    failure_reason: str | None = None
 
 
 class OpenAICompatibleEmbeddings(Embeddings):
@@ -350,6 +364,13 @@ def build_default_llm() -> BaseChatModel | None:
     return ChatBedrock(**llm_kwargs)
 
 
+def _missing_ai_config_reason() -> str:
+    return (
+        "BEDROCK_MODEL_ID is not set; AI enrichment cannot invoke a "
+        "Bedrock model."
+    )
+
+
 def _llm_response_text(response: Any) -> str:
     content = getattr(response, "content", response)
     if isinstance(content, str):
@@ -381,6 +402,54 @@ def invoke_annotation_llm(
     return _llm_response_text(response)
 
 
+def _serialize_prompt_messages(prompt_messages: list[BaseMessage]) -> str:
+    parts: list[str] = []
+    for message in prompt_messages:
+        parts.append(f"{message.type}:{message.content}")
+    return "\n\n".join(parts)
+
+
+def _build_input_hash(prompt_messages: list[BaseMessage]) -> str:
+    prompt_text = _serialize_prompt_messages(prompt_messages)
+    return hashlib.sha256(prompt_text.encode("utf-8")).hexdigest()
+
+
+def _infer_provider(active_llm: BaseChatModel | Any | None) -> str | None:
+    if active_llm is None:
+        return None
+    if isinstance(active_llm, ChatBedrock):
+        return "amazon_bedrock"
+    return getattr(active_llm, "provider", active_llm.__class__.__name__)
+
+
+def _infer_model_id(active_llm: BaseChatModel | Any | None) -> str | None:
+    if active_llm is None:
+        return None
+    model_id = getattr(active_llm, "model_id", None)
+    if model_id is not None:
+        return str(model_id)
+    model_name = getattr(active_llm, "_model", None)
+    if model_name is not None:
+        return str(model_name)
+    return None
+
+
+def _infer_temperature(active_llm: BaseChatModel | Any | None) -> str | None:
+    if active_llm is None:
+        return None
+    temperature = getattr(active_llm, "temperature", None)
+    if temperature is not None:
+        return str(temperature)
+
+    model_kwargs = getattr(active_llm, "model_kwargs", None)
+    if (
+        isinstance(model_kwargs, dict)
+        and model_kwargs.get("temperature") is not None
+    ):
+        return str(model_kwargs["temperature"])
+    return None
+
+
 def parse_annotation_response(
     llm_response_text: str | None,
 ) -> AIAnnotationContent | None:
@@ -395,6 +464,25 @@ def orchestrate_ai_enrichment(
     retriever: BaseRetriever | Any | None = None,
     llm: BaseChatModel | Any | None = None,
 ) -> AIEnrichmentResult:
+    active_llm = llm or build_default_llm()
+    if active_llm is None:
+        prompt_messages: list[BaseMessage] = []
+        return AIEnrichmentResult(
+            guideline_context=[],
+            prompt_messages=prompt_messages,
+            llm_response_text=None,
+            llm_response_content=None,
+            provider=None,
+            model_id=None,
+            prompt_version=PROMPT_VERSION,
+            temperature=None,
+            content_schema_version=CONTENT_SCHEMA_VERSION,
+            input_hash=_build_input_hash(prompt_messages),
+            created_at=datetime.now(timezone.utc),
+            rejection_reason=None,
+            failure_reason=_missing_ai_config_reason(),
+        )
+
     guideline_context = retrieve_guideline_context(
         request, retriever=retriever
     )
@@ -404,12 +492,29 @@ def orchestrate_ai_enrichment(
     )
     llm_response_text = invoke_annotation_llm(
         prompt_messages,
-        llm=llm,
+        llm=active_llm,
     )
-    llm_response_content = parse_annotation_response(llm_response_text)
+    llm_response_content: AIAnnotationContent | None = None
+    rejection_reason: str | None = None
+    if llm_response_text is not None:
+        try:
+            llm_response_content = parse_annotation_response(
+                llm_response_text
+            )
+        except ValidationError as exc:
+            rejection_reason = str(exc)
     return AIEnrichmentResult(
         guideline_context=guideline_context,
         prompt_messages=prompt_messages,
         llm_response_text=llm_response_text,
         llm_response_content=llm_response_content,
+        provider=_infer_provider(active_llm),
+        model_id=_infer_model_id(active_llm),
+        prompt_version=PROMPT_VERSION,
+        temperature=_infer_temperature(active_llm),
+        content_schema_version=CONTENT_SCHEMA_VERSION,
+        input_hash=_build_input_hash(prompt_messages),
+        created_at=datetime.now(timezone.utc),
+        rejection_reason=rejection_reason,
+        failure_reason=None,
     )

@@ -19,6 +19,9 @@ from app.ai.ai_orchestration import (
     ObservationContext,
     orchestrate_ai_enrichment,
 )
+from app.ai.content_versions.ai_annotation_content_v1_0_0 import (
+    build_rejected_ai_annotation_audit,
+)
 
 import uuid
 from dataclasses import asdict, dataclass, is_dataclass
@@ -33,6 +36,14 @@ from app.persistence.models.provenance import (
 )
 from app.persistence.repositories.processing_event_repo import (
     ProcessingEventRepository,
+)
+from app.persistence.repositories.ai_annotation_repo import (
+    AiAnnotationRepository,
+)
+from app.persistence.models.ai import (
+    AIAnnotationType,
+    AIAnnotationValidationStatus,
+    AiAnnotation,
 )
 from app.provenance.emitter import (
     EventContext,
@@ -68,6 +79,7 @@ class IngestionService:
         self.panel_repo = PanelRepository(session)
         self.test_repo = TestRepository(session)
         self.pe_repo = ProcessingEventRepository(session)
+        self.ai_annotation_repo = AiAnnotationRepository(session)
 
     def _dedupe_key(
         self,
@@ -265,6 +277,130 @@ class IngestionService:
             ],
         )
 
+    def _emit_ai_stage_event(
+        self,
+        ctx: EventContext,
+        *,
+        event_type: ProcessingEventType,
+        severity: ProcessingEventSeverity,
+        message: str,
+        details: dict[str, Any] | None = None,
+    ) -> None:
+        emit(
+            self.pe_repo,
+            ctx,
+            event_type=event_type,
+            severity=severity,
+            message=message,
+            details=details,
+            dedupe_key=self._dedupe_key(ctx, event_type),
+            deduped=True,
+        )
+
+    def _emit_ai_stage_result(self, ctx: EventContext, ai_result) -> None:
+        base_details = {
+            "provider": ai_result.provider,
+            "model_id": ai_result.model_id,
+            "prompt_version": ai_result.prompt_version,
+            "temperature": ai_result.temperature,
+            "content_schema_version": ai_result.content_schema_version,
+            "input_hash": ai_result.input_hash,
+        }
+
+        if ai_result.failure_reason is not None:
+            self._emit_ai_stage_event(
+                ctx,
+                event_type=ProcessingEventType.AI_ENRICHMENT_FAILED,
+                severity=ProcessingEventSeverity.ERROR,
+                message="AI enrichment configuration is missing or invalid",
+                details={
+                    **base_details,
+                    "failure_reason": ai_result.failure_reason,
+                },
+            )
+            return
+
+        if ai_result.llm_response_content is not None:
+            self._emit_ai_stage_event(
+                ctx,
+                event_type=ProcessingEventType.AI_ENRICHMENT_SUCCEEDED,
+                severity=ProcessingEventSeverity.INFO,
+                message="AI enrichment succeeded",
+                details=base_details,
+            )
+            return
+
+        if ai_result.llm_response_text is not None:
+            self._emit_ai_stage_event(
+                ctx,
+                event_type=ProcessingEventType.AI_ENRICHMENT_FAILED,
+                severity=ProcessingEventSeverity.ERROR,
+                message="AI enrichment response failed schema validation",
+                details={
+                    **base_details,
+                    "rejection_reason": ai_result.rejection_reason,
+                },
+            )
+            return
+
+        self._emit_ai_stage_event(
+            ctx,
+            event_type=ProcessingEventType.AI_ENRICHMENT_SKIPPED,
+            severity=ProcessingEventSeverity.WARN,
+            message="AI enrichment produced no annotation",
+            details=base_details,
+        )
+
+    def _persist_ai_annotation(
+        self,
+        *,
+        ai_request: AIEnrichmentRequest,
+        ai_result,
+    ) -> None:
+        if ai_result is None:
+            return
+
+        if ai_result.llm_response_content is not None:
+            annotation_type = AIAnnotationType(
+                ai_result.llm_response_content.annotation_type
+            )
+            content_json = ai_result.llm_response_content.model_dump(
+                mode="json"
+            )
+            validation_status = AIAnnotationValidationStatus.ACCEPTED
+            rejection_reason = None
+            validated_at = ai_result.created_at
+        elif ai_result.llm_response_text is not None:
+            annotation_type = None
+            audit_payload = build_rejected_ai_annotation_audit(
+                raw_llm_response=ai_result.llm_response_text,
+                rejection_reason=ai_result.rejection_reason
+                or "AI annotation validation failed",
+            )
+            content_json = audit_payload.model_dump(mode="json")
+            validation_status = AIAnnotationValidationStatus.REJECTED
+            rejection_reason = audit_payload.rejection_reason
+            validated_at = ai_result.created_at
+        else:
+            return
+
+        ai_annotation = AiAnnotation(
+            ingestion_id=ai_request.ingestion_id,
+            annotation_type=annotation_type,
+            content_json=content_json,
+            provider=ai_result.provider,
+            model_id=ai_result.model_id,
+            prompt_version=ai_result.prompt_version,
+            temperature=ai_result.temperature,
+            content_schema_version=ai_result.content_schema_version,
+            input_hash=ai_result.input_hash,
+            created_at=ai_result.created_at,
+            validation_status=validation_status,
+            validated_at=validated_at,
+            rejection_reason=rejection_reason,
+        )
+        self.ai_annotation_repo.create(ai_annotation)
+
     def insert_panel_test_data(
         self,
         ingestion_id,
@@ -316,6 +452,7 @@ class IngestionService:
         )
         parser_ctx = root_ctx.child(actor=ProcessingEventActor.PARSER)
         validator_ctx = root_ctx.child(actor=ProcessingEventActor.VALIDATOR)
+        ai_ctx = root_ctx.child(actor=ProcessingEventActor.AI_WORKER)
 
         try:
             emit_started(
@@ -625,11 +762,41 @@ class IngestionService:
                 return
 
             # Normalization succeeded (warnings are still a success path).
-            ai_request = self._get_ai_enrichment_request(ingestion_id)
-            orchestrate_ai_enrichment(ai_request)
+            emit_started(
+                self.pe_repo,
+                ai_ctx,
+                event_type=ProcessingEventType.AI_ENRICHMENT_STARTED,
+                message="AI enrichment started",
+                details=None,
+                dedupe_key=self._dedupe_key(
+                    ai_ctx, ProcessingEventType.AI_ENRICHMENT_STARTED
+                ),
+                deduped=True,
+            )
+            self.session.commit()
 
-            # Don't mark ingestion as completed until AI_ENRICHMENT_SUCCEEDED/FAILED/SKIPPED
-            # self.ingestion_repo.mark_completed(ingestion_id)
+            ai_request = self._get_ai_enrichment_request(ingestion_id)
+            try:
+                ai_result = orchestrate_ai_enrichment(ai_request)
+            except Exception as e:
+                self._emit_stage_failed(
+                    ai_ctx,
+                    event_type=ProcessingEventType.AI_ENRICHMENT_FAILED,
+                    error_code="ai_enrichment_exception",
+                    error=e,
+                    message="AI enrichment failed",
+                )
+                self.ingestion_repo.mark_completed(ingestion_id)
+                self.session.commit()
+                return
+
+            self._persist_ai_annotation(
+                ai_request=ai_request,
+                ai_result=ai_result,
+            )
+            self._emit_ai_stage_result(ai_ctx, ai_result)
+
+            self.ingestion_repo.mark_completed(ingestion_id)
             self.session.commit()
             return
 
