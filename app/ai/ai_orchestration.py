@@ -42,6 +42,7 @@ DEFAULT_OPENAI_BASE_URL = "https://api.openai.com/v1"
 DEFAULT_RETRIEVER_TOP_K = 5
 DEFAULT_BEDROCK_TEMPERATURE = 0.0
 DEFAULT_BEDROCK_PROVIDER = "anthropic"
+DEFAULT_BEDROCK_MAX_TOKENS = 6000
 
 _ABNORMAL_INTERPRETATIONS = {"HIGH", "LOW", "ABNORMAL", "CRITICAL"}
 
@@ -358,7 +359,10 @@ def build_default_llm() -> BaseChatModel | None:
     llm_kwargs: dict[str, Any] = {
         "model_id": model_id,
         "provider": DEFAULT_BEDROCK_PROVIDER,
-        "model_kwargs": {"temperature": DEFAULT_BEDROCK_TEMPERATURE},
+        "model_kwargs": {
+            "temperature": DEFAULT_BEDROCK_TEMPERATURE,
+            "max_tokens": DEFAULT_BEDROCK_MAX_TOKENS,
+        },
     }
     if region_name:
         llm_kwargs["region_name"] = region_name
@@ -467,6 +471,10 @@ def _strip_json_code_fences(text: str) -> str:
 
     if len(lines) >= 2 and lines[-1].strip() == "```":
         return "\n".join(lines[1:-1]).strip()
+
+    # Closing fence absent (truncated response) — strip the opening line anyway.
+    if len(lines) >= 2:
+        return "\n".join(lines[1:]).strip()
 
     return stripped
 
