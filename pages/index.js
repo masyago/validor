@@ -17,6 +17,7 @@ const globalCss = `*{box-sizing:border-box;margin:0;padding:0}
   --border2:rgba(58,155,255,0.3);
   --success:#00e87a;
   --danger:#ff4d6a;
+  --warn:#f5a623;
   --font:'Space Grotesk',sans-serif;
   --mono:'JetBrains Mono',monospace;
 }
@@ -170,6 +171,116 @@ body>*{position:relative;z-index:1}
   footer > span:nth-child(3){grid-column:2;grid-row:1;text-align:right}
 
   .result-grid{grid-template-columns:1fr}
+}
+
+/* ===== AI AUGMENTATION LAYER (scoped under .ai-aug) ===== */
+.ai-aug{margin-top:24px;border-top:1px solid var(--border);padding-top:20px}
+.ai-aug .ai-tabs{display:flex;border-bottom:1px solid var(--border);margin-bottom:20px}
+.ai-aug .ai-tab{padding:12px 20px;font-size:13px;font-weight:500;cursor:pointer;color:var(--muted);border-bottom:2px solid transparent;margin-bottom:-1px;transition:all .2s;font-family:var(--mono)}
+.ai-aug .ai-tab.active{color:var(--blue3);border-bottom-color:var(--blue3)}
+.ai-aug .section-label{font-size:10px;font-weight:600;color:var(--blue3);letter-spacing:0.1em;text-transform:uppercase;font-family:var(--mono);margin-bottom:10px}
+.ai-aug .meta-row{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:var(--border);border:1px solid var(--border);border-radius:10px;overflow:hidden;margin-bottom:20px}
+.ai-aug .meta-cell{background:var(--navy2);padding:12px 16px;min-width:0}
+.ai-aug .meta-label{font-size:10px;color:var(--muted);font-family:var(--mono);letter-spacing:0.06em;margin-bottom:4px}
+.ai-aug .meta-val{font-size:13px;font-weight:600;color:var(--white);font-family:var(--mono);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ai-aug .review-banner{display:flex;align-items:center;gap:10px;padding:12px 16px;border-radius:8px;margin-bottom:20px;font-size:13px;font-weight:600}
+.ai-aug .review-banner.urgent{background:rgba(255,77,106,0.08);border:1px solid rgba(255,77,106,0.3);color:var(--danger)}
+.ai-aug .review-banner.routine{background:rgba(245,166,35,0.08);border:1px solid rgba(245,166,35,0.3);color:var(--warn)}
+.ai-aug .summary-card{background:var(--navy2);border:1px solid var(--border2);border-radius:12px;padding:20px 22px;margin-bottom:20px}
+.ai-aug .summary-header{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;margin-bottom:14px}
+.ai-aug .summary-type{display:inline-flex;align-items:center;gap:6px;background:rgba(245,166,35,0.1);border:1px solid rgba(245,166,35,0.3);border-radius:6px;padding:4px 12px;font-size:11px;font-weight:700;color:var(--warn);font-family:var(--mono);letter-spacing:0.05em}
+.ai-aug .conf-wrap{display:flex;align-items:center;gap:10px;flex-shrink:0}
+.ai-aug .conf-label{font-size:11px;color:var(--muted);font-family:var(--mono)}
+.ai-aug .conf-bar{width:80px;height:6px;background:rgba(58,155,255,0.15);border-radius:3px;overflow:hidden}
+.ai-aug .conf-fill{height:100%;border-radius:3px;background:linear-gradient(90deg,var(--blue3),var(--cyan))}
+.ai-aug .conf-num{font-size:12px;font-weight:600;color:var(--blue3);font-family:var(--mono);min-width:28px}
+.ai-aug .summary-text{font-size:14px;color:#c8dff5;line-height:1.7;margin-bottom:12px}
+.ai-aug .summary-footer{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.ai-aug .requires-review-tag{background:rgba(255,77,106,0.1);border:1px solid rgba(255,77,106,0.25);color:var(--danger);border-radius:5px;padding:3px 10px;font-size:11px;font-weight:600;font-family:var(--mono)}
+.ai-aug .non-auth-tag{background:rgba(122,153,196,0.1);border:1px solid rgba(122,153,196,0.2);color:var(--muted);border-radius:5px;padding:3px 10px;font-size:11px;font-family:var(--mono)}
+.ai-aug .priority-grid{display:flex;flex-direction:column;gap:10px;margin-bottom:20px}
+.ai-aug .finding-card{background:var(--navy2);border:1px solid var(--border);border-radius:10px;overflow:hidden;transition:border-color .2s}
+.ai-aug .finding-card:hover{border-color:var(--border2)}
+.ai-aug .finding-card.critical{border-left:3px solid var(--danger)}
+.ai-aug .finding-card.high{border-left:3px solid var(--warn)}
+.ai-aug .finding-card.elevated{border-left:3px solid #7ec4ff}
+.ai-aug .finding-header{display:flex;align-items:center;gap:12px;padding:14px 18px;cursor:pointer;user-select:none}
+.ai-aug .flag-pill{display:inline-flex;padding:3px 10px;border-radius:5px;font-size:10px;font-weight:700;font-family:var(--mono);letter-spacing:0.05em;white-space:nowrap}
+.ai-aug .flag-critical_high,.ai-aug .flag-critical_low{background:rgba(255,77,106,0.12);color:var(--danger);border:1px solid rgba(255,77,106,0.3)}
+.ai-aug .flag-high,.ai-aug .flag-low{background:rgba(245,166,35,0.1);color:var(--warn);border:1px solid rgba(245,166,35,0.3)}
+.ai-aug .flag-normal{background:rgba(0,232,122,0.08);color:var(--success);border:1px solid rgba(0,232,122,0.2)}
+.ai-aug .flag-unknown{background:rgba(122,153,196,0.1);color:var(--muted);border:1px solid rgba(122,153,196,0.2)}
+.ai-aug .analyte-name{font-size:14px;font-weight:600;color:var(--white);flex:1}
+.ai-aug .analyte-result{font-family:var(--mono);font-size:13px;font-weight:600;white-space:nowrap}
+.ai-aug .val-critical_high,.ai-aug .val-critical_low{color:var(--danger)}
+.ai-aug .val-high,.ai-aug .val-low{color:var(--warn)}
+.ai-aug .val-normal{color:var(--success)}
+.ai-aug .val-unknown{color:var(--white)}
+.ai-aug .finding-chevron{color:var(--muted);font-size:12px;transition:transform .2s;margin-left:4px}
+.ai-aug .finding-chevron.open{transform:rotate(180deg)}
+.ai-aug .finding-body{padding:0 18px 14px;border-top:1px solid var(--border)}
+.ai-aug .finding-desc{font-size:13px;color:#a8c4e0;line-height:1.7;margin:12px 0 10px}
+.ai-aug .finding-meta{display:flex;gap:12px;flex-wrap:wrap;margin-top:10px;padding-top:10px;border-top:1px solid var(--border)}
+.ai-aug .finding-meta-item{font-size:11px;color:var(--muted);font-family:var(--mono)}
+.ai-aug .finding-meta-item span{color:var(--blue4)}
+.ai-aug .hist-btn{margin-top:12px;background:rgba(58,155,255,0.08);border:1px solid var(--border2);color:var(--blue3);padding:5px 12px;border-radius:5px;font-size:11px;font-weight:600;cursor:pointer;font-family:var(--mono)}
+.ai-aug .hist-table{margin-top:12px;border:1px solid var(--border);border-radius:8px;overflow:hidden;max-width:320px}
+.ai-aug .hist-row{display:grid;grid-template-columns:1fr 1fr;padding:7px 14px;border-bottom:1px solid rgba(58,155,255,0.07);font-size:12px;font-family:var(--mono)}
+.ai-aug .hist-row:last-child{border:none}
+.ai-aug .hist-row.head{background:rgba(58,155,255,0.05);font-size:10px;letter-spacing:0.06em}
+.ai-aug .hist-date{color:var(--blue4)}
+.ai-aug .hist-val{color:#c8e6ff;text-align:right}
+.ai-aug .hist-empty{margin-top:10px;font-size:12px;color:var(--muted);font-family:var(--mono)}
+.ai-aug .other-table-wrap{background:var(--navy2);border:1px solid var(--border);border-radius:10px;overflow:hidden;margin-bottom:20px}
+.ai-aug .other-row{display:grid;grid-template-columns:1fr 100px 100px 90px;align-items:center;padding:10px 18px;border-bottom:1px solid rgba(58,155,255,0.07);font-size:13px;gap:8px}
+.ai-aug .other-row:last-child{border:none}
+.ai-aug .other-row.head{background:rgba(58,155,255,0.05);font-size:10px;font-weight:600;color:var(--muted);letter-spacing:0.07em;font-family:var(--mono);padding:8px 18px}
+.ai-aug .other-analyte{font-weight:500;color:var(--white)}
+.ai-aug .other-val{font-family:var(--mono);font-size:12px;font-weight:600;text-align:right}
+.ai-aug .other-ref{font-family:var(--mono);font-size:11px;color:var(--muted);text-align:right}
+.ai-aug .other-flag{text-align:right}
+.ai-aug .collapse-head{display:flex;align-items:center;justify-content:space-between;cursor:pointer;user-select:none;padding:12px 16px;background:var(--navy2);border:1px solid var(--border);border-radius:10px;margin-bottom:12px}
+.ai-aug .collapse-head:hover{border-color:var(--border2)}
+.ai-aug .audit-footer{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;padding:12px 16px;background:rgba(10,22,40,0.6);border:1px solid var(--border);border-radius:8px;margin-top:4px}
+.ai-aug .audit-item{font-size:11px;color:var(--muted);font-family:var(--mono)}
+.ai-aug .audit-item span{color:var(--blue4)}
+.ai-aug .disclaimer{font-size:11px;color:#4a6585;font-style:italic;text-align:center;margin-top:14px;line-height:1.6}
+.ai-aug .composer-wrap{background:var(--navy2);border:1px solid var(--border2);border-radius:14px;overflow:hidden}
+.ai-aug .composer-top{padding:18px 22px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.ai-aug .composer-title-row{display:flex;align-items:center;gap:10px}
+.ai-aug .composer-icon{width:32px;height:32px;background:rgba(58,155,255,0.1);border:1px solid var(--border2);border-radius:8px;display:flex;align-items:center;justify-content:center;color:var(--blue3);font-size:16px;flex-shrink:0}
+.ai-aug .composer-title{font-size:14px;font-weight:600;color:var(--white)}
+.ai-aug .composer-subtitle{font-size:12px;color:var(--muted);margin-top:1px;font-family:var(--mono)}
+.ai-aug .draft-tag{display:inline-flex;align-items:center;gap:5px;background:rgba(245,166,35,0.1);border:1px solid rgba(245,166,35,0.3);border-radius:5px;padding:3px 10px;font-size:11px;font-weight:600;color:var(--warn);font-family:var(--mono)}
+.ai-aug .draft-dot{width:5px;height:5px;border-radius:50%;background:var(--warn)}
+.ai-aug .meta-fields{display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--border);border-bottom:1px solid var(--border)}
+.ai-aug .meta-field{background:var(--navy2);padding:11px 22px;display:flex;align-items:center;gap:10px}
+.ai-aug .meta-field-val{font-size:13px;color:var(--white);font-family:var(--mono)}
+.ai-aug .message-area{padding:20px 22px;border-bottom:1px solid var(--border)}
+.ai-aug .msg-toolbar{display:flex;align-items:center;gap:6px;margin-bottom:10px;flex-wrap:wrap}
+.ai-aug .tb-btn{padding:4px 10px;border-radius:5px;font-size:11px;font-weight:500;cursor:pointer;background:transparent;border:1px solid var(--border);color:var(--muted);font-family:var(--mono);transition:all .15s}
+.ai-aug .tb-btn:hover{border-color:var(--blue3);color:var(--blue3)}
+.ai-aug .tb-sep{width:1px;height:16px;background:var(--border);margin:0 4px}
+.ai-aug .msg-textarea{width:100%;background:rgba(5,14,26,0.6);border:1px solid var(--border2);border-radius:8px;padding:16px;font-size:14px;color:var(--white);font-family:var(--font);line-height:1.75;resize:vertical;min-height:340px;outline:none;transition:border-color .2s}
+.ai-aug .msg-textarea:focus{border-color:var(--blue3)}
+.ai-aug .draft-actions{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:12px 22px;border-top:1px solid var(--border)}
+.ai-aug .draft-actions-right{display:flex;align-items:center;gap:10px}
+.ai-aug .draft-btn{padding:8px 18px;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;background:transparent;border:1px solid var(--border2);color:var(--blue3);font-family:var(--mono);transition:all .15s}
+.ai-aug .draft-btn:hover{border-color:var(--blue3);color:var(--white)}
+.ai-aug .draft-btn.secondary{color:var(--muted);border-color:var(--border)}
+.ai-aug .draft-btn.secondary:hover{color:var(--blue3);border-color:var(--blue3)}
+.ai-aug .draft-btn.primary{background:var(--blue3);border-color:var(--blue3);color:#04121f}
+.ai-aug .draft-btn.primary:hover:not(:disabled){background:var(--white);border-color:var(--white)}
+.ai-aug .draft-btn:disabled{opacity:0.45;cursor:not-allowed}
+.ai-aug .send-notice{font-size:11px;color:var(--warn);font-family:var(--mono);text-align:right;padding:0 22px 12px}
+.ai-aug .physician-note{display:flex;align-items:flex-start;gap:10px;padding:12px 22px;background:rgba(0,0,0,0.15);border-top:1px solid var(--border)}
+.ai-aug .pn-text{font-size:12px;color:var(--muted);line-height:1.6;font-style:italic}
+.ai-aug .pn-text strong{color:var(--blue4);font-style:normal;font-weight:600}
+@media (max-width:640px){
+  .ai-aug .meta-row{grid-template-columns:1fr 1fr}
+  .ai-aug .other-row{grid-template-columns:1fr 70px 60px}
+  .ai-aug .other-ref{display:none}
+  .ai-aug .meta-fields{grid-template-columns:1fr}
 }`;
 
 const STAGE_MAP = [
@@ -177,6 +288,8 @@ const STAGE_MAP = [
   { label: "VALIDATE", ok: "VALIDATION_SUCCEEDED", fail: "VALIDATION_FAILED" },
   { label: "NORMALIZE", ok: "NORMALIZATION_SUCCEEDED", fail: "NORMALIZATION_FAILED" },
   { label: "PERSIST", ok: "FHIR_JSON_GENERATION_SUCCEEDED", fail: "FHIR_JSON_GENERATION_FAILED" },
+  { label: "AI ANNOTATION", ok: "AI_ENRICHMENT_SUCCEEDED", fail: "AI_ENRICHMENT_FAILED" },
+  { label: "EMAIL DRAFT", ok: "PATIENT_MESSAGE_SUCCEEDED", fail: "PATIENT_MESSAGE_FAILED" },
 ];
 
 function deriveStageSummary(events) {
@@ -201,8 +314,17 @@ export default function Home() {
   const [demoError, setDemoError] = useState(null);
   const [showReports, setShowReports] = useState(false);
   const [showObservations, setShowObservations] = useState(false);
+  const [showAudit, setShowAudit] = useState(false);
   const [showErrorDetails, setShowErrorDetails] = useState(false);
+  const [aiTab, setAiTab] = useState("annotation");
+  const [openFindings, setOpenFindings] = useState({});
+  const [history, setHistory] = useState({});
+  const [showOther, setShowOther] = useState(false);
+  const [emailBody, setEmailBody] = useState("");
+  const [copied, setCopied] = useState(false);
+  const [sentNotice, setSentNotice] = useState(false);
   const pollRef = useRef(null);
+  const textareaRef = useRef(null);
 
   useEffect(() => () => clearInterval(pollRef.current), []);
 
@@ -216,7 +338,13 @@ export default function Home() {
     setLoadingStage(0);
     setShowReports(false);
     setShowObservations(false);
+    setShowAudit(false);
     setShowErrorDetails(false);
+    setAiTab("annotation");
+    setOpenFindings({});
+    setHistory({});
+    setShowOther(false);
+    setEmailBody("");
   }
 
   async function runDemo() {
@@ -265,7 +393,7 @@ export default function Home() {
         if (!res) return;
         const body = await res.json().catch(() => null);
         if (!body) return;
-        if (body.status === "PROCESSING") setLoadingStage((s) => Math.min(s + 1, 3));
+        if (body.status === "PROCESSING") setLoadingStage((s) => Math.min(s + 1, 5));
         if (TERMINAL.has(body.status)) {
           finalStatus = body;
           clearInterval(pollRef.current);
@@ -273,23 +401,226 @@ export default function Home() {
         }
       }, 1000);
     });
-    setLoadingStage(4);
+    setLoadingStage(6);
 
-    const [evRes, rpRes, obRes] = await Promise.allSettled([
+    const [evRes, rpRes, obRes, aiRes] = await Promise.allSettled([
       fetch(`/v1/ingestions/${ingestionId}/processing-events`).then((r) => r.json()),
       fetch(`/v1/ingestions/${ingestionId}/diagnostic-reports?include_json=1`).then((r) => r.json()),
       fetch(`/v1/ingestions/${ingestionId}/observations?include_json=1`).then((r) => r.json()),
+      fetch(`/v1/ingestions/${ingestionId}/ai_annotation`).then((r) => (r.ok ? r.json() : [])),
     ]);
 
-    setDemoResult({
+    const observations = obRes.status === "fulfilled" && Array.isArray(obRes.value) ? obRes.value : [];
+    const reports = rpRes.status === "fulfilled" && Array.isArray(rpRes.value) ? rpRes.value : [];
+    const aiRows = aiRes.status === "fulfilled" && Array.isArray(aiRes.value) ? aiRes.value : [];
+    // Prefer an ACCEPTED annotation; fall back to any annotation with content.
+    const aiAnnotation =
+      aiRows.find((a) => a && a.validation_status === "ACCEPTED" && a.content_json) ||
+      aiRows.find((a) => a && a.content_json) ||
+      null;
+    const patientId = observations.find((o) => o && o.patient_id)?.patient_id || null;
+
+    const resultObj = {
       ingestionId,
       status: finalStatus?.status,
       errorDetail: finalStatus?.error_detail,
       events: evRes.status === "fulfilled" ? evRes.value : [],
-      reports: rpRes.status === "fulfilled" ? rpRes.value : [],
-      observations: obRes.status === "fulfilled" ? obRes.value : [],
-    });
+      reports,
+      observations,
+      aiAnnotation,
+      patientId,
+    };
+
+    setDemoResult(resultObj);
+    setEmailBody(buildEmailTemplate(resultObj));
     setDemoPhase("done");
+  }
+
+  function fmtObsValue(o) {
+    if (!o) return "—";
+    const base = o.value_num != null ? String(o.value_num) : (o.value_text || "");
+    if (!base) return "—";
+    return o.unit ? `${base} ${o.unit}` : base;
+  }
+
+  function fmtRef(o) {
+    if (!o) return "—";
+    const lo = o.ref_low_num;
+    const hi = o.ref_high_num;
+    if (lo == null && hi == null) return "—";
+    return `${lo == null ? "?" : lo}–${hi == null ? "?" : hi}`;
+  }
+
+  function flagKey(o) {
+    const raw = (o?.flag_system_interpretation || o?.flag_analyzer_interpretation || "")
+      .toString()
+      .toUpperCase();
+    if (!raw) return "unknown";
+    if (raw.includes("CRITICAL") && raw.includes("LOW")) return "critical_low";
+    if (raw.includes("CRITICAL")) return "critical_high";
+    if (raw === "HIGH" || raw === "H") return "high";
+    if (raw === "LOW" || raw === "L") return "low";
+    if (raw === "NORMAL" || raw === "N") return "normal";
+    return "unknown";
+  }
+
+  function flagLabel(o) {
+    const k = flagKey(o);
+    return k === "unknown" ? "—" : k.toUpperCase();
+  }
+
+  function cardPriorityClass(o) {
+    const k = flagKey(o);
+    if (k.startsWith("critical")) return "critical";
+    if (k === "high" || k === "low") return "high";
+    return "elevated";
+  }
+
+  // Higher rank = more clinically urgent; used to order priority findings.
+  function flagRank(o) {
+    const k = flagKey(o);
+    if (k.startsWith("critical")) return 3;
+    if (k === "high" || k === "low") return 2;
+    if (k === "normal") return 0;
+    return 1; // unknown / unmatched
+  }
+
+  // Combines the result flag with value + reference range, e.g. "HIGH: 93 mmol/L [50–80]".
+  function fmtResultWithFlag(o) {
+    if (!o) return "REVIEW";
+    const k = flagKey(o);
+    const prefix = k === "unknown" ? "" : `${k.toUpperCase().replace("_", " ")}: `;
+    return `${prefix}${fmtObsValue(o)} [${fmtRef(o)}]`;
+  }
+
+  // Review banner urgency: routine → yellow, anything else → red.
+  function reviewPriorityClass(priority) {
+    return (priority || "").toString().trim().toLowerCase() === "routine"
+      ? "routine"
+      : "urgent";
+  }
+
+  // Formats a UTC timestamp in the viewer's local timezone, e.g. "2026-07-05 15:05:14 EDT".
+  function fmtGenerated(iso) {
+    if (!iso) return "—";
+    const d = new Date(iso);
+    if (isNaN(d.getTime())) return "—";
+    const p = {};
+    new Intl.DateTimeFormat("en-CA", {
+      year: "numeric", month: "2-digit", day: "2-digit",
+      hour: "2-digit", minute: "2-digit", second: "2-digit",
+      hour12: false, timeZoneName: "short",
+    }).formatToParts(d).forEach((x) => { p[x.type] = x.value; });
+    return `${p.year}-${p.month}-${p.day} ${p.hour}:${p.minute}:${p.second} ${p.timeZoneName}`;
+  }
+
+  // Bedrock model ids arrive as long ARNs / inference-profile strings; show just the
+  // human-readable model name (e.g. "claude-haiku-4-5").
+  function shortModelName(modelId) {
+    if (!modelId) return "—";
+    let s = modelId.toString().trim();
+    // ARN form: arn:aws:bedrock:...:foundation-model/anthropic.claude-...  → take last segment
+    if (s.includes("/")) s = s.split("/").pop();
+    // Strip provider prefix and region qualifier: "us.anthropic.claude-haiku-4-5-v1:0"
+    s = s.replace(/^(us|eu|apac|global)\./, "").replace(/^anthropic\./, "");
+    // Drop trailing version/token suffixes like "-20250101-v1:0" or ":0"
+    s = s.replace(/:.*$/, "").replace(/-v\d+.*$/, "").replace(/-\d{8}$/, "");
+    return s || modelId;
+  }
+
+  function fmtDate(s) {
+    const d = new Date(s);
+    return isNaN(d.getTime()) ? (s || "") : d.toISOString().slice(0, 10);
+  }
+
+  // Patient identity is resolved by SQL from patient_id and injected here — it is never
+  // shared with the AI. Hardcoded for the demo.
+  const PATIENT_NAME = "Jane Doe";
+
+  function buildEmailTemplate(result) {
+    const obs = Array.isArray(result?.observations) ? result.observations : [];
+    const reports = Array.isArray(result?.reports) ? result.reports : [];
+    const findings = result?.aiAnnotation?.content_json?.analyte_findings || [];
+
+    const times = obs.map((o) => o.effective_at).filter(Boolean).sort();
+    let labDate = "your recent visit";
+    if (times.length) {
+      const d = new Date(times[times.length - 1]);
+      if (!isNaN(d.getTime())) {
+        labDate = d.toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" });
+      }
+    }
+
+    const panel = reports.map((r) => r.panel_code).filter(Boolean).join(", ") || "lab";
+    const flagged = findings.map((f) => {
+      const o = obs.find((x) => x.code === f.analyte_code);
+      return o?.display || f.analyte_code;
+    });
+    const n = findings.length;
+    const followUp =
+      n > 0
+        ? `\n${n} result${n !== 1 ? "s" : ""} fell outside normal ranges and require follow-up: ${flagged.join(
+            ", "
+          )}. These will be reviewed and may need further evaluation.\n`
+        : "";
+
+    return `Subject: Blood test results — ${labDate}
+
+Dear ${PATIENT_NAME},
+
+Your ${panel} blood test results from ${labDate} are now available. Here is a summary of the key findings.
+
+Most results were within normal ranges.
+${followUp}
+We recommend scheduling a follow-up appointment to discuss these findings and determine whether additional tests are needed. Please contact [your clinic name] to arrange this at your earliest convenience.
+
+Regards,
+Dr. [YOUR NAME]`;
+  }
+
+  async function toggleHistory(code) {
+    const cur = history[code];
+    if (cur && cur.rows != null) {
+      setHistory((p) => ({ ...p, [code]: { ...cur, shown: !cur.shown } }));
+      return;
+    }
+    const pid = demoResult?.patientId;
+    if (!pid) {
+      setHistory((p) => ({ ...p, [code]: { loading: false, shown: true, rows: [] } }));
+      return;
+    }
+    setHistory((p) => ({ ...p, [code]: { loading: true, shown: true } }));
+    try {
+      const res = await fetch(`/v1/patients/${pid}/observations?limit=200&offset=0`);
+      const all = await res.json();
+      const currentIds = new Set((demoResult?.observations || []).map((o) => o.observation_id));
+      const rows = (Array.isArray(all) ? all : [])
+        .filter((o) => o.code === code && !currentIds.has(o.observation_id))
+        .sort((a, b) => (a.effective_at < b.effective_at ? 1 : -1))
+        .map((o) => ({ date: fmtDate(o.effective_at), result: fmtObsValue(o) }));
+      setHistory((p) => ({ ...p, [code]: { loading: false, shown: true, rows } }));
+    } catch (e) {
+      setHistory((p) => ({ ...p, [code]: { loading: false, shown: true, error: "Could not load history." } }));
+    }
+  }
+
+  function resetDraft() {
+    setEmailBody(buildEmailTemplate(demoResult));
+  }
+
+  function sendDraft() {
+    setSentNotice(true);
+    setTimeout(() => setSentNotice(false), 4000);
+  }
+
+  async function copyDraft() {
+    try {
+      await navigator.clipboard.writeText(emailBody);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1800);
+    } catch {
+      // Clipboard API unavailable (e.g. non-secure context) — no-op.
+    }
   }
 
   return (
@@ -298,11 +629,6 @@ export default function Home() {
         <title>Validor</title>
         <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
         <link rel="shortcut icon" href="/favicon.svg" />
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link
-          href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap"
-          rel="stylesheet"
-        />
       </Head>
       <style dangerouslySetInnerHTML={{ __html: globalCss }} />
 
@@ -524,7 +850,8 @@ export default function Home() {
         <div className="section-title">See Validor in action</div>
         <div className="section-sub">
           Two scenarios: a valid file completing the full pipeline, and an invalid file caught at
-          validation.
+          validation. Every run emits a full, timestamped audit trail — expand it inline with the
+          persisted resources below.
         </div>
 
         <div className="demo-wrap">
@@ -562,7 +889,7 @@ export default function Home() {
                 <div style={{ color: "var(--muted)", fontSize: 12, marginBottom: 16, fontFamily: "var(--mono)" }}>
                   <span className="spinner" /> Processing through pipeline...
                 </div>
-                {["Parse", "Validate", "Normalize", "Persist"].map((name, i) => (
+                {["Parse", "Validate", "Normalize", "Persist", "AI annotation", "Email draft"].map((name, i) => (
                   <div className="stage" key={name}>
                     <span
                       className={`stage-badge ${
@@ -665,6 +992,22 @@ export default function Home() {
                           >
                             Observations ×{demoResult.observations.length}
                           </button>
+                          <button
+                            onClick={() => setShowAudit(!showAudit)}
+                            style={{
+                              background: showAudit ? "rgba(0,212,255,0.15)" : "rgba(0,212,255,0.08)",
+                              border: "1px solid rgba(0,212,255,0.2)",
+                              color: "var(--cyan)",
+                              padding: "4px 12px",
+                              borderRadius: 4,
+                              fontSize: 11,
+                              fontWeight: 600,
+                              cursor: "pointer",
+                              transition: "background 0.2s",
+                            }}
+                          >
+                            Audit log ×{(demoResult.events || []).length}
+                          </button>
                         </div>
                         {showReports && (
                           <div style={{ marginBottom: 16, maxHeight: 300, overflowY: "auto" }}>
@@ -705,6 +1048,35 @@ export default function Home() {
                             </pre>
                           </div>
                         )}
+                        {showAudit && (
+                          <div style={{ marginBottom: 16, maxHeight: 300, overflowY: "auto", background: "rgba(58,155,255,0.05)", border: "1px solid var(--border)", borderRadius: 6, padding: 12 }}>
+                            {(demoResult.events || []).map((evt) => {
+                              const date = new Date(evt.occurred_at || evt.timestamp || evt.created_at || "");
+                              const ts = !isNaN(date.getTime())
+                                ? `${date.toLocaleTimeString("en-US", { hour12: false })}.${String(date.getMilliseconds()).padStart(3, "0")}`
+                                : "N/A";
+                              const isFailed = evt.event_type.endsWith("_FAILED");
+                              let stageClass = "es-parse";
+                              if (evt.event_type.includes("VALIDATION")) stageClass = "es-valid";
+                              else if (evt.event_type.includes("NORMALIZATION")) stageClass = "es-norm";
+                              else if (evt.event_type.includes("FHIR")) stageClass = "es-fhir";
+                              return (
+                                <div key={evt.event_id} className="event-row">
+                                  <span className="event-ts">{ts}</span>
+                                  <span
+                                    className={`event-stage ${!isFailed ? stageClass : ""}`}
+                                    style={isFailed ? { background: "rgba(255,77,106,0.08)", color: "var(--danger)" } : {}}
+                                  >
+                                    {evt.event_type.replace(/_SUCCEEDED|_FAILED/g, "").replace(/_/g, " ")}
+                                  </span>
+                                  <span className="event-msg" style={isFailed ? { color: "var(--danger)" } : {}}>
+                                    {evt.message}
+                                  </span>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        )}
                         <div
                           style={{
                             marginTop: 8,
@@ -715,23 +1087,6 @@ export default function Home() {
                         >
                           ingestion_id: <span style={{ color: "var(--blue3)" }}>{demoResult.ingestionId}</span>
                         </div>
-                        <a href="#provenance" style={{ display: "inline-block", textDecoration: "none" }}>
-                          <button
-                            style={{
-                              background: "rgba(58,155,255,0.1)",
-                              border: "1px solid rgba(58,155,255,0.3)",
-                              color: "var(--blue3)",
-                              padding: "8px 12px",
-                              borderRadius: 6,
-                              fontSize: 12,
-                              fontWeight: 600,
-                              cursor: "pointer",
-                              transition: "background 0.2s",
-                            }}
-                          >
-                            See audit logs →
-                          </button>
-                        </a>
                       </>
                     ) : (
                       <>
@@ -802,131 +1157,288 @@ export default function Home() {
                             )}
                           </div>
                         )}
-                        <a href="#provenance" style={{ display: "inline-block", textDecoration: "none", marginTop: showErrorDetails ? 8 : 0 }}>
-                          <button
-                            style={{
-                              background: "rgba(58,155,255,0.1)",
-                              border: "1px solid rgba(58,155,255,0.3)",
-                              color: "var(--blue3)",
-                              padding: "8px 12px",
-                              borderRadius: 6,
-                              fontSize: 13,
-                              fontWeight: 600,
-                              cursor: "pointer",
-                              transition: "background 0.2s",
-                            }}
-                          >
-                            See audit logs →
-                          </button>
-                        </a>
+                        <button
+                          onClick={() => setShowAudit(!showAudit)}
+                          style={{
+                            background: "rgba(58,155,255,0.1)",
+                            border: "1px solid rgba(58,155,255,0.3)",
+                            color: "var(--blue3)",
+                            padding: "8px 12px",
+                            borderRadius: 6,
+                            fontSize: 13,
+                            fontWeight: 600,
+                            cursor: "pointer",
+                            transition: "background 0.2s",
+                            marginTop: showErrorDetails ? 8 : 0,
+                            display: "block",
+                          }}
+                        >
+                          {showAudit ? "Hide audit log ▼" : `Audit log ×${(demoResult.events || []).length} →`}
+                        </button>
+                        {showAudit && (
+                          <div style={{ marginTop: 8, maxHeight: 300, overflowY: "auto", background: "rgba(58,155,255,0.05)", border: "1px solid var(--border)", borderRadius: 6, padding: 12 }}>
+                            {(demoResult.events || []).map((evt) => {
+                              const date = new Date(evt.occurred_at || evt.timestamp || evt.created_at || "");
+                              const ts = !isNaN(date.getTime())
+                                ? `${date.toLocaleTimeString("en-US", { hour12: false })}.${String(date.getMilliseconds()).padStart(3, "0")}`
+                                : "N/A";
+                              const isFailed = evt.event_type.endsWith("_FAILED");
+                              let stageClass = "es-parse";
+                              if (evt.event_type.includes("VALIDATION")) stageClass = "es-valid";
+                              else if (evt.event_type.includes("NORMALIZATION")) stageClass = "es-norm";
+                              else if (evt.event_type.includes("FHIR")) stageClass = "es-fhir";
+                              return (
+                                <div key={evt.event_id} className="event-row">
+                                  <span className="event-ts">{ts}</span>
+                                  <span
+                                    className={`event-stage ${!isFailed ? stageClass : ""}`}
+                                    style={isFailed ? { background: "rgba(255,77,106,0.08)", color: "var(--danger)" } : {}}
+                                  >
+                                    {evt.event_type.replace(/_SUCCEEDED|_FAILED/g, "").replace(/_/g, " ")}
+                                  </span>
+                                  <span className="event-msg" style={isFailed ? { color: "var(--danger)" } : {}}>
+                                    {evt.message}
+                                  </span>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        )}
                       </>
                     )}
                   </div>
                 </div>
+                {demoResult.status === "COMPLETED" && (() => {
+                  const ai = demoResult.aiAnnotation;
+                  if (!ai || !ai.content_json) {
+                    return (
+                      <div className="ai-aug">
+                        <div style={{ color: "var(--muted)", fontSize: 12, fontFamily: "var(--mono)" }}>
+                          AI annotation not available for this run — the AI enrichment layer may be disabled in this environment.
+                        </div>
+                      </div>
+                    );
+                  }
+                  const content = ai.content_json;
+                  const rawFindings = Array.isArray(content.analyte_findings) ? content.analyte_findings : [];
+                  const obs = Array.isArray(demoResult.observations) ? demoResult.observations : [];
+                  // Index observations by both code and display name (case-insensitive) so a
+                  // finding whose analyte_code differs in case/label (e.g. "K" vs "Potassium")
+                  // still resolves to its observation instead of rendering a bare code.
+                  const obsIndex = {};
+                  obs.forEach((o) => {
+                    if (!o) return;
+                    [o.code, o.display].filter(Boolean).forEach((k) => {
+                      const key = k.toString().trim().toUpperCase();
+                      if (!(key in obsIndex)) obsIndex[key] = o;
+                    });
+                  });
+                  const lookupObs = (code) =>
+                    code ? obsIndex[code.toString().trim().toUpperCase()] : undefined;
+                  // Order findings by clinical urgency (critical → high/low → other).
+                  const findings = rawFindings
+                    .map((f) => ({ f, o: lookupObs(f.analyte_code) }))
+                    .sort((a, b) => flagRank(b.o) - flagRank(a.o))
+                    .map((x) => x.f);
+                  const priorityObsIds = new Set(
+                    findings.map((f) => lookupObs(f.analyte_code)?.observation_id).filter(Boolean)
+                  );
+                  const otherObs = obs.filter((o) => !priorityObsIds.has(o.observation_id));
+                  const confVals = findings.map((f) => f.confidence).filter((v) => typeof v === "number");
+                  const avgConf = confVals.length ? confVals.reduce((a, b) => a + b, 0) / confVals.length : null;
+                  const panel = (demoResult.reports || []).map((r) => r.panel_code).filter(Boolean).join(" · ") || "—";
+                  const times = obs.map((o) => o.effective_at).filter(Boolean).sort();
+                  let collected = "—";
+                  if (times.length) {
+                    const d = new Date(times[times.length - 1]);
+                    if (!isNaN(d.getTime())) collected = d.toISOString().slice(0, 16).replace("T", " ");
+                  }
+                  return (
+                    <div className="ai-aug">
+                      <div className="ai-tabs">
+                        <div className={`ai-tab${aiTab === "annotation" ? " active" : ""}`} onClick={() => setAiTab("annotation")}>AI annotation</div>
+                        <div className={`ai-tab${aiTab === "email" ? " active" : ""}`} onClick={() => setAiTab("email")}>Email draft</div>
+                      </div>
+
+                      {aiTab === "annotation" && (
+                        <div>
+                          <div className="meta-row">
+                            <div className="meta-cell"><div className="meta-label">INGESTION ID</div><div className="meta-val" title={demoResult.ingestionId}>{(demoResult.ingestionId || "").slice(0, 18)}</div></div>
+                            <div className="meta-cell"><div className="meta-label">PANEL</div><div className="meta-val">{panel}</div></div>
+                            <div className="meta-cell"><div className="meta-label">COLLECTED</div><div className="meta-val">{collected}</div></div>
+                            <div className="meta-cell"><div className="meta-label">ANNOTATION TYPE</div><div className="meta-val" style={{ color: "var(--warn)" }}>{(ai.annotation_type || content.annotation_type || "—").toString().toUpperCase()}</div></div>
+                          </div>
+
+                          {content.requires_review && (
+                            <div className={`review-banner ${reviewPriorityClass(content.review_priority)}`}>
+                              ⚠ Clinician review required{content.review_priority ? ` — priority: ${content.review_priority}` : ""}.
+                            </div>
+                          )}
+
+                          <div className="section-label">AI Panel Summary</div>
+                          <div className="summary-card">
+                            <div className="summary-header">
+                              <div className="summary-type">{(content.annotation_type || "ANNOTATION").toString().toUpperCase()}</div>
+                              {avgConf != null && (
+                                <div className="conf-wrap">
+                                  <span className="conf-label">Confidence</span>
+                                  <div className="conf-bar"><div className="conf-fill" style={{ width: `${Math.round(avgConf * 100)}%` }} /></div>
+                                  <span className="conf-num">{avgConf.toFixed(2)}</span>
+                                </div>
+                              )}
+                            </div>
+                            <div className="summary-text">{content.summary}</div>
+                            <div className="summary-footer">
+                              {content.requires_review && <span className="requires-review-tag">⚑ REQUIRES_REVIEW</span>}
+                              <span className="non-auth-tag">NON-AUTHORITATIVE · FOR REVIEW ONLY</span>
+                            </div>
+                          </div>
+
+                          {findings.length > 0 && (
+                            <>
+                              <div className="section-label">Priority Findings</div>
+                              <div className="priority-grid">
+                                {findings.map((f) => {
+                                  const o = lookupObs(f.analyte_code);
+                                  const fk = flagKey(o);
+                                  const open = !!openFindings[f.analyte_code];
+                                  const h = history[f.analyte_code];
+                                  return (
+                                    <div key={f.analyte_code} className={`finding-card ${o ? cardPriorityClass(o) : "elevated"}`}>
+                                      <div className="finding-header" onClick={() => setOpenFindings((p) => ({ ...p, [f.analyte_code]: !p[f.analyte_code] }))}>
+                                        <span className="analyte-name">{o?.display || f.analyte_code}</span>
+                                        <span className={`analyte-result val-${fk}`}>{fmtResultWithFlag(o)}</span>
+                                        <span className={`finding-chevron${open ? " open" : ""}`}>▼</span>
+                                      </div>
+                                      {open && (
+                                        <div className="finding-body">
+                                          <div className="finding-desc">{f.description}</div>
+                                          <div className="finding-meta">
+                                            <span className="finding-meta-item">Confidence: <span>{typeof f.confidence === "number" ? f.confidence.toFixed(2) : "—"}</span></span>
+                                            <span className="finding-meta-item">Trend: <span>{f.trend_direction || "—"}</span></span>
+                                          </div>
+                                          <button className="hist-btn" onClick={() => toggleHistory(f.analyte_code)}>
+                                            {h?.shown ? "Hide history ▲" : "Show history ▾"}
+                                          </button>
+                                          {h?.shown && (
+                                            h.loading ? (
+                                              <div className="hist-empty">Loading…</div>
+                                            ) : h.error ? (
+                                              <div className="hist-empty">{h.error}</div>
+                                            ) : h.rows && h.rows.length > 0 ? (
+                                              <div className="hist-table">
+                                                <div className="hist-row head"><div className="hist-date">DATE</div><div className="hist-val">RESULT</div></div>
+                                                {h.rows.map((r, i) => (
+                                                  <div className="hist-row" key={i}><div className="hist-date">{r.date}</div><div className="hist-val">{r.result}</div></div>
+                                                ))}
+                                              </div>
+                                            ) : (
+                                              <div className="hist-empty">No prior results for this analyte.</div>
+                                            )
+                                          )}
+                                        </div>
+                                      )}
+                                    </div>
+                                  );
+                                })}
+                              </div>
+                            </>
+                          )}
+
+                          {otherObs.length > 0 && (
+                            <>
+                              <div className="section-label collapse-head" onClick={() => setShowOther((v) => !v)}>
+                                <span>All Other Results ×{otherObs.length}</span>
+                                <span className="finding-chevron" style={{ transform: showOther ? "rotate(180deg)" : "none" }}>▼</span>
+                              </div>
+                              {showOther && (
+                                <div className="other-table-wrap">
+                                  <div className="other-row head">
+                                    <div>ANALYTE</div>
+                                    <div className="other-val">VALUE</div>
+                                    <div className="other-ref">REFERENCE</div>
+                                    <div className="other-flag">FLAG</div>
+                                  </div>
+                                  {otherObs.map((o) => {
+                                    const fk = flagKey(o);
+                                    return (
+                                      <div className="other-row" key={o.observation_id}>
+                                        <div className="other-analyte">{o.display || o.code}</div>
+                                        <div className={`other-val val-${fk}`}>{fmtObsValue(o)}</div>
+                                        <div className="other-ref">{fmtRef(o)}</div>
+                                        <div className="other-flag"><span className={`flag-pill flag-${fk}`}>{flagLabel(o)}</span></div>
+                                      </div>
+                                    );
+                                  })}
+                                </div>
+                              )}
+                            </>
+                          )}
+
+                          <div className="audit-footer">
+                            <span className="audit-item">Model: <span title={ai.model_id || ""}>{shortModelName(ai.model_id)}</span></span>
+                            <span className="audit-item">Annotation ID: <span>{(ai.ai_annotation_id || "").slice(0, 8) || "—"}</span></span>
+                            <span className="audit-item">Generated: <span>{fmtGenerated(ai.created_at)}</span></span>
+                            <span className="audit-item">Schema: <span>{ai.content_schema_version || "—"}</span></span>
+                          </div>
+                          <div className="disclaimer">
+                            AI annotations are non-authoritative and generated by an automated pipeline. They are not medical advice, do not constitute a clinical diagnosis, and must not be used as a substitute for clinician review. All findings require independent clinical interpretation.
+                          </div>
+                        </div>
+                      )}
+
+                      {aiTab === "email" && (
+                        <div className="composer-wrap">
+                          <div className="composer-top">
+                            <div className="composer-title-row">
+                              <div className="composer-icon">✉</div>
+                              <div>
+                                <div className="composer-title">Draft patient message</div>
+                                <div className="composer-subtitle">AI-generated · ingestion id: {(demoResult.ingestionId || "").slice(0, 18)}</div>
+                              </div>
+                            </div>
+                            <div className="draft-tag"><span className="draft-dot" />AWAITING PHYSICIAN REVIEW</div>
+                          </div>
+                          <div className="meta-fields">
+                            <div className="meta-field"><span className="meta-field-val">Patient: {PATIENT_NAME}</span></div>
+                            <div className="meta-field"><span className="meta-field-val">Lab date: {collected}</span></div>
+                          </div>
+                          <div className="message-area">
+                            <textarea
+                              ref={textareaRef}
+                              className="msg-textarea"
+                              value={emailBody}
+                              onChange={(e) => setEmailBody(e.target.value)}
+                              spellCheck={true}
+                            />
+                          </div>
+                          <div className="draft-actions">
+                            <button className="draft-btn secondary" onClick={resetDraft}>Reset draft</button>
+                            <div className="draft-actions-right">
+                              <button className="draft-btn" onClick={copyDraft}>{copied ? "Copied ✓" : "Copy"}</button>
+                              <button className="draft-btn primary" onClick={sendDraft}>Send</button>
+                            </div>
+                          </div>
+                          {sentNotice && <div className="send-notice">This is a demo. The message wasn't actually delivered.</div>}
+                          <div className="audit-footer">
+                            <span className="audit-item">Model: <span title={ai.model_id || ""}>{shortModelName(ai.model_id)}</span></span>
+                            <span className="audit-item">Draft ID: <span>—</span></span>
+                            <span className="audit-item">Generated: <span>{fmtGenerated(ai.created_at)}</span></span>
+                            <span className="audit-item">Schema: <span>{ai.content_schema_version || "—"}</span></span>
+                          </div>
+                          <div className="physician-note">
+                            <div className="pn-text">
+                              <strong>Physician review required.</strong> This draft was generated by an AI pipeline based on structured lab annotations and is provided as a starting point only. You must review, edit as needed, and personally approve before sending. This message does not constitute medical advice and must not be sent without clinical sign-off.
+                            </div>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  );
+                })()}
               </>
             )}
           </div>
-        </div>
-      </div>
-
-      <div className="section" id="provenance">
-        <div className="section-label">Provenance</div>
-        <div className="section-title">Full audit trail, by design</div>
-        <div className="section-sub">
-          Every ingestion emits a timestamped event log. Every step. Every outcome. Built-in, not
-          bolted-on.
-        </div>
-
-        <div className="audit-grid">
-          {demoPhase === "done" && demoResult?.events ? (
-            <div className="audit-card">
-              <div className="audit-title">PROCESSING EVENTS — {activeTab === "valid" ? "Valid CSV" : "Invalid CSV"}</div>
-              {demoResult.events.map((evt) => {
-                const timestampStr = evt.occurred_at || evt.timestamp || evt.created_at || "";
-                const date = new Date(timestampStr);
-                const ts = !isNaN(date.getTime())
-                  ? `${date.toLocaleTimeString("en-US", { hour12: false })}.${String(date.getMilliseconds()).padStart(3, "0")}`
-                  : "N/A";
-                const isSuccess = evt.event_type.endsWith("_SUCCEEDED");
-                const isFailed = evt.event_type.endsWith("_FAILED");
-                let stageClass = "es-parse";
-                if (evt.event_type.includes("VALIDATION")) stageClass = "es-valid";
-                else if (evt.event_type.includes("NORMALIZATION")) stageClass = "es-norm";
-                else if (evt.event_type.includes("FHIR")) stageClass = "es-fhir";
-
-                return (
-                  <div key={evt.event_id} className="event-row">
-                    <span className="event-ts">{ts}</span>
-                    <span
-                      className={`event-stage ${!isFailed ? stageClass : ""}`}
-                      style={
-                        isFailed
-                          ? {
-                              background: "rgba(255,77,106,0.08)",
-                              color: "var(--danger)",
-                            }
-                          : {}
-                      }
-                    >
-                      {evt.event_type.replace(/_SUCCEEDED|_FAILED/g, "").replace(/_/g, " ")}
-                    </span>
-                    <span className="event-msg" style={isFailed ? { color: "var(--danger)" } : {}}>
-                      {evt.message}
-                    </span>
-                  </div>
-                );
-              })}
-            </div>
-          ) : (
-            <>
-              <div className="audit-card">
-                <div className="audit-title">PROCESSING EVENTS — Valid CSV</div>
-                <div className="event-row">
-                  <span className="event-ts">09:14:00.012</span>
-                  <span className="event-stage es-parse">PARSE</span>
-                  <span className="event-msg">file parsed → 1 panel, 12 tests</span>
-                </div>
-                <div className="event-row">
-                  <span className="event-ts">09:14:00.098</span>
-                  <span className="event-stage es-valid">VALIDATION</span>
-                  <span className="event-msg">all rules passed</span>
-                </div>
-                <div className="event-row">
-                  <span className="event-ts">09:14:00.134</span>
-                  <span className="event-stage es-norm">NORMALIZE</span>
-                  <span className="event-msg">FHIR mapping applied</span>
-                </div>
-                <div className="event-row">
-                  <span className="event-ts">09:14:00.201</span>
-                  <span className="event-stage es-fhir">PERSIST</span>
-                  <span className="event-msg">DiagnosticReport + 12 Observations written</span>
-                </div>
-              </div>
-              <div className="audit-card">
-                <div className="audit-title">PROCESSING EVENTS — Invalid CSV</div>
-                <div className="event-row">
-                  <span className="event-ts">09:21:04.011</span>
-                  <span className="event-stage es-parse">PARSE</span>
-                  <span className="event-msg">file parsed → 1 panel, 11 tests</span>
-                </div>
-                <div className="event-row">
-                  <span className="event-ts">09:21:04.089</span>
-                  <span
-                    className="event-stage"
-                    style={{
-                      background: "rgba(255,77,106,0.08)",
-                      color: "var(--danger)",
-                    }}
-                  >
-                    VALIDATION
-                  </span>
-                  <span className="event-msg" style={{ color: "var(--danger)" }}>
-                    failed: missing 'unit' on row 3
-                  </span>
-                </div>
-              </div>
-            </>
-          )}
         </div>
       </div>
 

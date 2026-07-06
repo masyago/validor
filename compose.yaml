@@ -5,8 +5,15 @@ services:
       context: .
     ports:
       - ${API_PORT:-5001}:5000
+    env_file:
+      - .env
     environment:
       - DATABASE_URL=postgresql+psycopg://postgres:postgres@db:5432/cla
+      - AWS_REGION=${AWS_REGION:-us-east-1}
+      - AWS_CONFIG_FILE=/aws/config
+      - AWS_SHARED_CREDENTIALS_FILE=/aws/credentials
+    volumes:
+      - ~/.aws:/aws:ro
     depends_on:
       migrate:
         condition: service_completed_successfully

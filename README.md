@@ -8,6 +8,7 @@ validation, standardized normalization, and explicit provenance tracking.
 
 Future iterations will add AI-assisted enrichment via controlled, 
 non-authoritative LLM workflows.
+A human clinician is always the accountable sender; the AI's contribution is fully traceable
 
 ## Demo
 
