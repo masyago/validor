@@ -770,6 +770,21 @@ class TestIngestionServiceIntegration:
 
         def _capture_ai_request(request):
             captured["request"] = request
+            return AIEnrichmentResult(
+                guideline_context=[],
+                prompt_messages=[],
+                llm_response_text=None,
+                llm_response_content=None,
+                provider=None,
+                model_id=None,
+                prompt_version="v1.0.0",
+                temperature=None,
+                content_schema_version="v1.0.0",
+                input_hash="",
+                created_at=datetime.now(timezone.utc),
+                rejection_reason=None,
+                failure_reason="stubbed",
+            )
 
         monkeypatch.setattr(
             ingestion_service_mod,
@@ -789,7 +804,10 @@ class TestIngestionServiceIntegration:
 
         request = captured["request"]
         assert request.ingestion_id == ingestion_id
-        assert request.patient_id == current_observations[0].patient_id
+        # De-identification boundary: patient_id must never cross into the AI
+        # layer; a job-scoped correlation_id carries the identity instead.
+        assert not hasattr(request, "patient_id")
+        assert request.correlation_id is not None
         assert request.panel_codes == [
             report.panel_code for report in current_diagnostic_reports
         ]

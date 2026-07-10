@@ -114,6 +114,37 @@ def test_cli_demo_prints_ai_annotation_section_for_completed_ingestion():
                     },
                 ],
             ),
+            _FakeResponse(
+                200,
+                {
+                    "patient_message_id": "msg-123",
+                    "ingestion_id": "ing-123",
+                    "patient_id": "PAT-1",
+                    "patient_given_name": "Sam",
+                    "patient_family_name": "Rivera",
+                    "patient_email": "sam.rivera@demo.invalid",
+                    "validation_status": "ACCEPTED",
+                    "review_status": "PENDING_REVIEW",
+                    "provider": "amazon_bedrock",
+                    "model_id": "claude-haiku-4-5",
+                    "correlation_id": "corr-123",
+                    "draft_content_json": {
+                        "subject": "Blood test results",
+                        "opening": "Your results are now available. Here is a summary.",
+                        "normal_summary": "Most of your results were normal.",
+                        "abnormal_findings": [
+                            {
+                                "title": "Triglycerides",
+                                "analyte_codes": ["TG"],
+                                "explanation": "Triglycerides were a little high and will be monitored.",
+                            }
+                        ],
+                        "recommendation": "Your care team will follow up if needed.",
+                    },
+                    "final_content_json": None,
+                    "content_schema_version": "v1.1.0",
+                },
+            ),
         ]
     )
 
@@ -148,3 +179,13 @@ def test_cli_demo_prints_ai_annotation_section_for_completed_ingestion():
     assert "184 mg/dL" in output
     assert "confidence 0.65" in output
     assert "trend: first result" in output
+
+    # Patient message section
+    assert "PATIENT MESSAGE" in output
+    assert "review_status" in output
+    assert "PENDING_REVIEW" in output
+    assert "Sam Rivera" in output
+    assert "Subject: Blood test results" in output
+    assert "Most of your results were normal." in output
+    assert "Triglycerides" in output
+    assert "Your care team will follow up if needed." in output

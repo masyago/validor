@@ -51,6 +51,14 @@ class ProcessingEventType(enum.Enum):
     AI_ENRICHMENT_SUCCEEDED = "AI_ENRICHMENT_SUCCEEDED"
     AI_ENRICHMENT_FAILED = "AI_ENRICHMENT_FAILED"
 
+    MESSAGE_DRAFT_STARTED = "MESSAGE_DRAFT_STARTED"
+    MESSAGE_DRAFT_SKIPPED = "MESSAGE_DRAFT_SKIPPED"
+    MESSAGE_DRAFT_SUCCEEDED = "MESSAGE_DRAFT_SUCCEEDED"
+    MESSAGE_DRAFT_FAILED = "MESSAGE_DRAFT_FAILED"
+
+    # Clinician-approved demo "send" of a patient message (no real delivery)
+    MESSAGE_SENT = "MESSAGE_SENT"
+
 
 processing_event_type_enum = SqlEnum(
     ProcessingEventType,
@@ -68,6 +76,7 @@ class ProcessingEventTargetType(enum.Enum):
     DIAGNOSTIC_REPORT = "diagnostic_report"
     OBSERVATION = "observation"
     AI_ANNOTATION = "ai_annotation"
+    PATIENT_MESSAGE = "patient_message"
 
 
 processing_event_target_type_enum = SqlEnum(
@@ -85,6 +94,7 @@ class ProcessingEventActor(enum.Enum):
     VALIDATOR = "validator"
     NORMALIZER = "normalizer"
     AI_WORKER = "ai-worker"
+    MESSAGE_DRAFTER = "message-drafter"
 
 
 processing_event_actor_enum = SqlEnum(

@@ -24,7 +24,7 @@ from app.ai.content_versions.ai_annotation_content_v1_0_0 import (
     CONTENT_SCHEMA_VERSION,
     parse_ai_annotation_content,
 )
-from app.ai.prompt_versions.ai_annotation_prompt_v1_0_0 import (
+from app.ai.prompt_versions.ai_annotation_prompt_v1_1_0 import (
     ANNOTATION_PROMPT,
     HistoricalObservation,
     ObservationRow,
@@ -63,7 +63,10 @@ class ObservationContext:
 @dataclass(frozen=True)
 class AIEnrichmentRequest:
     ingestion_id: UUID
-    patient_id: str
+    # Job-scoped token minted on the trusted side. patient_id/PHI is resolved
+    # server-side (for the historical fetch) BEFORE the request is built and is
+    # deliberately NOT carried here — nothing PHI crosses into the AI layer.
+    correlation_id: UUID
     panel_codes: list[str]
     collected_at: datetime
     current_observations: list[ObservationContext]

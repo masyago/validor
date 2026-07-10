@@ -43,7 +43,9 @@ class Panel(Base):
     ingestion_id: Mapped[uuid.UUID] = mapped_column(
         Uuid, ForeignKey("ingestion.ingestion_id"), nullable=False
     )
-    patient_id: Mapped[str] = mapped_column(Text, nullable=False)
+    patient_id: Mapped[str] = mapped_column(
+        Text, ForeignKey("patient.patient_id"), nullable=False
+    )
     panel_code: Mapped[str] = mapped_column(Text, nullable=False)
     sample_id: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
 

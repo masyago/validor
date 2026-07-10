@@ -111,7 +111,7 @@ def test_retrieve_guideline_context_invokes_retriever_with_built_query() -> (
 ):
     request = AIEnrichmentRequest(
         ingestion_id=uuid4(),
-        patient_id="PAT-1",
+        correlation_id=uuid4(),
         panel_codes=["BMP"],
         collected_at=datetime.now(timezone.utc),
         current_observations=[
@@ -144,7 +144,7 @@ def test_retrieve_guideline_context_skips_retriever_when_no_abnormal_results() -
 ):
     request = AIEnrichmentRequest(
         ingestion_id=uuid4(),
-        patient_id="PAT-1",
+        correlation_id=uuid4(),
         panel_codes=["BMP"],
         collected_at=datetime.now(timezone.utc),
         current_observations=[
@@ -173,7 +173,7 @@ def test_retrieve_guideline_context_skips_retriever_when_no_abnormal_results() -
 def test_orchestrate_ai_enrichment_builds_prompt_and_invokes_llm() -> None:
     request = AIEnrichmentRequest(
         ingestion_id=uuid4(),
-        patient_id="PAT-1",
+        correlation_id=uuid4(),
         panel_codes=["BMP", "LIPID"],
         collected_at=datetime(2026, 6, 11, 12, 0, tzinfo=timezone.utc),
         current_observations=[
@@ -227,7 +227,7 @@ def test_orchestrate_ai_enrichment_returns_rejected_result_for_invalid_llm_outpu
 ):
     request = AIEnrichmentRequest(
         ingestion_id=uuid4(),
-        patient_id="PAT-1",
+        correlation_id=uuid4(),
         panel_codes=["LIPID"],
         collected_at=datetime(2026, 6, 11, 12, 0, tzinfo=timezone.utc),
         current_observations=[
@@ -270,7 +270,7 @@ def test_build_default_llm_uses_bedrock_env(
     assert llm.kwargs == {
         "model_id": "anthropic.test-model-v1:0",
         "provider": "anthropic",
-        "model_kwargs": {"temperature": 0.0},
+        "model_kwargs": {"temperature": 0.0, "max_tokens": 6000},
         "region_name": "us-east-1",
     }
 
@@ -297,7 +297,7 @@ def test_build_default_llm_uses_provider_for_inference_profile_arn(
             "inference-profile/us.anthropic.claude-haiku-4-5-20251001-v1:0"
         ),
         "provider": "anthropic",
-        "model_kwargs": {"temperature": 0.0},
+        "model_kwargs": {"temperature": 0.0, "max_tokens": 6000},
         "region_name": "us-east-1",
     }
 
@@ -311,7 +311,7 @@ def test_orchestrate_ai_enrichment_returns_failure_reason_when_bedrock_config_mi
 
     request = AIEnrichmentRequest(
         ingestion_id=uuid4(),
-        patient_id="PAT-1",
+        correlation_id=uuid4(),
         panel_codes=["BMP"],
         collected_at=datetime.now(timezone.utc),
         current_observations=[],

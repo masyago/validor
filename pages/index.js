@@ -204,6 +204,7 @@ body>*{position:relative;z-index:1}
 .ai-aug .finding-card.critical{border-left:3px solid var(--danger)}
 .ai-aug .finding-card.high{border-left:3px solid var(--warn)}
 .ai-aug .finding-card.elevated{border-left:3px solid #7ec4ff}
+.ai-aug .finding-card.improved{border-left:3px solid var(--success)}
 .ai-aug .finding-header{display:flex;align-items:center;gap:12px;padding:14px 18px;cursor:pointer;user-select:none}
 .ai-aug .flag-pill{display:inline-flex;padding:3px 10px;border-radius:5px;font-size:10px;font-weight:700;font-family:var(--mono);letter-spacing:0.05em;white-space:nowrap}
 .ai-aug .flag-critical_high,.ai-aug .flag-critical_low{background:rgba(255,77,106,0.12);color:var(--danger);border:1px solid rgba(255,77,106,0.3)}
@@ -216,6 +217,7 @@ body>*{position:relative;z-index:1}
 .ai-aug .val-high,.ai-aug .val-low{color:var(--warn)}
 .ai-aug .val-normal{color:var(--success)}
 .ai-aug .val-unknown{color:var(--white)}
+.ai-aug .val-improved{color:var(--success)}
 .ai-aug .finding-chevron{color:var(--muted);font-size:12px;transition:transform .2s;margin-left:4px}
 .ai-aug .finding-chevron.open{transform:rotate(180deg)}
 .ai-aug .finding-body{padding:0 18px 14px;border-top:1px solid var(--border)}
@@ -231,6 +233,18 @@ body>*{position:relative;z-index:1}
 .ai-aug .hist-date{color:var(--blue4)}
 .ai-aug .hist-val{color:#c8e6ff;text-align:right}
 .ai-aug .hist-empty{margin-top:10px;font-size:12px;color:var(--muted);font-family:var(--mono)}
+.ai-aug .hist-chart{position:relative;margin-top:12px;max-width:320px}
+.ai-aug .hist-chart-svg{display:block}
+.ai-aug .hist-chart-line{stroke:var(--blue3);stroke-width:2}
+.ai-aug .hist-chart-axis{stroke:var(--border2);stroke-width:1}
+.ai-aug .hist-chart-refline{stroke:var(--muted);stroke-width:1.25;stroke-dasharray:4 3}
+.ai-aug .hist-chart-refline-label{fill:var(--muted);font-size:9px;font-family:var(--mono)}
+.ai-aug .hist-chart-axis-label{fill:var(--muted);font-size:9px;font-family:var(--mono)}
+.ai-aug .hist-chart-hit{fill:transparent;cursor:pointer}
+.ai-aug .hist-chart-tooltip{position:absolute;transform:translate(-50%,-115%);background:var(--navy2);border:1px solid var(--border2);border-radius:8px;padding:8px 10px;font-family:var(--mono);font-size:11px;white-space:nowrap;pointer-events:none;box-shadow:0 4px 14px rgba(0,0,0,0.35);z-index:5}
+.ai-aug .hist-chart-tooltip-val{font-weight:700;color:var(--white)}
+.ai-aug .hist-chart-tooltip-date{color:var(--muted);margin-top:2px}
+.ai-aug .hist-chart-tooltip-flag{margin-top:2px;font-weight:600;letter-spacing:0.04em}
 .ai-aug .other-table-wrap{background:var(--navy2);border:1px solid var(--border);border-radius:10px;overflow:hidden;margin-bottom:20px}
 .ai-aug .other-row{display:grid;grid-template-columns:1fr 100px 100px 90px;align-items:center;padding:10px 18px;border-bottom:1px solid rgba(58,155,255,0.07);font-size:13px;gap:8px}
 .ai-aug .other-row:last-child{border:none}
@@ -252,9 +266,17 @@ body>*{position:relative;z-index:1}
 .ai-aug .composer-title{font-size:14px;font-weight:600;color:var(--white)}
 .ai-aug .composer-subtitle{font-size:12px;color:var(--muted);margin-top:1px;font-family:var(--mono)}
 .ai-aug .draft-tag{display:inline-flex;align-items:center;gap:5px;background:rgba(245,166,35,0.1);border:1px solid rgba(245,166,35,0.3);border-radius:5px;padding:3px 10px;font-size:11px;font-weight:600;color:var(--warn);font-family:var(--mono)}
+.ai-aug .draft-tag.status-rejected{background:rgba(255,77,106,0.1);border-color:rgba(255,77,106,0.3);color:var(--danger)}
+.ai-aug .draft-tag.status-approved{background:rgba(0,232,122,0.1);border-color:rgba(0,232,122,0.3);color:var(--success)}
+.ai-aug .draft-tag.status-pending{background:rgba(58,155,255,0.1);border-color:rgba(58,155,255,0.3);color:var(--blue3)}
 .ai-aug .draft-dot{width:5px;height:5px;border-radius:50%;background:var(--warn)}
+.ai-aug .draft-tag.status-rejected .draft-dot{background:var(--danger)}
+.ai-aug .draft-tag.status-approved .draft-dot{background:var(--success)}
+.ai-aug .draft-tag.status-pending .draft-dot{background:var(--blue3);animation:stagePulse 1s ease-in-out infinite}
 .ai-aug .meta-fields{display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--border);border-bottom:1px solid var(--border)}
 .ai-aug .meta-field{background:var(--navy2);padding:11px 22px;display:flex;align-items:center;gap:10px}
+.ai-aug .meta-field-full{grid-column:1 / -1}
+.ai-aug .meta-field-icon{color:var(--blue3);display:flex;align-items:center;flex-shrink:0}
 .ai-aug .meta-field-val{font-size:13px;color:var(--white);font-family:var(--mono)}
 .ai-aug .message-area{padding:20px 22px;border-bottom:1px solid var(--border)}
 .ai-aug .msg-toolbar{display:flex;align-items:center;gap:6px;margin-bottom:10px;flex-wrap:wrap}
@@ -272,7 +294,15 @@ body>*{position:relative;z-index:1}
 .ai-aug .draft-btn.primary{background:var(--blue3);border-color:var(--blue3);color:#04121f}
 .ai-aug .draft-btn.primary:hover:not(:disabled){background:var(--white);border-color:var(--white)}
 .ai-aug .draft-btn:disabled{opacity:0.45;cursor:not-allowed}
+.ai-aug .draft-btn.danger{color:var(--danger);border-color:rgba(255,77,106,0.3)}
+.ai-aug .draft-btn.danger:hover:not(:disabled){background:var(--danger);border-color:var(--danger);color:#04121f}
+.ai-aug .reject-panel{display:flex;flex-direction:column;gap:10px;padding:14px 22px;border-top:1px solid var(--border);background:rgba(255,77,106,0.05)}
+.ai-aug .reject-label{font-size:11px;font-weight:600;color:var(--danger);font-family:var(--mono);text-transform:uppercase;letter-spacing:.04em}
+.ai-aug .reject-textarea{width:100%;background:rgba(5,14,26,0.6);border:1px solid rgba(255,77,106,0.3);border-radius:8px;padding:12px;font-size:13px;color:var(--white);font-family:var(--font);line-height:1.6;resize:vertical;min-height:80px;outline:none;transition:border-color .2s}
+.ai-aug .reject-textarea:focus{border-color:var(--danger)}
+.ai-aug .reject-panel-actions{display:flex;align-items:center;justify-content:flex-end;gap:10px}
 .ai-aug .send-notice{font-size:11px;color:var(--warn);font-family:var(--mono);text-align:right;padding:0 22px 12px}
+.ai-aug .rejected-notice{font-size:12px;font-weight:600;color:var(--danger);font-family:var(--mono);text-align:center;padding:10px 22px;background:rgba(255,77,106,0.06);border-top:1px solid rgba(255,77,106,0.2)}
 .ai-aug .physician-note{display:flex;align-items:flex-start;gap:10px;padding:12px 22px;background:rgba(0,0,0,0.15);border-top:1px solid var(--border)}
 .ai-aug .pn-text{font-size:12px;color:var(--muted);line-height:1.6;font-style:italic}
 .ai-aug .pn-text strong{color:var(--blue4);font-style:normal;font-weight:600}
@@ -289,7 +319,7 @@ const STAGE_MAP = [
   { label: "NORMALIZE", ok: "NORMALIZATION_SUCCEEDED", fail: "NORMALIZATION_FAILED" },
   { label: "PERSIST", ok: "FHIR_JSON_GENERATION_SUCCEEDED", fail: "FHIR_JSON_GENERATION_FAILED" },
   { label: "AI ANNOTATION", ok: "AI_ENRICHMENT_SUCCEEDED", fail: "AI_ENRICHMENT_FAILED" },
-  { label: "EMAIL DRAFT", ok: "PATIENT_MESSAGE_SUCCEEDED", fail: "PATIENT_MESSAGE_FAILED" },
+  { label: "MESSAGE DRAFT", ok: "MESSAGE_DRAFT_SUCCEEDED", fail: "MESSAGE_DRAFT_FAILED" },
 ];
 
 function deriveStageSummary(events) {
@@ -304,6 +334,139 @@ function deriveStageSummary(events) {
     if (types.has(ok)) return { label, state: "pass" };
     return { label, state: "skip" };
   });
+}
+
+function flagPointColor(flag) {
+  if (flag === "critical_high" || flag === "critical_low") return "var(--danger)";
+  if (flag === "high" || flag === "low") return "var(--warn)";
+  if (flag === "normal") return "var(--success)";
+  return "var(--muted)";
+}
+
+function fmtChartDate(iso) {
+  const d = new Date(iso);
+  return isNaN(d.getTime()) ? "" : d.toISOString().slice(0, 10);
+}
+
+function fmtAxisNum(v) {
+  if (Math.abs(v) >= 100) return String(Math.round(v));
+  if (Math.abs(v) >= 10) return String(Math.round(v * 10) / 10);
+  return String(Math.round(v * 100) / 100);
+}
+
+// Renders a single-analyte trend: value over time with dashed low/high
+// reference lines. Kept as a top-level component (not nested in Home) so its
+// hover state isn't torn down on every parent re-render.
+function HistoryChart({ series, unit, refLow, refHigh }) {
+  const [hoverIdx, setHoverIdx] = useState(null);
+  if (!series || series.length === 0) return null;
+
+  const width = 300;
+  const height = 132;
+  const padLeft = 34;
+  const padRight = 46;
+  const padTop = 14;
+  const padBottom = 26;
+  const plotW = width - padLeft - padRight;
+  const plotH = height - padTop - padBottom;
+  const plotBottom = padTop + plotH;
+
+  const values = series.map((s) => s.value_num);
+  const refVals = [refLow, refHigh].filter((v) => typeof v === "number");
+  const allVals = values.concat(refVals);
+  let yMin = Math.min(...allVals);
+  let yMax = Math.max(...allVals);
+  if (yMin === yMax) {
+    yMin -= 1;
+    yMax += 1;
+  }
+  // Extra headroom (vs. a plain 5-10%) so a value sitting below the low
+  // reference line still has visible separation from the axis and doesn't
+  // read as clipped/crowded against the ref line or the plot edge.
+  const pad = (yMax - yMin) * 0.18;
+  yMin -= pad;
+  yMax += pad;
+
+  const xAt = (i) =>
+    series.length === 1 ? padLeft + plotW / 2 : padLeft + (i / (series.length - 1)) * plotW;
+  const yAt = (v) => padTop + (1 - (v - yMin) / (yMax - yMin)) * plotH;
+
+  const points = series.map((s, i) => ({ ...s, x: xAt(i), y: yAt(s.value_num) }));
+  const linePath = points.map((p, i) => `${i === 0 ? "M" : "L"}${p.x.toFixed(1)},${p.y.toFixed(1)}`).join(" ");
+  const hovered = hoverIdx != null ? points[hoverIdx] : null;
+
+  // Three y-axis labels: the axis/x-axis intersection (bottom), a midpoint,
+  // and one near the top (nudged down slightly so its text isn't clipped).
+  const yTicks = [
+    { value: yMin, y: plotBottom },
+    { value: (yMin + yMax) / 2, y: (padTop + plotBottom) / 2 },
+    { value: yMax, y: padTop + 3 },
+  ];
+
+  return (
+    <div className="hist-chart">
+      <svg width={width} height={height} className="hist-chart-svg">
+        <line x1={padLeft} x2={padLeft} y1={padTop} y2={plotBottom} className="hist-chart-axis" />
+        <line x1={padLeft} x2={width - padRight} y1={plotBottom} y2={plotBottom} className="hist-chart-axis" />
+        {yTicks.map((t, i) => (
+          <g key={i}>
+            <line x1={padLeft - 4} x2={padLeft} y1={t.y} y2={t.y} className="hist-chart-axis" />
+            <text x={padLeft - 7} y={t.y} textAnchor="end" dominantBaseline="middle" className="hist-chart-axis-label">
+              {fmtAxisNum(t.value)}
+            </text>
+          </g>
+        ))}
+        {refLow != null && (
+          <>
+            <line x1={padLeft} x2={width - padRight} y1={yAt(refLow)} y2={yAt(refLow)} className="hist-chart-refline" />
+            <text x={width - padRight + 4} y={yAt(refLow)} dominantBaseline="middle" className="hist-chart-refline-label">
+              {refLow}
+            </text>
+          </>
+        )}
+        {refHigh != null && (
+          <>
+            <line x1={padLeft} x2={width - padRight} y1={yAt(refHigh)} y2={yAt(refHigh)} className="hist-chart-refline" />
+            <text x={width - padRight + 4} y={yAt(refHigh)} dominantBaseline="middle" className="hist-chart-refline-label">
+              {refHigh}
+            </text>
+          </>
+        )}
+        {points.length > 1 && <path d={linePath} className="hist-chart-line" fill="none" />}
+        {points.map((p, i) => (
+          <g key={i} onMouseEnter={() => setHoverIdx(i)} onMouseLeave={() => setHoverIdx(null)}>
+            <circle cx={p.x} cy={p.y} r={10} className="hist-chart-hit" />
+            <circle cx={p.x} cy={p.y} r={p.isCurrent ? 5 : 3.5} style={{ fill: flagPointColor(p.flag) }} />
+          </g>
+        ))}
+        <text x={padLeft} y={height - 4} className="hist-chart-axis-label">
+          {fmtChartDate(points[0].effective_at)}
+        </text>
+        {points.length > 1 && (
+          <text x={width - padRight} y={height - 4} textAnchor="end" className="hist-chart-axis-label">
+            {fmtChartDate(points[points.length - 1].effective_at)}
+          </text>
+        )}
+      </svg>
+      {hovered && (
+        <div
+          className="hist-chart-tooltip"
+          style={{ left: `${(hovered.x / width) * 100}%`, top: `${(hovered.y / height) * 100}%` }}
+        >
+          <div className="hist-chart-tooltip-val">
+            {hovered.value_num}
+            {unit ? ` ${unit}` : ""}
+          </div>
+          <div className="hist-chart-tooltip-date">{fmtChartDate(hovered.effective_at)}</div>
+          {hovered.flag && hovered.flag !== "unknown" && (
+            <div className="hist-chart-tooltip-flag" style={{ color: flagPointColor(hovered.flag) }}>
+              {hovered.flag.toUpperCase().replace("_", " ")}
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
 }
 
 export default function Home() {
@@ -323,8 +486,13 @@ export default function Home() {
   const [emailBody, setEmailBody] = useState("");
   const [copied, setCopied] = useState(false);
   const [sentNotice, setSentNotice] = useState(false);
+  const [patientMessage, setPatientMessage] = useState(null);
+  const [rejecting, setRejecting] = useState(false);
+  const [rejectReason, setRejectReason] = useState("");
+  const [aiReady, setAiReady] = useState(false);
   const pollRef = useRef(null);
   const textareaRef = useRef(null);
+  const aiReadyCheckedRef = useRef(false);
 
   useEffect(() => () => clearInterval(pollRef.current), []);
 
@@ -345,6 +513,9 @@ export default function Home() {
     setHistory({});
     setShowOther(false);
     setEmailBody("");
+    setPatientMessage(null);
+    setAiReady(false);
+    aiReadyCheckedRef.current = false;
   }
 
   async function runDemo() {
@@ -353,6 +524,8 @@ export default function Home() {
     setDemoResult(null);
     setDemoError(null);
     setLoadingStage(0);
+    setAiReady(false);
+    aiReadyCheckedRef.current = false;
 
     const csvPath = activeTab === "valid" ? "/demo-csv/valid_01.csv" : "/demo-csv/invalid_missing_fields.csv";
     const instrumentId = activeTab === "valid" ? "demo-instrument-01" : "demo-instrument-02";
@@ -385,6 +558,52 @@ export default function Home() {
     }
     setLoadingStage(1);
 
+    // Reveal the AI annotation tab as soon as its own stage finishes, without
+    // waiting for message-draft (which runs after it and can take longer) —
+    // detected via the processing-event log rather than overall ingestion
+    // status, since that only goes terminal once both AI stages are done.
+    async function checkAiReadyEarly() {
+      if (aiReadyCheckedRef.current) return;
+      const evRes = await fetch(`/v1/ingestions/${ingestionId}/processing-events`).catch(() => null);
+      const events = evRes ? await evRes.json().catch(() => null) : null;
+      if (!Array.isArray(events)) return;
+      const types = new Set(events.map((e) => e.event_type));
+      const succeeded = types.has("AI_ENRICHMENT_SUCCEEDED");
+      const failed = types.has("AI_ENRICHMENT_FAILED");
+      if (!succeeded && !failed) return;
+      aiReadyCheckedRef.current = true;
+
+      let reports = [];
+      let observations = [];
+      let aiAnnotation = null;
+      if (succeeded) {
+        const [rpRes, obRes, aiRes] = await Promise.allSettled([
+          fetch(`/v1/ingestions/${ingestionId}/diagnostic-reports?include_json=1`).then((r) => r.json()),
+          fetch(`/v1/ingestions/${ingestionId}/observations?include_json=1`).then((r) => r.json()),
+          fetch(`/v1/ingestions/${ingestionId}/ai_annotation`).then((r) => (r.ok ? r.json() : [])),
+        ]);
+        observations = obRes.status === "fulfilled" && Array.isArray(obRes.value) ? obRes.value : [];
+        reports = rpRes.status === "fulfilled" && Array.isArray(rpRes.value) ? rpRes.value : [];
+        const aiRows = aiRes.status === "fulfilled" && Array.isArray(aiRes.value) ? aiRes.value : [];
+        aiAnnotation =
+          aiRows.find((a) => a && a.validation_status === "ACCEPTED" && a.content_json) ||
+          aiRows.find((a) => a && a.content_json) ||
+          null;
+      }
+      setDemoResult({
+        ingestionId,
+        status: undefined,
+        errorDetail: undefined,
+        events,
+        reports,
+        observations,
+        aiAnnotation,
+        patientMessage: null,
+        patientId: observations.find((o) => o && o.patient_id)?.patient_id || null,
+      });
+      setAiReady(true);
+    }
+
     const TERMINAL = new Set(["COMPLETED", "FAILED VALIDATION", "FAILED"]);
     let finalStatus = null;
     await new Promise((resolve) => {
@@ -393,7 +612,10 @@ export default function Home() {
         if (!res) return;
         const body = await res.json().catch(() => null);
         if (!body) return;
-        if (body.status === "PROCESSING") setLoadingStage((s) => Math.min(s + 1, 5));
+        if (body.status === "PROCESSING") {
+          setLoadingStage((s) => Math.min(s + 1, 5));
+          checkAiReadyEarly();
+        }
         if (TERMINAL.has(body.status)) {
           finalStatus = body;
           clearInterval(pollRef.current);
@@ -403,11 +625,12 @@ export default function Home() {
     });
     setLoadingStage(6);
 
-    const [evRes, rpRes, obRes, aiRes] = await Promise.allSettled([
+    const [evRes, rpRes, obRes, aiRes, pmRes] = await Promise.allSettled([
       fetch(`/v1/ingestions/${ingestionId}/processing-events`).then((r) => r.json()),
       fetch(`/v1/ingestions/${ingestionId}/diagnostic-reports?include_json=1`).then((r) => r.json()),
       fetch(`/v1/ingestions/${ingestionId}/observations?include_json=1`).then((r) => r.json()),
       fetch(`/v1/ingestions/${ingestionId}/ai_annotation`).then((r) => (r.ok ? r.json() : [])),
+      fetch(`/v1/ingestions/${ingestionId}/patient_message`).then((r) => (r.ok ? r.json() : null)),
     ]);
 
     const observations = obRes.status === "fulfilled" && Array.isArray(obRes.value) ? obRes.value : [];
@@ -418,6 +641,7 @@ export default function Home() {
       aiRows.find((a) => a && a.validation_status === "ACCEPTED" && a.content_json) ||
       aiRows.find((a) => a && a.content_json) ||
       null;
+    const patientMessage = pmRes.status === "fulfilled" ? pmRes.value : null;
     const patientId = observations.find((o) => o && o.patient_id)?.patient_id || null;
 
     const resultObj = {
@@ -428,11 +652,20 @@ export default function Home() {
       reports,
       observations,
       aiAnnotation,
+      patientMessage,
       patientId,
     };
 
     setDemoResult(resultObj);
-    setEmailBody(buildEmailTemplate(resultObj));
+    setPatientMessage(patientMessage);
+    // Prefer the clinician-reviewable draft the backend actually produced;
+    // fall back to a local template when no LLM-backed draft exists.
+    setEmailBody(
+      patientMessage ? patientMessageToText(patientMessage, resultObj) : buildEmailTemplate(resultObj)
+    );
+    // Fallback in case the early per-tick check never caught the AI stage
+    // (e.g. it finished between polls) — make sure the tab still reveals.
+    if (resultObj.status === "COMPLETED") setAiReady(true);
     setDemoPhase("done");
   }
 
@@ -469,7 +702,14 @@ export default function Home() {
     return k === "unknown" ? "—" : k.toUpperCase();
   }
 
-  function cardPriorityClass(o) {
+  // True when the AI has flagged this finding as a result that was out of
+  // range in its most recent prior result but is back within range now.
+  function isImprovedFinding(f) {
+    return (f?.trend_direction || "").toString().trim().toLowerCase() === "improved";
+  }
+
+  function cardPriorityClass(o, improved) {
+    if (improved) return "improved";
     const k = flagKey(o);
     if (k.startsWith("critical")) return "critical";
     if (k === "high" || k === "low") return "high";
@@ -477,7 +717,11 @@ export default function Home() {
   }
 
   // Higher rank = more clinically urgent; used to order priority findings.
-  function flagRank(o) {
+  // Improved findings rank below everything else, including "normal" — they
+  // are good news, not something needing attention, so they sit at the
+  // bottom of the list.
+  function flagRank(o, improved) {
+    if (improved) return -1;
     const k = flagKey(o);
     if (k.startsWith("critical")) return 3;
     if (k === "high" || k === "low") return 2;
@@ -486,8 +730,9 @@ export default function Home() {
   }
 
   // Combines the result flag with value + reference range, e.g. "HIGH: 93 mmol/L [50–80]".
-  function fmtResultWithFlag(o) {
+  function fmtResultWithFlag(o, improved) {
     if (!o) return "REVIEW";
+    if (improved) return `IMPROVED: ${fmtObsValue(o)} [${fmtRef(o)}]`;
     const k = flagKey(o);
     const prefix = k === "unknown" ? "" : `${k.toUpperCase().replace("_", " ")}: `;
     return `${prefix}${fmtObsValue(o)} [${fmtRef(o)}]`;
@@ -537,45 +782,90 @@ export default function Home() {
   // shared with the AI. Hardcoded for the demo.
   const PATIENT_NAME = "Jane Doe";
 
-  function buildEmailTemplate(result) {
+  function labDateFromResult(result) {
+    // The lab collection date, formatted for the subject line. Derived from the
+    // observations because patientMessageToText runs outside the render scope
+    // where `collected` is computed. Returns "" when unknown so the caller can
+    // omit the date rather than print a placeholder.
     const obs = Array.isArray(result?.observations) ? result.observations : [];
-    const reports = Array.isArray(result?.reports) ? result.reports : [];
-    const findings = result?.aiAnnotation?.content_json?.analyte_findings || [];
-
     const times = obs.map((o) => o.effective_at).filter(Boolean).sort();
-    let labDate = "your recent visit";
     if (times.length) {
       const d = new Date(times[times.length - 1]);
       if (!isNaN(d.getTime())) {
-        labDate = d.toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" });
+        return d.toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" });
       }
     }
+    return "";
+  }
 
-    const panel = reports.map((r) => r.panel_code).filter(Boolean).join(", ") || "lab";
-    const flagged = findings.map((f) => {
-      const o = obs.find((x) => x.code === f.analyte_code);
-      return o?.display || f.analyte_code;
-    });
-    const n = findings.length;
-    const followUp =
-      n > 0
-        ? `\n${n} result${n !== 1 ? "s" : ""} fell outside normal ranges and require follow-up: ${flagged.join(
-            ", "
-          )}. These will be reviewed and may need further evaluation.\n`
-        : "";
+  function patientMessageToText(pm, result = demoResult) {
+    // Render the clinician-reviewable draft as a letter body. The recipient
+    // name, the lab date, the clinic name and the signature are applied only
+    // here at render time — never baked into the draft_content_json the LLM
+    // produced. `result` is passed explicitly when called right after
+    // ingestion, because the demoResult state has not applied yet at that
+    // point. The "To:" and "Subject:" lines live in the composer header, not
+    // in the body — the body starts with the salutation.
+    const c = (pm && (pm.final_content_json || pm.draft_content_json)) || {};
+    const firstName = pm?.patient_given_name || "[patient first name]";
+    const findings = Array.isArray(c.abnormal_findings) ? c.abnormal_findings : [];
+    const improvedFindings = Array.isArray(c.improved_findings) ? c.improved_findings : [];
 
-    return `Subject: Blood test results — ${labDate}
+    const lines = [];
+    lines.push(`Dear ${firstName},`, "");
+    if (c.opening) lines.push(c.opening, "");
+    if (c.normal_summary && c.normal_summary.trim()) lines.push(c.normal_summary, "");
+    if (improvedFindings.length) {
+      lines.push("The following results have returned to normal since your last test:");
+      improvedFindings.forEach((f, i) => lines.push(`${i + 1}. ${f.title}: ${f.explanation}`, ""));
+    }
+    if (findings.length) {
+      lines.push("The following results fell outside normal ranges and require follow-up:");
+      findings.forEach((f, i) => lines.push(`${i + 1}. ${f.title}: ${f.explanation}`, ""));
+      lines.push("Please schedule a follow-up appointment with your clinician to discuss these results.");
+    } else {
+      lines.push("No follow-up appointment needed at this time.");
+    }
+    lines.push("", "Regards,", "Dr. [clinician name]");
+    return lines.join("\n").trim();
+  }
 
-Dear ${PATIENT_NAME},
+  function buildEmailTemplate(result) {
+    // Fallback letter body for the no-backend demo path — mirrors the shape of
+    // the real draft rendered by patientMessageToText. The "To:" and
+    // "Subject:" lines live in the composer header, not in the body.
+    const obs = Array.isArray(result?.observations) ? result.observations : [];
+    const allFindings = result?.aiAnnotation?.content_json?.analyte_findings || [];
+    const improvedFindings = allFindings.filter((f) => isImprovedFinding(f));
+    const findings = allFindings.filter((f) => !isImprovedFinding(f));
 
-Your ${panel} blood test results from ${labDate} are now available. Here is a summary of the key findings.
-
-Most results were within normal ranges.
-${followUp}
-We recommend scheduling a follow-up appointment to discuss these findings and determine whether additional tests are needed. Please contact [your clinic name] to arrange this at your earliest convenience.
-
-Regards,
-Dr. [YOUR NAME]`;
+    const lines = [];
+    lines.push(`Dear ${PATIENT_NAME.split(" ")[0]},`, "");
+    lines.push("Your blood test results are now available. Here is a summary of the key findings.", "");
+    lines.push("Most results were within normal ranges.", "");
+    if (improvedFindings.length) {
+      lines.push("The following results have returned to normal since your last test:");
+      improvedFindings.forEach((f, i) => {
+        const o = obs.find((x) => x.code === f.analyte_code);
+        const name = o?.display || f.analyte_code;
+        const desc = f.description || "This result has returned to within the normal range.";
+        lines.push(`${i + 1}. ${name}: ${desc}`, "");
+      });
+    }
+    if (findings.length) {
+      lines.push("The following results fell outside normal ranges and require follow-up:");
+      findings.forEach((f, i) => {
+        const o = obs.find((x) => x.code === f.analyte_code);
+        const name = o?.display || f.analyte_code;
+        const desc = f.description || "This result was outside the normal range and will be reviewed.";
+        lines.push(`${i + 1}. ${name}: ${desc}`, "");
+      });
+      lines.push("Please schedule a follow-up appointment with your clinician to discuss these results.");
+    } else {
+      lines.push("No follow-up appointment needed at this time.");
+    }
+    lines.push("", "Regards,", "Dr. [clinician name]");
+    return lines.join("\n");
   }
 
   async function toggleHistory(code) {
@@ -597,7 +887,7 @@ Dr. [YOUR NAME]`;
       const rows = (Array.isArray(all) ? all : [])
         .filter((o) => o.code === code && !currentIds.has(o.observation_id))
         .sort((a, b) => (a.effective_at < b.effective_at ? 1 : -1))
-        .map((o) => ({ date: fmtDate(o.effective_at), result: fmtObsValue(o) }));
+        .map((o) => ({ ...o, date: fmtDate(o.effective_at), result: fmtObsValue(o) }));
       setHistory((p) => ({ ...p, [code]: { loading: false, shown: true, rows } }));
     } catch (e) {
       setHistory((p) => ({ ...p, [code]: { loading: false, shown: true, error: "Could not load history." } }));
@@ -605,12 +895,70 @@ Dr. [YOUR NAME]`;
   }
 
   function resetDraft() {
-    setEmailBody(buildEmailTemplate(demoResult));
+    setEmailBody(
+      patientMessage ? patientMessageToText(patientMessage) : buildEmailTemplate(demoResult)
+    );
   }
 
-  function sendDraft() {
+  async function sendDraft() {
+    // Demo-send. When a real backend draft exists, drive the clinician gate for
+    // real: approve (with any edits) then send. Otherwise it's a local no-op.
+    const pm = patientMessage;
+    if (pm && pm.patient_message_id) {
+      try {
+        const id = pm.patient_message_id;
+        if (pm.review_status !== "APPROVED" && pm.review_status !== "SENT") {
+          const editedText = emailBody;
+          await fetch(`/v1/patient_messages/${id}/approve`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              approved_by: "demo-clinician",
+              // Preserve the structured draft; record the reviewed text too.
+              final_content_json: {
+                ...(pm.draft_content_json || {}),
+                reviewed_text: editedText,
+              },
+            }),
+          });
+        }
+        const sendRes = await fetch(`/v1/patient_messages/${id}/send`, { method: "POST" });
+        if (sendRes.ok) {
+          const updated = await sendRes.json();
+          setPatientMessage(updated);
+        }
+      } catch (e) {
+        // fall through to the demo notice regardless
+      }
+    }
     setSentNotice(true);
     setTimeout(() => setSentNotice(false), 4000);
+  }
+
+  async function rejectDraft() {
+    // Clinician rejects the draft with a reason. Drives the human gate:
+    // review_status -> REJECTED (the message is no longer active).
+    const pm = patientMessage;
+    if (pm && pm.patient_message_id) {
+      try {
+        const res = await fetch(`/v1/patient_messages/${pm.patient_message_id}/reject`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            reviewed_by: "demo-clinician",
+            note: rejectReason.trim() || null,
+          }),
+        });
+        if (res.ok) {
+          const updated = await res.json();
+          setPatientMessage(updated);
+        }
+      } catch (e) {
+        // Demo UI — swallow and close the panel regardless.
+      }
+    }
+    setRejecting(false);
+    setRejectReason("");
   }
 
   async function copyDraft() {
@@ -621,6 +969,348 @@ Dr. [YOUR NAME]`;
     } catch {
       // Clipboard API unavailable (e.g. non-secure context) — no-op.
     }
+  }
+
+  // Combines the current result with fetched history rows into an ascending,
+  // numeric-only series for the trend chart (qualitative/text-only results
+  // can't be plotted but still show in the history table).
+  function buildChartSeries(current, rows) {
+    const combined = Array.isArray(rows) ? [...rows] : [];
+    if (current) combined.push(current);
+    const seen = new Set();
+    return combined
+      .filter((o) => o && typeof o.value_num === "number" && o.effective_at)
+      .filter((o) => {
+        const key = o.observation_id || `${o.code}-${o.effective_at}`;
+        if (seen.has(key)) return false;
+        seen.add(key);
+        return true;
+      })
+      .sort((a, b) => (a.effective_at > b.effective_at ? 1 : -1))
+      .map((o) => ({
+        effective_at: o.effective_at,
+        value_num: o.value_num,
+        flag: flagKey(o),
+        isCurrent: !!current && o.observation_id === current.observation_id,
+      }));
+  }
+
+  function renderAiAugSection() {
+    if (!demoResult) return null;
+    const messageDraftPending = demoPhase !== "done";
+    const ai = demoResult.aiAnnotation;
+    if (!ai || !ai.content_json) {
+      return (
+        <div className="ai-aug">
+          <div style={{ color: "var(--muted)", fontSize: 12, fontFamily: "var(--mono)" }}>
+            AI annotation not available for this run — the AI enrichment layer may be disabled in this environment.
+          </div>
+        </div>
+      );
+    }
+    const content = ai.content_json;
+    const rawFindings = Array.isArray(content.analyte_findings) ? content.analyte_findings : [];
+    const obs = Array.isArray(demoResult.observations) ? demoResult.observations : [];
+    // Index observations by both code and display name (case-insensitive) so a
+    // finding whose analyte_code differs in case/label (e.g. "K" vs "Potassium")
+    // still resolves to its observation instead of rendering a bare code.
+    const obsIndex = {};
+    obs.forEach((o) => {
+      if (!o) return;
+      [o.code, o.display].filter(Boolean).forEach((k) => {
+        const key = k.toString().trim().toUpperCase();
+        if (!(key in obsIndex)) obsIndex[key] = o;
+      });
+    });
+    const lookupObs = (code) =>
+      code ? obsIndex[code.toString().trim().toUpperCase()] : undefined;
+    // Order findings by clinical urgency (critical → high/low → other → improved).
+    const findings = rawFindings
+      .map((f) => ({ f, o: lookupObs(f.analyte_code), improved: isImprovedFinding(f) }))
+      .sort((a, b) => flagRank(b.o, b.improved) - flagRank(a.o, a.improved))
+      .map((x) => x.f);
+    const priorityObsIds = new Set(
+      findings.map((f) => lookupObs(f.analyte_code)?.observation_id).filter(Boolean)
+    );
+    const otherObs = obs.filter((o) => !priorityObsIds.has(o.observation_id));
+    const confVals = findings.map((f) => f.confidence).filter((v) => typeof v === "number");
+    const avgConf = confVals.length ? confVals.reduce((a, b) => a + b, 0) / confVals.length : null;
+    const panel = (demoResult.reports || []).map((r) => r.panel_code).filter(Boolean).join(" · ") || "—";
+    const times = obs.map((o) => o.effective_at).filter(Boolean).sort();
+    let collected = "—";
+    if (times.length) {
+      const d = new Date(times[times.length - 1]);
+      if (!isNaN(d.getTime())) collected = d.toISOString().slice(0, 16).replace("T", " ");
+    }
+    const emailLabDate = labDateFromResult(demoResult);
+    const emailPmContent = (patientMessage && (patientMessage.final_content_json || patientMessage.draft_content_json)) || {};
+    const emailSubject = emailPmContent.subject || "Blood test results";
+    return (
+      <div className="ai-aug">
+        <div className="ai-tabs">
+          <div className={`ai-tab${aiTab === "annotation" ? " active" : ""}`} onClick={() => setAiTab("annotation")}>AI annotation</div>
+          <div className={`ai-tab${aiTab === "email" ? " active" : ""}`} onClick={() => setAiTab("email")}>Message draft</div>
+        </div>
+
+        {aiTab === "annotation" && (
+          <div>
+            <div className="meta-row">
+              <div className="meta-cell"><div className="meta-label">INGESTION ID</div><div className="meta-val" title={demoResult.ingestionId}>{(demoResult.ingestionId || "").slice(0, 18)}</div></div>
+              <div className="meta-cell"><div className="meta-label">PANEL</div><div className="meta-val">{panel}</div></div>
+              <div className="meta-cell"><div className="meta-label">COLLECTED</div><div className="meta-val">{collected}</div></div>
+              <div className="meta-cell"><div className="meta-label">ANNOTATION TYPE</div><div className="meta-val" style={{ color: "var(--warn)" }}>{(ai.annotation_type || content.annotation_type || "—").toString().toUpperCase()}</div></div>
+            </div>
+
+            {content.requires_review && (
+              <div className={`review-banner ${reviewPriorityClass(content.review_priority)}`}>
+                ⚠ Clinician review required{content.review_priority ? ` — priority: ${content.review_priority}` : ""}.
+              </div>
+            )}
+
+            <div className="section-label">AI Panel Summary</div>
+            <div className="summary-card">
+              <div className="summary-header">
+                <div className="summary-type">{(content.annotation_type || "ANNOTATION").toString().toUpperCase()}</div>
+                {avgConf != null && (
+                  <div className="conf-wrap">
+                    <span className="conf-label">Confidence</span>
+                    <div className="conf-bar"><div className="conf-fill" style={{ width: `${Math.round(avgConf * 100)}%` }} /></div>
+                    <span className="conf-num">{avgConf.toFixed(2)}</span>
+                  </div>
+                )}
+              </div>
+              <div className="summary-text">{content.summary}</div>
+              <div className="summary-footer">
+                {content.requires_review && <span className="requires-review-tag">⚑ REQUIRES_REVIEW</span>}
+                <span className="non-auth-tag">NON-AUTHORITATIVE · FOR REVIEW ONLY</span>
+              </div>
+            </div>
+
+            {findings.length > 0 && (
+              <>
+                <div className="section-label">Priority Findings</div>
+                <div className="priority-grid">
+                  {findings.map((f) => {
+                    const o = lookupObs(f.analyte_code);
+                    const improved = isImprovedFinding(f);
+                    const fk = improved ? "improved" : flagKey(o);
+                    const open = !!openFindings[f.analyte_code];
+                    const h = history[f.analyte_code];
+                    return (
+                      <div key={f.analyte_code} className={`finding-card ${cardPriorityClass(o, improved)}`}>
+                        <div className="finding-header" onClick={() => setOpenFindings((p) => ({ ...p, [f.analyte_code]: !p[f.analyte_code] }))}>
+                          <span className="analyte-name">{o?.display || f.analyte_code}</span>
+                          <span className={`analyte-result val-${fk}`}>{fmtResultWithFlag(o, improved)}</span>
+                          <span className={`finding-chevron${open ? " open" : ""}`}>▼</span>
+                        </div>
+                        {open && (
+                          <div className="finding-body">
+                            <div className="finding-desc">{f.description}</div>
+                            <div className="finding-meta">
+                              <span className="finding-meta-item">Confidence: <span>{typeof f.confidence === "number" ? f.confidence.toFixed(2) : "—"}</span></span>
+                              <span className="finding-meta-item">Trend: <span>{f.trend_direction || "—"}</span></span>
+                            </div>
+                            <button className="hist-btn" onClick={() => toggleHistory(f.analyte_code)}>
+                              {h?.shown ? "Hide history ▲" : "Show history ▾"}
+                            </button>
+                            {h?.shown && (
+                              h.loading ? (
+                                <div className="hist-empty">Loading…</div>
+                              ) : h.error ? (
+                                <div className="hist-empty">{h.error}</div>
+                              ) : (
+                                <>
+                                  <HistoryChart
+                                    series={buildChartSeries(o, h.rows)}
+                                    unit={o?.unit}
+                                    refLow={o?.ref_low_num}
+                                    refHigh={o?.ref_high_num}
+                                  />
+                                  {h.rows && h.rows.length > 0 ? (
+                                    <div className="hist-table">
+                                      <div className="hist-row head"><div className="hist-date">DATE</div><div className="hist-val">RESULT</div></div>
+                                      {h.rows.map((r, i) => (
+                                        <div className="hist-row" key={i}><div className="hist-date">{r.date}</div><div className="hist-val">{r.result}</div></div>
+                                      ))}
+                                    </div>
+                                  ) : (
+                                    <div className="hist-empty">No prior results for this analyte.</div>
+                                  )}
+                                </>
+                              )
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              </>
+            )}
+
+            {otherObs.length > 0 && (
+              <>
+                <div className="section-label collapse-head" onClick={() => setShowOther((v) => !v)}>
+                  <span>All Other Results ×{otherObs.length}</span>
+                  <span className="finding-chevron" style={{ transform: showOther ? "rotate(180deg)" : "none" }}>▼</span>
+                </div>
+                {showOther && (
+                  <div className="other-table-wrap">
+                    <div className="other-row head">
+                      <div>ANALYTE</div>
+                      <div className="other-val">VALUE</div>
+                      <div className="other-ref">REFERENCE</div>
+                      <div className="other-flag">FLAG</div>
+                    </div>
+                    {otherObs.map((o) => {
+                      const fk = flagKey(o);
+                      return (
+                        <div className="other-row" key={o.observation_id}>
+                          <div className="other-analyte">{o.display || o.code}</div>
+                          <div className={`other-val val-${fk}`}>{fmtObsValue(o)}</div>
+                          <div className="other-ref">{fmtRef(o)}</div>
+                          <div className="other-flag"><span className={`flag-pill flag-${fk}`}>{flagLabel(o)}</span></div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </>
+            )}
+
+            <div className="audit-footer">
+              <span className="audit-item">Model: <span title={ai.model_id || ""}>{shortModelName(ai.model_id)}</span></span>
+              <span className="audit-item">Annotation ID: <span>{(ai.ai_annotation_id || "").slice(0, 8) || "—"}</span></span>
+              <span className="audit-item">Generated: <span>{fmtGenerated(ai.created_at)}</span></span>
+              <span className="audit-item">Schema: <span>{ai.content_schema_version || "—"}</span></span>
+            </div>
+            <div className="disclaimer">
+              AI annotations are non-authoritative and generated by an automated pipeline. They are not medical advice, do not constitute a clinical diagnosis, and must not be used as a substitute for clinician review. All findings require independent clinical interpretation.
+            </div>
+          </div>
+        )}
+
+        {aiTab === "email" && (
+          <div className="composer-wrap">
+            <div className="composer-top">
+              <div className="composer-title-row">
+                <div className="composer-icon">
+                <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" width="16" height="16">
+                  <rect x="2.5" y="4.5" width="15" height="11" rx="2" />
+                  <path d="M3 5.5l7 5.5 7-5.5" />
+                </svg>
+              </div>
+                <div>
+                  <div className="composer-title">Draft patient message</div>
+                  <div className="composer-subtitle">AI-generated · ingestion id: {(demoResult.ingestionId || "").slice(0, 18)}</div>
+                </div>
+              </div>
+              <div className={`draft-tag${
+                messageDraftPending ? " status-pending"
+                  : patientMessage?.review_status === "REJECTED" ? " status-rejected"
+                  : patientMessage?.review_status === "SENT" ? " status-approved"
+                  : ""
+              }`}><span className="draft-dot" />{
+                messageDraftPending ? "Drafting…"
+                  : patientMessage?.review_status === "REJECTED" ? "Rejected"
+                  : patientMessage?.review_status === "SENT" ? "Approved and Sent"
+                  : "Clinician review required"
+              }</div>
+            </div>
+            {messageDraftPending ? (
+              <div style={{ padding: "40px 22px", textAlign: "center", color: "var(--muted)", fontSize: 13, fontFamily: "var(--mono)" }}>
+                <span className="spinner" /> Drafting patient message…
+              </div>
+            ) : (
+              <>
+            <div className="meta-fields">
+              <div className="meta-field">
+                <span className="meta-field-icon">
+                  <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" width="14" height="14">
+                    <circle cx="8" cy="5" r="2.75" />
+                    <path d="M2.5 13.5c0-2.8 2.5-4.5 5.5-4.5s5.5 1.7 5.5 4.5" />
+                  </svg>
+                </span>
+                <span className="meta-field-val">Patient: {
+                patientMessage
+                  ? [patientMessage.patient_given_name, patientMessage.patient_family_name].filter(Boolean).join(" ") || PATIENT_NAME
+                  : PATIENT_NAME
+              }</span>
+              </div>
+              <div className="meta-field">
+                <span className="meta-field-icon">
+                  <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" width="14" height="14">
+                    <rect x="2" y="3.5" width="12" height="10.5" rx="1.5" />
+                    <path d="M2 6.5h12M5.5 2v3M10.5 2v3" />
+                  </svg>
+                </span>
+                <span className="meta-field-val">Lab Date: {emailLabDate || "—"}</span>
+              </div>
+              <div className="meta-field meta-field-full"><span className="meta-field-val">Subject: {emailSubject}{emailLabDate ? ` — ${emailLabDate}` : ""}</span></div>
+            </div>
+            <div className="message-area">
+              <textarea
+                ref={textareaRef}
+                className="msg-textarea"
+                value={emailBody}
+                onChange={(e) => setEmailBody(e.target.value)}
+                spellCheck={true}
+              />
+            </div>
+            <div className="draft-actions">
+              <button className="draft-btn secondary" onClick={resetDraft}>Reset draft</button>
+              <div className="draft-actions-right">
+                <button className="draft-btn" onClick={copyDraft}>{copied ? "Copied ✓" : "Copy"}</button>
+                <button
+                  className="draft-btn danger"
+                  onClick={() => setRejecting((v) => !v)}
+                  disabled={patientMessage?.review_status === "SENT" || patientMessage?.review_status === "REJECTED"}
+                >
+                  {patientMessage?.review_status === "REJECTED" ? "Rejected ✗" : "Reject"}
+                </button>
+                <button className="draft-btn primary" onClick={sendDraft} disabled={patientMessage?.review_status === "SENT" || patientMessage?.review_status === "REJECTED"}>
+                  {patientMessage?.review_status === "SENT" ? "Sent ✓" : "Approve & send"}
+                </button>
+              </div>
+            </div>
+            {rejecting && (
+              <div className="reject-panel">
+                <label className="reject-label" htmlFor="reject-reason">Reason for rejection</label>
+                <textarea
+                  id="reject-reason"
+                  className="reject-textarea"
+                  value={rejectReason}
+                  onChange={(e) => setRejectReason(e.target.value)}
+                  placeholder="Why is this draft being rejected? (recorded on the message audit trail)"
+                  spellCheck={true}
+                />
+                <div className="reject-panel-actions">
+                  <button className="draft-btn secondary" onClick={() => { setRejecting(false); setRejectReason(""); }}>Cancel</button>
+                  <button className="draft-btn danger" onClick={rejectDraft}>Confirm rejection</button>
+                </div>
+              </div>
+            )}
+            {sentNotice && <div className="send-notice">This is a demo. The message wasn't actually delivered.</div>}
+            {patientMessage?.review_status === "REJECTED" && (
+              <div className="rejected-notice">The message was rejected and cannot be sent to patient.</div>
+            )}
+            <div className="audit-footer">
+              <span className="audit-item">Model: <span title={(patientMessage?.model_id || ai.model_id) || ""}>{shortModelName(patientMessage?.model_id || ai.model_id)}</span></span>
+              <span className="audit-item">Draft ID: <span>{(patientMessage?.patient_message_id || "").slice(0, 8) || "—"}</span></span>
+              <span className="audit-item">Generated: <span>{fmtGenerated(patientMessage?.created_at || ai.created_at)}</span></span>
+              <span className="audit-item">Schema: <span>{(patientMessage?.content_schema_version || ai.content_schema_version) || "—"}</span></span>
+            </div>
+            <div className="physician-note">
+              <div className="pn-text">
+                <strong>Physician review required.</strong> This draft was generated by an AI pipeline based on structured lab annotations and is provided as a starting point only. You must review, edit as needed, and personally approve before sending. This message does not constitute medical advice and must not be sent without clinical sign-off.
+              </div>
+            </div>
+              </>
+            )}
+          </div>
+        )}
+      </div>
+    );
   }
 
   return (
@@ -889,7 +1579,7 @@ Dr. [YOUR NAME]`;
                 <div style={{ color: "var(--muted)", fontSize: 12, marginBottom: 16, fontFamily: "var(--mono)" }}>
                   <span className="spinner" /> Processing through pipeline...
                 </div>
-                {["Parse", "Validate", "Normalize", "Persist", "AI annotation", "Email draft"].map((name, i) => (
+                {["Parse", "Validate", "Normalize", "Persist", "AI annotation", "Message draft"].map((name, i) => (
                   <div className="stage" key={name}>
                     <span
                       className={`stage-badge ${
@@ -907,6 +1597,8 @@ Dr. [YOUR NAME]`;
                 ))}
               </div>
             )}
+
+            {demoPhase === "loading" && aiReady && renderAiAugSection()}
 
             {demoPhase === "done" && demoResult && (
               <>
@@ -1208,234 +1900,7 @@ Dr. [YOUR NAME]`;
                     )}
                   </div>
                 </div>
-                {demoResult.status === "COMPLETED" && (() => {
-                  const ai = demoResult.aiAnnotation;
-                  if (!ai || !ai.content_json) {
-                    return (
-                      <div className="ai-aug">
-                        <div style={{ color: "var(--muted)", fontSize: 12, fontFamily: "var(--mono)" }}>
-                          AI annotation not available for this run — the AI enrichment layer may be disabled in this environment.
-                        </div>
-                      </div>
-                    );
-                  }
-                  const content = ai.content_json;
-                  const rawFindings = Array.isArray(content.analyte_findings) ? content.analyte_findings : [];
-                  const obs = Array.isArray(demoResult.observations) ? demoResult.observations : [];
-                  // Index observations by both code and display name (case-insensitive) so a
-                  // finding whose analyte_code differs in case/label (e.g. "K" vs "Potassium")
-                  // still resolves to its observation instead of rendering a bare code.
-                  const obsIndex = {};
-                  obs.forEach((o) => {
-                    if (!o) return;
-                    [o.code, o.display].filter(Boolean).forEach((k) => {
-                      const key = k.toString().trim().toUpperCase();
-                      if (!(key in obsIndex)) obsIndex[key] = o;
-                    });
-                  });
-                  const lookupObs = (code) =>
-                    code ? obsIndex[code.toString().trim().toUpperCase()] : undefined;
-                  // Order findings by clinical urgency (critical → high/low → other).
-                  const findings = rawFindings
-                    .map((f) => ({ f, o: lookupObs(f.analyte_code) }))
-                    .sort((a, b) => flagRank(b.o) - flagRank(a.o))
-                    .map((x) => x.f);
-                  const priorityObsIds = new Set(
-                    findings.map((f) => lookupObs(f.analyte_code)?.observation_id).filter(Boolean)
-                  );
-                  const otherObs = obs.filter((o) => !priorityObsIds.has(o.observation_id));
-                  const confVals = findings.map((f) => f.confidence).filter((v) => typeof v === "number");
-                  const avgConf = confVals.length ? confVals.reduce((a, b) => a + b, 0) / confVals.length : null;
-                  const panel = (demoResult.reports || []).map((r) => r.panel_code).filter(Boolean).join(" · ") || "—";
-                  const times = obs.map((o) => o.effective_at).filter(Boolean).sort();
-                  let collected = "—";
-                  if (times.length) {
-                    const d = new Date(times[times.length - 1]);
-                    if (!isNaN(d.getTime())) collected = d.toISOString().slice(0, 16).replace("T", " ");
-                  }
-                  return (
-                    <div className="ai-aug">
-                      <div className="ai-tabs">
-                        <div className={`ai-tab${aiTab === "annotation" ? " active" : ""}`} onClick={() => setAiTab("annotation")}>AI annotation</div>
-                        <div className={`ai-tab${aiTab === "email" ? " active" : ""}`} onClick={() => setAiTab("email")}>Email draft</div>
-                      </div>
-
-                      {aiTab === "annotation" && (
-                        <div>
-                          <div className="meta-row">
-                            <div className="meta-cell"><div className="meta-label">INGESTION ID</div><div className="meta-val" title={demoResult.ingestionId}>{(demoResult.ingestionId || "").slice(0, 18)}</div></div>
-                            <div className="meta-cell"><div className="meta-label">PANEL</div><div className="meta-val">{panel}</div></div>
-                            <div className="meta-cell"><div className="meta-label">COLLECTED</div><div className="meta-val">{collected}</div></div>
-                            <div className="meta-cell"><div className="meta-label">ANNOTATION TYPE</div><div className="meta-val" style={{ color: "var(--warn)" }}>{(ai.annotation_type || content.annotation_type || "—").toString().toUpperCase()}</div></div>
-                          </div>
-
-                          {content.requires_review && (
-                            <div className={`review-banner ${reviewPriorityClass(content.review_priority)}`}>
-                              ⚠ Clinician review required{content.review_priority ? ` — priority: ${content.review_priority}` : ""}.
-                            </div>
-                          )}
-
-                          <div className="section-label">AI Panel Summary</div>
-                          <div className="summary-card">
-                            <div className="summary-header">
-                              <div className="summary-type">{(content.annotation_type || "ANNOTATION").toString().toUpperCase()}</div>
-                              {avgConf != null && (
-                                <div className="conf-wrap">
-                                  <span className="conf-label">Confidence</span>
-                                  <div className="conf-bar"><div className="conf-fill" style={{ width: `${Math.round(avgConf * 100)}%` }} /></div>
-                                  <span className="conf-num">{avgConf.toFixed(2)}</span>
-                                </div>
-                              )}
-                            </div>
-                            <div className="summary-text">{content.summary}</div>
-                            <div className="summary-footer">
-                              {content.requires_review && <span className="requires-review-tag">⚑ REQUIRES_REVIEW</span>}
-                              <span className="non-auth-tag">NON-AUTHORITATIVE · FOR REVIEW ONLY</span>
-                            </div>
-                          </div>
-
-                          {findings.length > 0 && (
-                            <>
-                              <div className="section-label">Priority Findings</div>
-                              <div className="priority-grid">
-                                {findings.map((f) => {
-                                  const o = lookupObs(f.analyte_code);
-                                  const fk = flagKey(o);
-                                  const open = !!openFindings[f.analyte_code];
-                                  const h = history[f.analyte_code];
-                                  return (
-                                    <div key={f.analyte_code} className={`finding-card ${o ? cardPriorityClass(o) : "elevated"}`}>
-                                      <div className="finding-header" onClick={() => setOpenFindings((p) => ({ ...p, [f.analyte_code]: !p[f.analyte_code] }))}>
-                                        <span className="analyte-name">{o?.display || f.analyte_code}</span>
-                                        <span className={`analyte-result val-${fk}`}>{fmtResultWithFlag(o)}</span>
-                                        <span className={`finding-chevron${open ? " open" : ""}`}>▼</span>
-                                      </div>
-                                      {open && (
-                                        <div className="finding-body">
-                                          <div className="finding-desc">{f.description}</div>
-                                          <div className="finding-meta">
-                                            <span className="finding-meta-item">Confidence: <span>{typeof f.confidence === "number" ? f.confidence.toFixed(2) : "—"}</span></span>
-                                            <span className="finding-meta-item">Trend: <span>{f.trend_direction || "—"}</span></span>
-                                          </div>
-                                          <button className="hist-btn" onClick={() => toggleHistory(f.analyte_code)}>
-                                            {h?.shown ? "Hide history ▲" : "Show history ▾"}
-                                          </button>
-                                          {h?.shown && (
-                                            h.loading ? (
-                                              <div className="hist-empty">Loading…</div>
-                                            ) : h.error ? (
-                                              <div className="hist-empty">{h.error}</div>
-                                            ) : h.rows && h.rows.length > 0 ? (
-                                              <div className="hist-table">
-                                                <div className="hist-row head"><div className="hist-date">DATE</div><div className="hist-val">RESULT</div></div>
-                                                {h.rows.map((r, i) => (
-                                                  <div className="hist-row" key={i}><div className="hist-date">{r.date}</div><div className="hist-val">{r.result}</div></div>
-                                                ))}
-                                              </div>
-                                            ) : (
-                                              <div className="hist-empty">No prior results for this analyte.</div>
-                                            )
-                                          )}
-                                        </div>
-                                      )}
-                                    </div>
-                                  );
-                                })}
-                              </div>
-                            </>
-                          )}
-
-                          {otherObs.length > 0 && (
-                            <>
-                              <div className="section-label collapse-head" onClick={() => setShowOther((v) => !v)}>
-                                <span>All Other Results ×{otherObs.length}</span>
-                                <span className="finding-chevron" style={{ transform: showOther ? "rotate(180deg)" : "none" }}>▼</span>
-                              </div>
-                              {showOther && (
-                                <div className="other-table-wrap">
-                                  <div className="other-row head">
-                                    <div>ANALYTE</div>
-                                    <div className="other-val">VALUE</div>
-                                    <div className="other-ref">REFERENCE</div>
-                                    <div className="other-flag">FLAG</div>
-                                  </div>
-                                  {otherObs.map((o) => {
-                                    const fk = flagKey(o);
-                                    return (
-                                      <div className="other-row" key={o.observation_id}>
-                                        <div className="other-analyte">{o.display || o.code}</div>
-                                        <div className={`other-val val-${fk}`}>{fmtObsValue(o)}</div>
-                                        <div className="other-ref">{fmtRef(o)}</div>
-                                        <div className="other-flag"><span className={`flag-pill flag-${fk}`}>{flagLabel(o)}</span></div>
-                                      </div>
-                                    );
-                                  })}
-                                </div>
-                              )}
-                            </>
-                          )}
-
-                          <div className="audit-footer">
-                            <span className="audit-item">Model: <span title={ai.model_id || ""}>{shortModelName(ai.model_id)}</span></span>
-                            <span className="audit-item">Annotation ID: <span>{(ai.ai_annotation_id || "").slice(0, 8) || "—"}</span></span>
-                            <span className="audit-item">Generated: <span>{fmtGenerated(ai.created_at)}</span></span>
-                            <span className="audit-item">Schema: <span>{ai.content_schema_version || "—"}</span></span>
-                          </div>
-                          <div className="disclaimer">
-                            AI annotations are non-authoritative and generated by an automated pipeline. They are not medical advice, do not constitute a clinical diagnosis, and must not be used as a substitute for clinician review. All findings require independent clinical interpretation.
-                          </div>
-                        </div>
-                      )}
-
-                      {aiTab === "email" && (
-                        <div className="composer-wrap">
-                          <div className="composer-top">
-                            <div className="composer-title-row">
-                              <div className="composer-icon">✉</div>
-                              <div>
-                                <div className="composer-title">Draft patient message</div>
-                                <div className="composer-subtitle">AI-generated · ingestion id: {(demoResult.ingestionId || "").slice(0, 18)}</div>
-                              </div>
-                            </div>
-                            <div className="draft-tag"><span className="draft-dot" />AWAITING PHYSICIAN REVIEW</div>
-                          </div>
-                          <div className="meta-fields">
-                            <div className="meta-field"><span className="meta-field-val">Patient: {PATIENT_NAME}</span></div>
-                            <div className="meta-field"><span className="meta-field-val">Lab date: {collected}</span></div>
-                          </div>
-                          <div className="message-area">
-                            <textarea
-                              ref={textareaRef}
-                              className="msg-textarea"
-                              value={emailBody}
-                              onChange={(e) => setEmailBody(e.target.value)}
-                              spellCheck={true}
-                            />
-                          </div>
-                          <div className="draft-actions">
-                            <button className="draft-btn secondary" onClick={resetDraft}>Reset draft</button>
-                            <div className="draft-actions-right">
-                              <button className="draft-btn" onClick={copyDraft}>{copied ? "Copied ✓" : "Copy"}</button>
-                              <button className="draft-btn primary" onClick={sendDraft}>Send</button>
-                            </div>
-                          </div>
-                          {sentNotice && <div className="send-notice">This is a demo. The message wasn't actually delivered.</div>}
-                          <div className="audit-footer">
-                            <span className="audit-item">Model: <span title={ai.model_id || ""}>{shortModelName(ai.model_id)}</span></span>
-                            <span className="audit-item">Draft ID: <span>—</span></span>
-                            <span className="audit-item">Generated: <span>{fmtGenerated(ai.created_at)}</span></span>
-                            <span className="audit-item">Schema: <span>{ai.content_schema_version || "—"}</span></span>
-                          </div>
-                          <div className="physician-note">
-                            <div className="pn-text">
-                              <strong>Physician review required.</strong> This draft was generated by an AI pipeline based on structured lab annotations and is provided as a starting point only. You must review, edit as needed, and personally approve before sending. This message does not constitute medical advice and must not be sent without clinical sign-off.
-                            </div>
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                  );
-                })()}
+                {aiReady && renderAiAugSection()}
               </>
             )}
           </div>

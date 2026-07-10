@@ -198,6 +198,12 @@ class AiAnnotation(Base):
     temperature: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
     content_schema_version: Mapped[str] = mapped_column(Text, nullable=False)
     input_hash: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    # Job-scoped token minted on the trusted side; the de-identification
+    # boundary that keeps patient_id/PHI out of the AI layer. See
+    # AiGenerationJob and app/ai/ai_orchestration.py.
+    correlation_id: Mapped[Optional[uuid.UUID]] = mapped_column(
+        Uuid, nullable=True
+    )
     created_at: Mapped[Optional[datetime]] = mapped_column(
         TIMESTAMP(timezone=True), nullable=True
     )

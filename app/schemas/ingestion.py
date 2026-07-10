@@ -139,6 +139,54 @@ class ReadAiAnnotationOkResponse(BaseModel):
     rejection_reason: str | None = None
 
 
+class ReadPatientMessageOkResponse(BaseModel):
+    patient_message_id: UUID
+    ingestion_id: UUID
+    patient_id: PatientId
+    # Rendered "To:" line — synthetic PHI applied only at read/render time,
+    # never baked into draft_content_json.
+    patient_given_name: str | None = None
+    patient_family_name: str | None = None
+    patient_email: str | None = None
+    draft_content_json: dict[str, Any]
+    final_content_json: dict[str, Any] | None = None
+    content_schema_version: str | None = None
+    # Provenance
+    correlation_id: UUID | None = None
+    generation_event_id: UUID | None = None
+    provider: str | None = None
+    model_id: str | None = None
+    prompt_version: str | None = None
+    temperature: str | None = None
+    input_hash: str | None = None
+    retrieved_refs_json: list[dict[str, Any]] | None = None
+    created_at: datetime | None = None
+    # Machine gate
+    validation_status: str
+    validated_at: datetime | None = None
+    validation_error: str | None = None
+    # Human gate
+    review_status: str
+    reviewed_by: str | None = None
+    approved_by: str | None = None
+    reviewed_at: datetime | None = None
+    approved_at: datetime | None = None
+    sent_at: datetime | None = None
+    review_note: str | None = None
+    superseded_by: UUID | None = None
+
+
+class ApprovePatientMessageRequest(BaseModel):
+    approved_by: str
+    # Optional clinician-edited content; if omitted the draft is approved as-is.
+    final_content_json: dict[str, Any] | None = None
+
+
+class ReviewPatientMessageRequest(BaseModel):
+    reviewed_by: str
+    note: str | None = None
+
+
 class ReadDiagnosticReportsOkResponse(BaseModel):
     diagnostic_report_id: UUID
     patient_id: PatientId

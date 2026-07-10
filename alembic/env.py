@@ -19,6 +19,10 @@ from app.persistence.models import provenance
 
 from app.persistence.models import ai
 
+from app.persistence.models import patient
+
+from app.persistence.models import patient_message
+
 
 def _normalize_database_url(url: str) -> str:
     url = url.strip()

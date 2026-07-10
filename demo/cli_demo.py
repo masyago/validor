@@ -77,6 +77,31 @@ def _fetch_ai_annotations(
         return [], "unreachable", ai_url
 
 
+def _fetch_patient_message(
+    *,
+    ingestion_id: str,
+    base_url: str,
+    session: requests.Session,
+) -> tuple[dict[str, Any] | None, str | None, str]:
+    pm_url = f"{base_url}/v1/ingestions/{ingestion_id}/patient_message"
+    try:
+        response = session.get(
+            pm_url,
+            timeout=csv_uploader.REQUEST_TIMEOUT_SECONDS,
+        )
+        if response.status_code == 404:
+            return None, None, pm_url
+        if not response.ok:
+            return None, f"HTTP {response.status_code}", pm_url
+
+        payload = response.json()
+        if not isinstance(payload, dict):
+            return None, "invalid response", pm_url
+        return payload, None, pm_url
+    except requests.RequestException:
+        return None, "unreachable", pm_url
+
+
 def _fetch_observations_by_code(
     *,
     ingestion_id: str,
@@ -349,6 +374,130 @@ def _print_ai_annotation_section(
             )
 
 
+def _print_patient_message_section(
+    *,
+    ingestion_id: str,
+    base_url: str,
+    session: requests.Session,
+    console_out,
+) -> None:
+    out = console_out
+    message, warning, _ = _fetch_patient_message(
+        ingestion_id=ingestion_id,
+        base_url=base_url,
+        session=session,
+    )
+
+    out.print("")
+    out.print("PATIENT MESSAGE", style="bold")
+    out.print(Rule(style="white"))
+
+    if warning:
+        out.print(
+            f"Patient message unavailable ({warning})",
+            style="warning",
+        )
+        return
+    if message is None:
+        out.print("No patient message drafted for this ingestion.")
+        return
+
+    validation_status = str(message.get("validation_status") or "UNKNOWN")
+    validation_style = (
+        "success"
+        if validation_status == "ACCEPTED"
+        else "error" if validation_status == "REJECTED" else None
+    )
+    _print_labeled_value(
+        out=out,
+        label="patient_message_id",
+        value=str(message.get("patient_message_id") or "UNKNOWN"),
+    )
+    _print_labeled_value(
+        out=out,
+        label="validation_status",
+        value=validation_status,
+        value_style=validation_style,
+    )
+    _print_labeled_value(
+        out=out,
+        label="review_status",
+        value=str(message.get("review_status") or "UNKNOWN"),
+    )
+
+    # Rendered "To:" line — synthetic PHI applied only here, at render time.
+    to_name = " ".join(
+        part
+        for part in [
+            message.get("patient_given_name"),
+            message.get("patient_family_name"),
+        ]
+        if part
+    )
+    if to_name or message.get("patient_email"):
+        _print_labeled_value(
+            out=out,
+            label="to",
+            value=(to_name or "UNKNOWN")
+            + (
+                f" <{message.get('patient_email')}>"
+                if message.get("patient_email")
+                else ""
+            ),
+        )
+
+    provider = message.get("provider")
+    model_id = message.get("model_id")
+    if provider or model_id:
+        _print_labeled_value(
+            out=out,
+            label="provider / model",
+            value=(provider or "UNKNOWN") + " / " + (model_id or "UNKNOWN"),
+        )
+    correlation_id = message.get("correlation_id")
+    if correlation_id:
+        _print_labeled_value(
+            out=out,
+            label="correlation_id",
+            value=str(correlation_id),
+        )
+
+    content = message.get("final_content_json") or message.get(
+        "draft_content_json"
+    )
+    if isinstance(content, dict):
+        subject = content.get("subject")
+        opening = content.get("opening")
+        normal_summary = content.get("normal_summary")
+        recommendation = content.get("recommendation")
+        out.print("")
+        if isinstance(subject, str) and subject.strip():
+            out.print(f"Subject: {subject}")
+        if isinstance(opening, str) and opening.strip():
+            out.print("")
+            out.print(opening)
+        if isinstance(normal_summary, str) and normal_summary.strip():
+            out.print("")
+            out.print(normal_summary)
+        abnormal_findings = content.get("abnormal_findings")
+        if isinstance(abnormal_findings, list) and abnormal_findings:
+            out.print("")
+            for index, finding in enumerate(abnormal_findings, start=1):
+                if not isinstance(finding, dict):
+                    continue
+                out.print(
+                    f"  {index}. {finding.get('title')}: "
+                    f"{finding.get('explanation')}"
+                )
+        if isinstance(recommendation, str) and recommendation.strip():
+            out.print("")
+            out.print(recommendation)
+
+    validation_error = message.get("validation_error")
+    if isinstance(validation_error, str) and validation_error.strip():
+        out.print(f"validation_error: {validation_error}", style="warning")
+
+
 def _print_ingestion_processing_status(
     *,
     ingestion_id: str,
@@ -561,6 +710,12 @@ def _print_ingestion_processing_status(
         )
         out.print("")
         _print_ai_annotation_section(
+            ingestion_id=ingestion_id,
+            base_url=base_url,
+            session=session,
+            console_out=out,
+        )
+        _print_patient_message_section(
             ingestion_id=ingestion_id,
             base_url=base_url,
             session=session,

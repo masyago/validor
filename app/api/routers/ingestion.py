@@ -27,6 +27,9 @@ from app.schemas.ingestion import (
     ReadObservationsOkResponse,
     ReadProcessingEventOkResponse,
     ReadAiAnnotationOkResponse,
+    ReadPatientMessageOkResponse,
+    ApprovePatientMessageRequest,
+    ReviewPatientMessageRequest,
 )
 
 from app.schemas.identifiers import PatientId
@@ -57,6 +60,16 @@ from app.persistence.repositories.observation_repo import ObservationRepository
 from app.persistence.repositories.ai_annotation_repo import (
     AiAnnotationRepository,
 )
+from app.persistence.repositories.patient_message_repo import (
+    PatientMessageRepository,
+)
+from app.persistence.repositories.patient_repo import PatientRepository
+from app.services.patient_message_service import (
+    PatientMessageService,
+    PatientMessageNotFoundError,
+    InvalidTransitionError,
+)
+from app.persistence.models.patient_message import PatientMessage
 
 from app.services.ingestion_service import IngestionService
 from app.persistence.repositories.processing_event_repo import (
@@ -707,6 +720,182 @@ def read_ai_annotations_for_ingestion_id(
             )
         )
     return out
+
+
+def _patient_message_response(
+    db: Session, message: PatientMessage
+) -> ReadPatientMessageOkResponse:
+    """Assemble the read model, applying synthetic PHI (name/email) only here,
+    at render time — never from draft_content_json."""
+    patient = PatientRepository(db).get(message.patient_id)
+    return ReadPatientMessageOkResponse(
+        patient_message_id=message.patient_message_id,
+        ingestion_id=message.ingestion_id,
+        patient_id=message.patient_id,
+        patient_given_name=patient.given_name if patient else None,
+        patient_family_name=patient.family_name if patient else None,
+        patient_email=patient.email if patient else None,
+        draft_content_json=message.draft_content_json,
+        final_content_json=message.final_content_json,
+        content_schema_version=message.content_schema_version,
+        correlation_id=message.correlation_id,
+        generation_event_id=message.generation_event_id,
+        provider=message.provider,
+        model_id=message.model_id,
+        prompt_version=message.prompt_version,
+        temperature=message.temperature,
+        input_hash=message.input_hash,
+        retrieved_refs_json=message.retrieved_refs_json,
+        created_at=message.created_at,
+        validation_status=message.validation_status.value,
+        validated_at=message.validated_at,
+        validation_error=message.validation_error,
+        review_status=message.review_status.value,
+        reviewed_by=message.reviewed_by,
+        approved_by=message.approved_by,
+        reviewed_at=message.reviewed_at,
+        approved_at=message.approved_at,
+        sent_at=message.sent_at,
+        review_note=message.review_note,
+        superseded_by=message.superseded_by,
+    )
+
+
+@router.get(
+    "/ingestions/{ingestion_id}/patient_message",
+    response_model=ReadPatientMessageOkResponse,
+    response_model_exclude_unset=True,
+    responses={
+        status.HTTP_404_NOT_FOUND: {
+            "model": PathResourceNotFoundResponse,
+            "description": "Item not found",
+        },
+    },
+)
+def read_patient_message_for_ingestion_id(
+    ingestion_id: UUID,
+    db: Session = Depends(get_session),
+) -> ReadPatientMessageOkResponse:
+    message = PatientMessageRepository(db).get_active_by_ingestion_id(
+        ingestion_id
+    )
+    if message is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=PathResourceNotFoundResponse(
+                ingestion_id=ingestion_id,
+                detail="Item not found",
+            ).model_dump(mode="json", exclude_none=True),
+        )
+    return _patient_message_response(db, message)
+
+
+def _patient_message_or_404(
+    service: PatientMessageService, patient_message_id: UUID
+) -> PatientMessage:
+    try:
+        return service.get(patient_message_id)
+    except PatientMessageNotFoundError:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Patient message not found",
+        )
+
+
+@router.post(
+    "/patient_messages/{patient_message_id}/approve",
+    response_model=ReadPatientMessageOkResponse,
+    response_model_exclude_unset=True,
+)
+def approve_patient_message(
+    patient_message_id: UUID,
+    body: ApprovePatientMessageRequest,
+    db: Session = Depends(get_session),
+) -> ReadPatientMessageOkResponse:
+    service = PatientMessageService(db)
+    _patient_message_or_404(service, patient_message_id)
+    try:
+        message = service.approve(
+            patient_message_id,
+            approved_by=body.approved_by,
+            final_content_json=body.final_content_json,
+        )
+    except InvalidTransitionError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT, detail=str(exc)
+        )
+    return _patient_message_response(db, message)
+
+
+@router.post(
+    "/patient_messages/{patient_message_id}/request_changes",
+    response_model=ReadPatientMessageOkResponse,
+    response_model_exclude_unset=True,
+)
+def request_changes_patient_message(
+    patient_message_id: UUID,
+    body: ReviewPatientMessageRequest,
+    db: Session = Depends(get_session),
+) -> ReadPatientMessageOkResponse:
+    service = PatientMessageService(db)
+    _patient_message_or_404(service, patient_message_id)
+    try:
+        message = service.request_changes(
+            patient_message_id,
+            reviewed_by=body.reviewed_by,
+            note=body.note or "",
+        )
+    except InvalidTransitionError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT, detail=str(exc)
+        )
+    return _patient_message_response(db, message)
+
+
+@router.post(
+    "/patient_messages/{patient_message_id}/reject",
+    response_model=ReadPatientMessageOkResponse,
+    response_model_exclude_unset=True,
+)
+def reject_patient_message(
+    patient_message_id: UUID,
+    body: ReviewPatientMessageRequest,
+    db: Session = Depends(get_session),
+) -> ReadPatientMessageOkResponse:
+    service = PatientMessageService(db)
+    _patient_message_or_404(service, patient_message_id)
+    try:
+        message = service.reject(
+            patient_message_id,
+            reviewed_by=body.reviewed_by,
+            note=body.note,
+        )
+    except InvalidTransitionError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT, detail=str(exc)
+        )
+    return _patient_message_response(db, message)
+
+
+@router.post(
+    "/patient_messages/{patient_message_id}/send",
+    response_model=ReadPatientMessageOkResponse,
+    response_model_exclude_unset=True,
+)
+def send_patient_message(
+    patient_message_id: UUID,
+    db: Session = Depends(get_session),
+) -> ReadPatientMessageOkResponse:
+    """Demo-send: flips APPROVED -> SENT. No external delivery."""
+    service = PatientMessageService(db)
+    _patient_message_or_404(service, patient_message_id)
+    try:
+        message = service.send(patient_message_id)
+    except InvalidTransitionError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT, detail=str(exc)
+        )
+    return _patient_message_response(db, message)
 
 
 # `GET /v1/patients/{patient_id}/diagnostic-reports?include_json=1&limit=...&offset=...`

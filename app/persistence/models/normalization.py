@@ -33,7 +33,9 @@ class DiagnosticReport(Base):
     panel_id: Mapped[uuid.UUID] = mapped_column(
         Uuid, ForeignKey("panel.panel_id"), nullable=False, unique=True
     )
-    patient_id: Mapped[str] = mapped_column(Text, nullable=False, index=True)
+    patient_id: Mapped[str] = mapped_column(
+        Text, ForeignKey("patient.patient_id"), nullable=False, index=True
+    )
     panel_code: Mapped[str] = mapped_column(Text, nullable=False)
 
     # Same as `collection_timestamp` from `Panel` model
@@ -79,7 +81,9 @@ class Observation(Base):
     ingestion_id: Mapped[uuid.UUID] = mapped_column(
         Uuid, ForeignKey("ingestion.ingestion_id"), nullable=False
     )
-    patient_id: Mapped[str] = mapped_column(Text, nullable=False, index=True)
+    patient_id: Mapped[str] = mapped_column(
+        Text, ForeignKey("patient.patient_id"), nullable=False, index=True
+    )
 
     # Clinical content
     code: Mapped[str] = mapped_column(Text, nullable=False, index=True)

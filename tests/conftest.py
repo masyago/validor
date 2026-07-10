@@ -3,12 +3,56 @@ import io
 from datetime import datetime
 import hashlib
 import os
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, event
+from sqlalchemy.dialects.postgresql import insert as pg_insert
 from sqlalchemy.orm import Session
 from sqlalchemy.engine.url import make_url
 
 from alembic import command
 from alembic.config import Config
+
+from app.persistence.models.patient import Patient
+from app.persistence.models.parsing import Panel
+from app.persistence.models.normalization import DiagnosticReport, Observation
+from app.services.synthetic_patient import synthetic_patient_fields
+
+# panel/diagnostic_report/observation now FK to patient(patient_id). Many tests
+# seed those rows directly with ad-hoc patient_ids and no patient row. Rather
+# than thread a patient into every fixture, auto-create a synthetic patient row
+# for any pending child before flush. Test-only; production upserts explicitly.
+_PATIENT_FK_MODELS = (Panel, DiagnosticReport, Observation)
+
+
+@event.listens_for(Session, "before_flush")
+def _autocreate_patients(session, flush_context, instances):
+    pending = {
+        obj.patient_id
+        for obj in session.new
+        if isinstance(obj, _PATIENT_FK_MODELS)
+        and getattr(obj, "patient_id", None)
+    }
+    if not pending:
+        return
+    # Bare FK columns don't create unit-of-work insert ordering (no
+    # relationship()), so ORM-adding the patient wouldn't guarantee it lands
+    # before the child. Emit the parent immediately, idempotently.
+    rows = []
+    for patient_id in pending:
+        fields = synthetic_patient_fields(patient_id)
+        rows.append(
+            {
+                "patient_id": patient_id,
+                "given_name": fields["given_name"],
+                "family_name": fields["family_name"],
+                "email": fields["email"],
+                "is_synthetic": True,
+            }
+        )
+    session.execute(
+        pg_insert(Patient)
+        .values(rows)
+        .on_conflict_do_nothing(index_elements=["patient_id"])
+    )
 
 
 def _ensure_database_exists(database_url: str) -> None:

@@ -184,7 +184,7 @@ def _build_lipid_workflow_request() -> AIEnrichmentRequest:
 
     return AIEnrichmentRequest(
         ingestion_id=uuid4(),
-        patient_id="PATIENT-LIPID-001",
+        correlation_id=uuid4(),
         panel_codes=["LIPID"],
         collected_at=now,
         current_observations=current_observations,
