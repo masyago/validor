@@ -265,7 +265,7 @@ class IngestionService:
                 patient_id,
                 exclude_ingestion_id=ingestion_id,
                 codes=analyte_codes,
-                per_code_limit=10,
+                limit=None,
             )
         )
 
@@ -498,7 +498,7 @@ class IngestionService:
                 patient_id,
                 exclude_ingestion_id=ingestion_id,
                 codes=analyte_codes,
-                per_code_limit=10,
+                limit=None,
             )
         )
 

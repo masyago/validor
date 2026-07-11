@@ -114,7 +114,7 @@ def test_orchestrate_accepts_valid_content() -> None:
     assert result.llm_response_content is not None
     assert result.llm_response_content.opening
     assert result.llm_response_content.abnormal_findings
-    assert result.prompt_version == "v1.2.0"
+    assert result.prompt_version == "v1.3.0"
     assert result.content_schema_version == "v1.2.0"
     # The analyte's human-readable display name reaches the prompt so the model
     # can write friendly finding titles (de-identified clinical data, not PHI).

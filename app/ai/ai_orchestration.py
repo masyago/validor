@@ -24,7 +24,7 @@ from app.ai.content_versions.ai_annotation_content_v1_0_0 import (
     CONTENT_SCHEMA_VERSION,
     parse_ai_annotation_content,
 )
-from app.ai.prompt_versions.ai_annotation_prompt_v1_1_0 import (
+from app.ai.prompt_versions.ai_annotation_prompt_v1_2_0 import (
     ANNOTATION_PROMPT,
     HistoricalObservation,
     ObservationRow,

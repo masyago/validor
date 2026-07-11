@@ -34,7 +34,7 @@ from app.ai.content_versions.patient_message_content_v1_2_0 import (
     PatientMessageContent,
     parse_patient_message_content,
 )
-from app.ai.prompt_versions.patient_message_prompt_v1_2_0 import (
+from app.ai.prompt_versions.patient_message_prompt_v1_3_0 import (
     NamedObservationRow,
     PATIENT_MESSAGE_PROMPT,
     PROMPT_VERSION,

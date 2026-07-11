@@ -533,9 +533,9 @@ export default function Home() {
     setAiReady(false);
     aiReadyCheckedRef.current = false;
 
-    const csvPath = activeTab === "valid" ? "/demo-csv/valid_01.csv" : "/demo-csv/invalid_missing_fields.csv";
+    const csvPath = activeTab === "valid" ? "/demo-csv/visit4_latest.csv" : "/demo-csv/invalid_missing_fields.csv";
     const instrumentId = activeTab === "valid" ? "demo-instrument-01" : "demo-instrument-02";
-    const fileName = activeTab === "valid" ? "valid_01.csv" : "invalid_missing_fields.csv";
+    const fileName = activeTab === "valid" ? "visit4_latest.csv" : "invalid_missing_fields.csv";
 
     const csvBlob = await fetch(csvPath)
       .then((r) => r.blob())
@@ -585,7 +585,7 @@ export default function Home() {
       if (succeeded) {
         const [rpRes, obRes, aiRes] = await Promise.allSettled([
           fetch(`/v1/ingestions/${ingestionId}/diagnostic-reports?include_json=1`).then((r) => r.json()),
-          fetch(`/v1/ingestions/${ingestionId}/observations?include_json=1`).then((r) => r.json()),
+          fetch(`/v1/ingestions/${ingestionId}/observations?include_json=1&limit=200`).then((r) => r.json()),
           fetch(`/v1/ingestions/${ingestionId}/ai_annotation`).then((r) => (r.ok ? r.json() : [])),
         ]);
         observations = obRes.status === "fulfilled" && Array.isArray(obRes.value) ? obRes.value : [];
@@ -634,7 +634,7 @@ export default function Home() {
     const [evRes, rpRes, obRes, aiRes, pmRes] = await Promise.allSettled([
       fetch(`/v1/ingestions/${ingestionId}/processing-events`).then((r) => r.json()),
       fetch(`/v1/ingestions/${ingestionId}/diagnostic-reports?include_json=1`).then((r) => r.json()),
-      fetch(`/v1/ingestions/${ingestionId}/observations?include_json=1`).then((r) => r.json()),
+      fetch(`/v1/ingestions/${ingestionId}/observations?include_json=1&limit=200`).then((r) => r.json()),
       fetch(`/v1/ingestions/${ingestionId}/ai_annotation`).then((r) => (r.ok ? r.json() : [])),
       fetch(`/v1/ingestions/${ingestionId}/patient_message`).then((r) => (r.ok ? r.json() : null)),
     ]);
