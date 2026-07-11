@@ -162,7 +162,9 @@ class ProcessingEvent(Base):
         Uuid, primary_key=True, default=uuid.uuid4
     )
     ingestion_id: Mapped[uuid.UUID] = mapped_column(
-        Uuid, ForeignKey("ingestion.ingestion_id"), nullable=False
+        Uuid,
+        ForeignKey("ingestion.ingestion_id", ondelete="CASCADE"),
+        nullable=False,
     )
     # Generated once at the start of a job invocation
     execution_id: Mapped[uuid.UUID] = mapped_column(Uuid, nullable=False)

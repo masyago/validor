@@ -8,6 +8,7 @@ from fastapi import (
     status,
     Header,
     HTTPException,
+    Request,
     Response,
     Query,
 )
@@ -34,13 +35,14 @@ from app.schemas.ingestion import (
 
 from app.schemas.identifiers import PatientId
 
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 import os
 from uuid import UUID, uuid4
 from app.core.ingestion_status_enums import IngestionStatus
+from app.core.session_config import SESSION_COOKIE_NAME, SESSION_TTL_MINUTES
 import hashlib
 import io
-from typing import Union, Any, Literal, cast
+from typing import Union, Any, Literal, Optional, cast
 
 from sqlalchemy.orm import Session
 from sqlalchemy import select, func
@@ -201,6 +203,7 @@ def _enforce_inflight_limit_or_429(db: Session) -> None:
     ],
 )
 async def create_ingestion(
+    request: Request,
     background_tasks: BackgroundTasks,
     response: Response,
     file: Annotated[UploadFile, File()],
@@ -289,6 +292,21 @@ async def create_ingestion(
     new_ingestion_id = uuid4()
     new_ingestion_api_received_at = datetime.now(timezone.utc)
 
+    # Browser-driven uploads carry a session cookie (see /v1/session/start);
+    # non-browser traffic (CLI demo, seed scripts) has none and stays
+    # session_id/expires_at=NULL, i.e. not swept by the periodic purge.
+    raw_session_id = request.cookies.get(SESSION_COOKIE_NAME)
+    session_id: Optional[UUID] = None
+    expires_at: Optional[datetime] = None
+    if raw_session_id:
+        try:
+            session_id = UUID(raw_session_id)
+            expires_at = new_ingestion_api_received_at + timedelta(
+                minutes=SESSION_TTL_MINUTES
+            )
+        except ValueError:
+            session_id = None
+
     new_ingestion_record = Ingestion(
         ingestion_id=new_ingestion_id,
         instrument_id=metadata.instrument_id,
@@ -301,6 +319,9 @@ async def create_ingestion(
         server_sha256=server_sha256_new,
         status=IngestionStatus.RECEIVED,
         source_filename=file.filename,
+        kind="SESSION",
+        session_id=session_id,
+        expires_at=expires_at,
     )
     new_raw_data_record = RawData(
         ingestion_id=new_ingestion_id,

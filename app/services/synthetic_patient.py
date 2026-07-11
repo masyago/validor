@@ -10,7 +10,7 @@ from __future__ import annotations
 
 _DEMO_GIVEN_NAME = "Jane"
 _DEMO_FAMILY_NAME = "Doe"
-_DEMO_EMAIL_DOMAIN = "demo.invalid"
+_DEMO_EMAIL_DOMAIN = "validor.demo"
 
 
 def synthetic_patient_fields(patient_id: str) -> dict[str, str]:

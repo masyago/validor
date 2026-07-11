@@ -81,7 +81,9 @@ class AiGenerationJob(Base):
         Text, ForeignKey("patient.patient_id"), nullable=False
     )
     ingestion_id: Mapped[uuid.UUID] = mapped_column(
-        Uuid, ForeignKey("ingestion.ingestion_id"), nullable=False
+        Uuid,
+        ForeignKey("ingestion.ingestion_id", ondelete="CASCADE"),
+        nullable=False,
     )
     created_at: Mapped[datetime] = mapped_column(
         TIMESTAMP(timezone=True), nullable=False, server_default=func.now()

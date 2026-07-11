@@ -1,0 +1,21 @@
+# syntax=docker/dockerfile:1
+ARG NODE_VERSION=22
+FROM node:${NODE_VERSION}-slim AS build
+WORKDIR /app
+ENV NEXT_TELEMETRY_DISABLED=1
+# Next.js resolves rewrites() at build time and bakes the destination into the
+# routes manifest, so the API origin must be present during `next build`.
+ARG VALIDOR_API_ORIGIN=http://api:5000
+ENV VALIDOR_API_ORIGIN=${VALIDOR_API_ORIGIN}
+COPY package.json package-lock.json ./
+RUN npm ci
+COPY . .
+RUN npm run build
+
+FROM node:${NODE_VERSION}-slim AS runner
+WORKDIR /app
+ENV NODE_ENV=production
+ENV NEXT_TELEMETRY_DISABLED=1
+COPY --from=build /app ./
+EXPOSE 3000
+CMD ["npm", "start"]

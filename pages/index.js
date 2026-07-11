@@ -496,6 +496,12 @@ export default function Home() {
 
   useEffect(() => () => clearInterval(pollRef.current), []);
 
+  // Establish/reuse the session cookie on load and purge any ingestion left
+  // over under it (covers a reopened tab without waiting for the TTL sweep).
+  useEffect(() => {
+    fetch("/v1/session/start", { method: "POST", credentials: "include" }).catch(() => {});
+  }, []);
+
   function handleTabChange(tab) {
     if (tab === activeTab) return;
     clearInterval(pollRef.current);
@@ -548,7 +554,7 @@ export default function Home() {
     form.append("run_id", "demo-run-" + Date.now());
     form.append("uploader_received_at", new Date().toISOString());
 
-    const postRes = await fetch("/v1/ingestions", { method: "POST", body: form }).catch(() => null);
+    const postRes = await fetch("/v1/ingestions", { method: "POST", body: form, credentials: "include" }).catch(() => null);
     const postData = postRes ? await postRes.json().catch(() => null) : null;
     const ingestionId = postData?.ingestion_id;
     if (!ingestionId) {
@@ -1055,7 +1061,11 @@ export default function Home() {
         {aiTab === "annotation" && (
           <div>
             <div className="meta-row">
-              <div className="meta-cell"><div className="meta-label">INGESTION ID</div><div className="meta-val" title={demoResult.ingestionId}>{(demoResult.ingestionId || "").slice(0, 18)}</div></div>
+              <div className="meta-cell"><div className="meta-label">PATIENT</div><div className="meta-val">{
+                patientMessage
+                  ? [patientMessage.patient_given_name, patientMessage.patient_family_name].filter(Boolean).join(" ") || PATIENT_NAME
+                  : PATIENT_NAME
+              }</div></div>
               <div className="meta-cell"><div className="meta-label">PANEL</div><div className="meta-val">{panel}</div></div>
               <div className="meta-cell"><div className="meta-label">COLLECTED</div><div className="meta-val">{collected}</div></div>
               <div className="meta-cell"><div className="meta-label">ANNOTATION TYPE</div><div className="meta-val" style={{ color: "var(--warn)" }}>{(ai.annotation_type || content.annotation_type || "—").toString().toUpperCase()}</div></div>
@@ -1180,7 +1190,6 @@ export default function Home() {
 
             <div className="audit-footer">
               <span className="audit-item">Model: <span title={ai.model_id || ""}>{shortModelName(ai.model_id)}</span></span>
-              <span className="audit-item">Annotation ID: <span>{(ai.ai_annotation_id || "").slice(0, 8) || "—"}</span></span>
               <span className="audit-item">Generated: <span>{fmtGenerated(ai.created_at)}</span></span>
               <span className="audit-item">Schema: <span>{ai.content_schema_version || "—"}</span></span>
             </div>
@@ -1296,7 +1305,6 @@ export default function Home() {
             )}
             <div className="audit-footer">
               <span className="audit-item">Model: <span title={(patientMessage?.model_id || ai.model_id) || ""}>{shortModelName(patientMessage?.model_id || ai.model_id)}</span></span>
-              <span className="audit-item">Draft ID: <span>{(patientMessage?.patient_message_id || "").slice(0, 8) || "—"}</span></span>
               <span className="audit-item">Generated: <span>{fmtGenerated(patientMessage?.created_at || ai.created_at)}</span></span>
               <span className="audit-item">Schema: <span>{(patientMessage?.content_schema_version || ai.content_schema_version) || "—"}</span></span>
             </div>

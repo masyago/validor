@@ -30,5 +30,8 @@ if [ "$attempt" -gt "$max_retries" ]; then
   exit 1
 fi
 
+echo "Seeding database (idempotent)..."
+"$python_bin" scripts/seed_db.py
+
 echo "Starting API on port ${PORT}..."
 exec "$python_bin" -m uvicorn app.main:app --host 0.0.0.0 --port "$PORT"

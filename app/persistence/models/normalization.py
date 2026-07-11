@@ -28,10 +28,15 @@ class DiagnosticReport(Base):
         Uuid, primary_key=True, default=uuid.uuid4
     )
     ingestion_id: Mapped[uuid.UUID] = mapped_column(
-        Uuid, ForeignKey("ingestion.ingestion_id"), nullable=False
+        Uuid,
+        ForeignKey("ingestion.ingestion_id", ondelete="CASCADE"),
+        nullable=False,
     )
     panel_id: Mapped[uuid.UUID] = mapped_column(
-        Uuid, ForeignKey("panel.panel_id"), nullable=False, unique=True
+        Uuid,
+        ForeignKey("panel.panel_id", ondelete="CASCADE"),
+        nullable=False,
+        unique=True,
     )
     patient_id: Mapped[str] = mapped_column(
         Text, ForeignKey("patient.patient_id"), nullable=False, index=True
@@ -70,16 +75,23 @@ class Observation(Base):
         Uuid, primary_key=True, default=uuid.uuid4
     )
     test_id: Mapped[uuid.UUID] = mapped_column(
-        Uuid, ForeignKey("test.test_id"), nullable=False, unique=True
+        Uuid,
+        ForeignKey("test.test_id", ondelete="CASCADE"),
+        nullable=False,
+        unique=True,
     )
     diagnostic_report_id: Mapped[uuid.UUID] = mapped_column(
         Uuid,
-        ForeignKey("diagnostic_report.diagnostic_report_id"),
+        ForeignKey(
+            "diagnostic_report.diagnostic_report_id", ondelete="CASCADE"
+        ),
         nullable=False,
         index=True,
     )
     ingestion_id: Mapped[uuid.UUID] = mapped_column(
-        Uuid, ForeignKey("ingestion.ingestion_id"), nullable=False
+        Uuid,
+        ForeignKey("ingestion.ingestion_id", ondelete="CASCADE"),
+        nullable=False,
     )
     patient_id: Mapped[str] = mapped_column(
         Text, ForeignKey("patient.patient_id"), nullable=False, index=True

@@ -17,8 +17,21 @@ services:
     depends_on:
       migrate:
         condition: service_completed_successfully
+      seed:
+        condition: service_completed_successfully
       db:
         condition: service_healthy
+
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile.web
+      args:
+        VALIDOR_API_ORIGIN: http://api:5000
+    ports:
+      - ${WEB_PORT:-3000}:3000
+    depends_on:
+      - api
 
   migrate:
     build:
@@ -29,6 +42,17 @@ services:
       db:
         condition: service_healthy
     command: ["alembic", "upgrade", "head"]
+    restart: "no"
+
+  seed:
+    build:
+      context: .
+    environment:
+      - DATABASE_URL=postgresql+psycopg://postgres:postgres@db:5432/cla
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+    command: ["python", "scripts/seed_db.py"]
     restart: "no"
 
   db:

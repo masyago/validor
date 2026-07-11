@@ -103,7 +103,9 @@ class PatientMessage(Base):
         Text, ForeignKey("patient.patient_id"), nullable=False
     )
     ingestion_id: Mapped[uuid.UUID] = mapped_column(
-        Uuid, ForeignKey("ingestion.ingestion_id"), nullable=False
+        Uuid,
+        ForeignKey("ingestion.ingestion_id", ondelete="CASCADE"),
+        nullable=False,
     )
 
     # Content

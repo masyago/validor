@@ -777,7 +777,7 @@ class IngestionService:
 
         return True
 
-    def process_ingestion(self, ingestion_id):
+    def process_ingestion(self, ingestion_id, skip_ai_stages: bool = False):
         if not self.ingestion_repo.claim_for_processing(ingestion_id):
             return  # already claimed or not in a processable state
 
@@ -1099,6 +1099,11 @@ class IngestionService:
                 return
 
             # Normalization succeeded (warnings are still a success path).
+            if skip_ai_stages:
+                self.ingestion_repo.mark_completed(ingestion_id)
+                self.session.commit()
+                return
+
             emit_started(
                 self.pe_repo,
                 ai_ctx,
