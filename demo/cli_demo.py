@@ -482,11 +482,11 @@ def _print_patient_message_section(
         abnormal_findings = content.get("abnormal_findings")
         if isinstance(abnormal_findings, list) and abnormal_findings:
             out.print("")
-            for index, finding in enumerate(abnormal_findings, start=1):
+            for finding in abnormal_findings:
                 if not isinstance(finding, dict):
                     continue
                 out.print(
-                    f"  {index}. {finding.get('title')}: "
+                    f"  - {finding.get('title')}: "
                     f"{finding.get('explanation')}"
                 )
         if isinstance(recommendation, str) and recommendation.strip():

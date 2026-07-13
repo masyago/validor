@@ -127,12 +127,21 @@ PATIENT_MESSAGE_JSON_SCHEMA = {
         "normal_summary": {
             "type": "string",
             "description": (
-                "One plain-language sentence rolling up the results that were "
-                "within normal ranges, naming the main ones (e.g. 'Most results "
-                "were within normal ranges, including blood sugar, potassium, "
-                "and several liver and kidney markers.'). Do not name a result "
-                "here if it is already covered by an `improved_findings` entry. "
-                "Use an empty string if no results were normal."
+                """
+                One plain-language sentence summarizing the results that were
+                within normal ranges, naming 3 to 5 categories or specific
+                analytes at most. Don't list all individual tests that were
+                normal; instead use categories, e.g. electrolytes, where
+                appropriate. Do NOT also list the individual analytes that
+                make up a category in parentheses (write "electrolytes", not
+                "electrolytes (sodium, potassium, and chloride)"). E.g.
+                'Most results were within normal ranges, including
+                electrolytes, kidney function markers, liver enzymes, and
+                lipid panel.'.
+                Do not name a result here if it is already covered by an
+                `improved_findings` entry.
+                Use an empty string if no results were normal.
+                """
             ),
         },
         "abnormal_findings": {
@@ -245,13 +254,17 @@ clinician will review and approve your draft before it is ever sent.
 8th-grade reading level. Explain any medical term you must use.
 - Be calm and reassuring without minimizing genuinely notable findings.
 - Roll ALL in-range results that were ALSO in range last time into a single \
-plain-language sentence (`normal_summary`) — do not list them one by one.
+plain-language sentence (`normal_summary`), naming 3 to 5 categories or \
+specific analytes at most — do not enumerate every normal test, and do not \
+list the individual analytes that make up a category (e.g. write \
+"electrolytes", not "electrolytes (sodium, potassium, and chloride)").
 - For a result that was out of range in its most recent prior result but is \
 now within range, add one `improved_findings` entry instead of folding it into \
 `normal_summary` — this is good news worth naming.
 - For results OUTSIDE the normal range, add one `abnormal_findings` entry each \
 (closely related analytes such as ALT and AST may be grouped). For each, explain \
-what the analyte measures, how it deviated, and any trend versus prior results — \
+what the analyte measures, how it deviated, and any trend versus prior results.
+Be specific.
 do NOT add a follow-up/monitoring sentence to each finding; that would repeat \
 across findings. State follow-up guidance ONCE, in `recommendation`.
 

@@ -101,18 +101,23 @@ ANNOTATION_JSON_SCHEMA = {
         "summary": {
             "type": "string",
             "description": (
-                "Two to four sentences. Open by stating what was analysed: which "
-                "panel(s), how many results, and whether historical data was "
-                "available for comparison. Then give the overall picture — what "
-                "is stable, what is moving, and what stands out (including any "
-                "results that have improved back to within range). Be specific: "
-                "name analytes, include values and units, and note the timeframe "
-                "of any trend. Example: 'Most recent results for 3 panels (Lipid, "
-                "Basic Metabolic, Liver Function) were analysed and compared "
-                "against prior results. The majority of analytes are stable. "
-                "Total cholesterol has risen from 120 to 175 mg/dL over 2 months "
-                "and warrants monitoring.' Do NOT include diagnoses or treatment "
-                "recommendations."
+                """
+                Two to four sentences. Open by stating what was analyzed: which 
+                panel(s), how many results, and whether historical data was
+                available for comparison. Then give the overall picture — what
+                is stable, what is moving, and what stands out. Specifically, 
+                mention ALL tests that are out of range currently or were out 
+                of range is previous reports and now improved to within range.
+                Be specific:name analytes, include values and units, and note 
+                the timeframe of any trend.
+                
+                Example: 'Most recent results for 3 panels (Lipid,
+                Basic Metabolic, Liver Function) were analysed and compared
+                against prior results. The majority of analytes are stable.
+                Total cholesterol has risen from 120 to 175 mg/dL over 2 months
+                and warrants monitoring.' Do NOT include diagnoses or treatment
+                recommendations.
+                """
             ),
         },
         # -----------------------------------------------------------------
@@ -122,11 +127,14 @@ ANNOTATION_JSON_SCHEMA = {
             "type": "array",
             "minItems": 1,
             "description": (
-                "One entry per analyte outside reference range, showing a notable "
-                "trend, or carrying a confidence concern. This also includes an "
-                "analyte that has improved from an out-of-range prior result back "
-                "to within range (set trend_direction = 'improved'). Omit analytes "
-                "that are within range, stable, and were not previously abnormal."
+                """
+                One entry per analyte outside reference range, showing a notable
+                trend, or carrying a confidence concern. This also includes analytes
+                that were out of range previously and has improved to within range
+                (set trend_direction = 'improved'). Omit analytes that are 
+                within range, stable, and were not previously abnormal.
+                
+                """
             ),
             "items": {
                 "type": "object",

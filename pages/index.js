@@ -823,11 +823,11 @@ export default function Home() {
     if (c.normal_summary && c.normal_summary.trim()) lines.push(c.normal_summary, "");
     if (improvedFindings.length) {
       lines.push("The following results have returned to normal since your last test:");
-      improvedFindings.forEach((f, i) => lines.push(`${i + 1}. ${f.title}: ${f.explanation}`, ""));
+      improvedFindings.forEach((f) => lines.push(`- ${f.title}: ${f.explanation}`, ""));
     }
     if (findings.length) {
       lines.push("The following results fell outside normal ranges and require follow-up:");
-      findings.forEach((f, i) => lines.push(`${i + 1}. ${f.title}: ${f.explanation}`, ""));
+      findings.forEach((f) => lines.push(`- ${f.title}: ${f.explanation}`, ""));
       lines.push("Please schedule a follow-up appointment with your clinician to discuss these results.");
     } else {
       lines.push("No follow-up appointment needed at this time.");
@@ -851,20 +851,20 @@ export default function Home() {
     lines.push("Most results were within normal ranges.", "");
     if (improvedFindings.length) {
       lines.push("The following results have returned to normal since your last test:");
-      improvedFindings.forEach((f, i) => {
+      improvedFindings.forEach((f) => {
         const o = obs.find((x) => x.code === f.analyte_code);
         const name = o?.display || f.analyte_code;
         const desc = f.description || "This result has returned to within the normal range.";
-        lines.push(`${i + 1}. ${name}: ${desc}`, "");
+        lines.push(`- ${name}: ${desc}`, "");
       });
     }
     if (findings.length) {
       lines.push("The following results fell outside normal ranges and require follow-up:");
-      findings.forEach((f, i) => {
+      findings.forEach((f) => {
         const o = obs.find((x) => x.code === f.analyte_code);
         const name = o?.display || f.analyte_code;
         const desc = f.description || "This result was outside the normal range and will be reviewed.";
-        lines.push(`${i + 1}. ${name}: ${desc}`, "");
+        lines.push(`- ${name}: ${desc}`, "");
       });
       lines.push("Please schedule a follow-up appointment with your clinician to discuss these results.");
     } else {
