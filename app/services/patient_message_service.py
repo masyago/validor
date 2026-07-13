@@ -151,6 +151,22 @@ class PatientMessageService:
         message.reviewed_at = _now()
         if note is not None:
             message.review_note = note
+
+        ctx = EventContext(
+            ingestion_id=message.ingestion_id,
+            actor=ProcessingEventActor.MESSAGE_DRAFTER,
+        )
+        emit(
+            self.pe_repo,
+            ctx,
+            event_type=ProcessingEventType.MESSAGE_REJECTED,
+            severity=ProcessingEventSeverity.WARN,
+            message="Patient message rejected by clinician",
+            details={"patient_message_id": str(patient_message_id), "note": note},
+            target_type=ProcessingEventTargetType.PATIENT_MESSAGE,
+            target_id=patient_message_id,
+            deduped=False,
+        )
         self.session.flush()
         self.session.commit()
         return message

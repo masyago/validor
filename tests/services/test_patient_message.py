@@ -363,6 +363,13 @@ def test_request_changes_and_reject(drafted, db_session):
     )
     assert rejected.review_status == PatientMessageReviewStatus.REJECTED
 
+    events = ProcessingEventRepository(
+        db_session
+    ).list_by_ingestion_id(_ingestion_id)
+    assert any(
+        e.event_type == ProcessingEventType.MESSAGE_REJECTED for e in events
+    )
+
 
 # ---------------------------------------------------------------------------
 # DB constraints

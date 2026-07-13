@@ -59,6 +59,9 @@ class ProcessingEventType(enum.Enum):
     # Clinician-approved demo "send" of a patient message (no real delivery)
     MESSAGE_SENT = "MESSAGE_SENT"
 
+    # Clinician rejection of a patient message draft
+    MESSAGE_REJECTED = "MESSAGE_REJECTED"
+
 
 processing_event_type_enum = SqlEnum(
     ProcessingEventType,

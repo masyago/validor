@@ -102,20 +102,22 @@ ANNOTATION_JSON_SCHEMA = {
             "type": "string",
             "description": (
                 """
-                Two to four sentences. Open by stating what was analyzed: which 
-                panel(s), how many results, and whether historical data was
-                available for comparison. Then give the overall picture — what
-                is stable, what is moving, and what stands out. Specifically, 
-                mention ALL tests that are out of range currently or were out 
-                of range is previous reports and now improved to within range.
-                Be specific:name analytes, include values and units, and note 
+                Two to four sentences. Open by stating what was analyzed: name
+                the panel(s) analyzed, and whether historical data was
+                available for comparison. Do NOT report how many results or
+                analytes were analyzed — name the panels only, not a count.
+                Then give the overall picture — what is stable, what is
+                moving, and what stands out. Specifically, mention ALL tests
+                that are out of range currently or were out of range is
+                previous reports and now improved to within range. Be
+                specific: name analytes, include values and units, and note
                 the timeframe of any trend.
-                
-                Example: 'Most recent results for 3 panels (Lipid,
-                Basic Metabolic, Liver Function) were analysed and compared
-                against prior results. The majority of analytes are stable.
-                Total cholesterol has risen from 120 to 175 mg/dL over 2 months
-                and warrants monitoring.' Do NOT include diagnoses or treatment
+
+                Example: 'Test panels Lipid, Basic Metabolic, and Liver
+                Function were analysed and compared against prior results.
+                The majority of analytes are stable. Total cholesterol has
+                risen from 120 to 175 mg/dL over 2 months and warrants
+                monitoring.' Do NOT include diagnoses or treatment
                 recommendations.
                 """
             ),

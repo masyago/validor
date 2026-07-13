@@ -283,7 +283,7 @@ body>*{position:relative;z-index:1}
 .ai-aug .tb-btn{padding:4px 10px;border-radius:5px;font-size:11px;font-weight:500;cursor:pointer;background:transparent;border:1px solid var(--border);color:var(--muted);font-family:var(--mono);transition:all .15s}
 .ai-aug .tb-btn:hover{border-color:var(--blue3);color:var(--blue3)}
 .ai-aug .tb-sep{width:1px;height:16px;background:var(--border);margin:0 4px}
-.ai-aug .msg-textarea{width:100%;background:rgba(5,14,26,0.6);border:1px solid var(--border2);border-radius:8px;padding:16px;font-size:14px;color:var(--white);font-family:var(--font);line-height:1.75;resize:vertical;min-height:340px;outline:none;transition:border-color .2s}
+.ai-aug .msg-textarea{width:100%;background:rgba(5,14,26,0.6);border:1px solid var(--border2);border-radius:8px;padding:16px;font-size:14px;color:var(--white);font-family:var(--font);line-height:1.75;resize:vertical;min-height:510px;outline:none;transition:border-color .2s}
 .ai-aug .msg-textarea:focus{border-color:var(--blue3)}
 .ai-aug .draft-actions{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:12px 22px;border-top:1px solid var(--border)}
 .ai-aug .draft-actions-right{display:flex;align-items:center;gap:10px}
@@ -945,6 +945,7 @@ export default function Home() {
     // Clinician rejects the draft with a reason. Drives the human gate:
     // review_status -> REJECTED (the message is no longer active).
     const pm = patientMessage;
+    if (!rejectReason.trim()) return;
     if (pm && pm.patient_message_id) {
       try {
         const res = await fetch(`/v1/patient_messages/${pm.patient_message_id}/reject`, {
@@ -952,7 +953,7 @@ export default function Home() {
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             reviewed_by: "demo-clinician",
-            note: rejectReason.trim() || null,
+            note: rejectReason.trim(),
           }),
         });
         if (res.ok) {
@@ -1211,7 +1212,7 @@ export default function Home() {
               </div>
                 <div>
                   <div className="composer-title">Draft patient message</div>
-                  <div className="composer-subtitle">AI-generated · ingestion id: {(demoResult.ingestionId || "").slice(0, 18)}</div>
+                  <div className="composer-subtitle">AI-generated</div>
                 </div>
               </div>
               <div className={`draft-tag${
@@ -1290,12 +1291,13 @@ export default function Home() {
                   className="reject-textarea"
                   value={rejectReason}
                   onChange={(e) => setRejectReason(e.target.value)}
-                  placeholder="Why is this draft being rejected? (recorded on the message audit trail)"
+                  placeholder="Required: Why is this draft being rejected? (recorded on the message audit trail)"
                   spellCheck={true}
+                  required
                 />
                 <div className="reject-panel-actions">
                   <button className="draft-btn secondary" onClick={() => { setRejecting(false); setRejectReason(""); }}>Cancel</button>
-                  <button className="draft-btn danger" onClick={rejectDraft}>Confirm rejection</button>
+                  <button className="draft-btn danger" onClick={rejectDraft} disabled={!rejectReason.trim()}>Confirm rejection</button>
                 </div>
               </div>
             )}
