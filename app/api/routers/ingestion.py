@@ -293,19 +293,21 @@ async def create_ingestion(
     new_ingestion_api_received_at = datetime.now(timezone.utc)
 
     # Browser-driven uploads carry a session cookie (see /v1/session/start);
-    # non-browser traffic (CLI demo, seed scripts) has none and stays
-    # session_id/expires_at=NULL, i.e. not swept by the periodic purge.
+    # cookie-less callers (CLI demo, or a browser that didn't send the cookie)
+    # have none and get session_id=NULL — but every SESSION ingestion still
+    # gets a TTL so the periodic purge can reclaim it. Otherwise a cookie-less
+    # upload would persist forever and pollute a patient's history. Only SEED
+    # rows (created by the seed script, not this endpoint) are permanent.
     raw_session_id = request.cookies.get(SESSION_COOKIE_NAME)
     session_id: Optional[UUID] = None
-    expires_at: Optional[datetime] = None
     if raw_session_id:
         try:
             session_id = UUID(raw_session_id)
-            expires_at = new_ingestion_api_received_at + timedelta(
-                minutes=SESSION_TTL_MINUTES
-            )
         except ValueError:
             session_id = None
+    expires_at: datetime = new_ingestion_api_received_at + timedelta(
+        minutes=SESSION_TTL_MINUTES
+    )
 
     new_ingestion_record = Ingestion(
         ingestion_id=new_ingestion_id,

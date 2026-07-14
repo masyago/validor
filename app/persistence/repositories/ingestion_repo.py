@@ -1,5 +1,5 @@
 from sqlalchemy.orm import Session
-from sqlalchemy import delete, select
+from sqlalchemy import delete, or_, select
 from uuid import UUID
 from datetime import datetime, timezone
 
@@ -116,13 +116,17 @@ class IngestionRepository:
         return result.rowcount
 
     def delete_expired_sessions(self, now: datetime | None = None) -> int:
-        """Purge SESSION-kind ingestions past their TTL. SEED rows are never
-        touched (session_id/expires_at are always NULL on them)."""
+        """Purge SESSION-kind ingestions past their TTL. Also self-heals any
+        orphaned SESSION rows with a NULL expires_at (e.g. legacy cookie-less
+        uploads created before TTLs were always assigned) — those are otherwise
+        unreachable by every purge path. SEED rows are never touched."""
         now = now or datetime.now(timezone.utc)
         stmt = delete(Ingestion).where(
             Ingestion.kind == "SESSION",
-            Ingestion.expires_at.is_not(None),
-            Ingestion.expires_at < now,
+            or_(
+                Ingestion.expires_at.is_(None),
+                Ingestion.expires_at < now,
+            ),
         )
         result = self.session.execute(stmt)
         self.session.flush()
