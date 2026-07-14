@@ -36,7 +36,7 @@ nav{display:flex;align-items:center;justify-content:space-between;padding:20px 4
 .nav-cta:hover{background:var(--blue4)}
 
 /* HERO */
-.hero{padding:100px 48px 80px;max-width:1100px;margin:0 auto;position:relative;text-align:center}
+.hero{padding:67px 48px 56px;max-width:1100px;margin:0 auto;position:relative;text-align:center}
 .hero-sub{margin-left:auto;margin-right:auto}
 .hero-actions{justify-content:center}
 .hero-badge{display:inline-flex;align-items:center;gap:8px;background:rgba(58,155,255,0.1);border:1px solid var(--border2);border-radius:100px;padding:6px 14px;font-size:12px;font-weight:500;color:var(--blue3);margin-bottom:32px;font-family:var(--mono)}
@@ -44,9 +44,9 @@ nav{display:flex;align-items:center;justify-content:space-between;padding:20px 4
 @keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.6;transform:scale(0.8)}}
 h1{font-size:clamp(40px,5vw,64px);font-weight:700;letter-spacing:-0.03em;line-height:1.1;margin-bottom:24px}
 h1 em{font-style:normal;background:linear-gradient(90deg,var(--blue3),var(--cyan));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
-.hero-sub{font-size:18px;color:var(--muted);max-width:580px;margin-bottom:48px;font-weight:400;line-height:1.7}
+.hero-sub{font-size:18px;color:var(--muted);max-width:580px;margin-bottom:17px;font-weight:400;line-height:1.7}
 .hero-actions{display:flex;gap:16px;flex-wrap:wrap}
-.hero-features{max-width:1100px;margin:8px auto 0;padding:0 48px;display:grid;grid-template-columns:repeat(3,1fr);gap:20px}
+.hero-features{max-width:1100px;margin:6px auto 0;padding:0 48px;display:grid;grid-template-columns:repeat(3,1fr);gap:20px}
 .hero-feature{border:1px solid var(--border);border-radius:12px;padding:22px 20px;background:var(--navy2)}
 .hero-feature-icon{width:34px;height:34px;border-radius:8px;background:rgba(58,155,255,0.12);display:flex;align-items:center;justify-content:center;color:var(--blue4);margin-bottom:14px}
 .hero-feature-icon svg{width:18px;height:18px}
@@ -60,20 +60,31 @@ h1 em{font-style:normal;background:linear-gradient(90deg,var(--blue3),var(--cyan
 
 /* PIPELINE SECTION */
 .section{padding:80px 48px;max-width:1100px;margin:0 auto}
+#demo{padding-bottom:40px}
+#pipeline{padding-top:40px}
 .section-label{font-size:12px;font-weight:600;color:var(--blue3);letter-spacing:0.1em;text-transform:uppercase;font-family:var(--mono);margin-bottom:12px}
 .section-title{font-size:36px;font-weight:700;letter-spacing:-0.02em;margin-bottom:16px}
 .section-sub{font-size:16px;color:var(--muted);max-width:520px;margin-bottom:56px}
+#demo .section-sub{margin-bottom:39px}
 
-/* PIPELINE DIAGRAM */
-.pipeline{display:flex;align-items:center;gap:0;overflow-x:auto;padding-bottom:8px}
-.pipe-step{flex:1;min-width:140px;position:relative}
-.pipe-box{background:var(--navy2);border:1px solid var(--border);border-radius:10px;padding:20px 16px;text-align:center;transition:all .25s;cursor:pointer}
-.pipe-box:hover{border-color:var(--blue3);background:var(--navy3);transform:translateY(-3px)}
-.pipe-icon{width:36px;height:36px;background:rgba(58,155,255,0.12);border-radius:8px;margin:0 auto 12px;display:flex;align-items:center;justify-content:center;font-size:18px}
-.pipe-name{font-size:13px;font-weight:600;color:var(--white);margin-bottom:4px}
-.pipe-desc{font-size:11px;color:var(--muted)}
-.pipe-arrow{color:var(--blue2);font-size:18px;flex-shrink:0;padding:0 8px;margin-top:-20px}
-.pipe-input{font-family:var(--mono);font-size:11px;color:var(--muted);text-align:center;margin-bottom:8px}
+/* PIPELINE DIAGRAM (SVG data-flow) */
+.vf-flow{max-width:700px;margin:0;overflow-x:auto}
+.vf-flow svg{display:block;width:100%;min-width:560px;height:auto}
+.vf-eyebrow{font-family:var(--mono);font-size:11px;letter-spacing:1px}
+.vf-mono{font-family:var(--mono);font-size:11px}
+.vf-title{font-family:var(--font);font-size:14px;font-weight:500;fill:var(--white)}
+.vf-sub{font-family:var(--font);font-size:12px;fill:var(--muted)}
+.vf-card{fill:var(--navy2);stroke:var(--border2);stroke-width:.5}
+.vf-arrow{stroke:var(--blue2);stroke-width:1.5}
+.vf-ai-card{fill:rgba(164,143,214,0.08);stroke:rgba(164,143,214,0.35);stroke-width:.5}
+.vf-ai-title{font-family:var(--font);font-size:14px;font-weight:500;fill:#e7defa}
+.vf-ai-sub{font-family:var(--font);font-size:12px;fill:#a48fd6}
+.vf-ai-arrow{stroke:#8a72c4;stroke-width:1.5}
+.vf-chip{fill:rgba(164,143,214,0.1);stroke:rgba(164,143,214,0.35);stroke-width:.5}
+.vf-chip-text{fill:#c9b8ef}
+.vf-audit-card{fill:rgba(245,166,35,0.06);stroke:rgba(245,166,35,0.3);stroke-width:.5;stroke-dasharray:4 3}
+.vf-audit-body{font-family:var(--font);font-size:12px;fill:#d6b98a}
+.vf-audit-arrow{stroke:#a37c2f;stroke-width:1.5}
 
 /* DEMO SECTION */
 .demo-wrap{background:var(--navy2);border:1px solid var(--border);border-radius:16px;overflow:hidden;margin-top:0}
@@ -136,7 +147,7 @@ h1 em{font-style:normal;background:linear-gradient(90deg,var(--blue3),var(--cyan
 .event-msg{color:var(--muted)}
 
 /* FOOTER SECTION */
-footer{border-top:1px solid var(--border);padding:48px 48px;font-size:13px;color:var(--muted);display:flex;flex-direction:column;align-items:center;gap:16px;text-align:center}
+footer{border-top:1px solid var(--border);padding:24px 48px;font-size:13px;color:var(--muted);display:flex;flex-direction:column;align-items:center;gap:16px;text-align:center;background:rgba(5,14,26,0.92);backdrop-filter:blur(12px)}
 .footer-title{font-weight:700;font-size:20px;color:var(--white);letter-spacing:-0.02em}
 .footer-links{display:flex;gap:24px}
 .footer-link{background:none;border:none;padding:0;font:inherit;color:var(--muted);text-decoration:none;cursor:pointer;letter-spacing:0.04em;text-transform:uppercase;font-size:12px;transition:color .2s}
@@ -152,6 +163,13 @@ footer{border-top:1px solid var(--border);padding:48px 48px;font-size:13px;color
 .contact-textarea:focus{outline:none;border-color:var(--blue3)}
 .contact-error{color:var(--danger);font-size:13px;margin-top:10px}
 .contact-actions{display:flex;justify-content:flex-end;gap:12px;margin-top:20px}
+.contact-actions .draft-btn{padding:8px 18px;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;background:transparent;border:1px solid var(--border2);color:var(--blue3);font-family:var(--mono);transition:all .15s}
+.contact-actions .draft-btn:hover:not(:disabled){border-color:var(--blue3);color:var(--white)}
+.contact-actions .draft-btn.secondary{color:var(--muted);border-color:var(--border)}
+.contact-actions .draft-btn.secondary:hover:not(:disabled){color:var(--blue3);border-color:var(--blue3)}
+.contact-actions .draft-btn.primary{background:var(--blue3);border-color:var(--blue3);color:#04121f}
+.contact-actions .draft-btn.primary:hover:not(:disabled){background:var(--white);border-color:var(--white)}
+.contact-actions .draft-btn:disabled{opacity:0.45;cursor:not-allowed}
 
 /* Result Grid */
 .result-grid{display:grid;grid-template-columns:1fr 1fr;gap:24px}
@@ -171,10 +189,7 @@ body>*{position:relative;z-index:1}
 
   .section{padding:32px 16px}
 
-  .pipeline{flex-direction:column;align-items:stretch;overflow-x:unset;gap:2px}
-  .pipe-arrow{transform:rotate(90deg);text-align:center;margin-top:0;margin-bottom:-4px;padding:0;font-size:16px}
-  .pipe-step{width:100%}
-  .pipe-box{width:100%;box-sizing:border-box}
+  .vf-flow{overflow-x:auto}
 
   .audit-grid{max-width:100%;padding-right:8px}
   .event-row{align-items:flex-start;flex-wrap:wrap}
@@ -1582,7 +1597,7 @@ export default function Home() {
             </div>
             <div className="physician-note">
               <div className="pn-text">
-                <strong>Physician review required.</strong> This draft was generated by an AI pipeline based on structured lab annotations and is provided as a starting point only. You must review, edit as needed, and personally approve before sending. This message does not constitute medical advice and must not be sent without clinical sign-off.
+                <strong>Physician review required.</strong> This message does not constitute medical advice and must not be sent without clinical sign-off.
               </div>
             </div>
               </>
@@ -1620,7 +1635,7 @@ export default function Home() {
         <div className="nav-links">
           <a href="#pipeline">Pipeline</a>
           <a href="#demo">Demo</a>
-          <a href="https://github.com/masyago/validor" target="_blank" rel="noopener noreferrer">Docs</a>
+          <a href="https://github.com/masyago/validor" target="_blank" rel="noopener noreferrer">GitHub</a>
         </div>
         <a href="#demo" className="nav-cta">
           Try Demo →
@@ -1684,8 +1699,8 @@ export default function Home() {
         <div className="section-title">See Validor in action</div>
         <div className="section-sub">
           A single run through the full pipeline, replayed end to end: ingestion, validation,
-          FHIR persistence, then AI annotation and a patient message draft.
-          Every run emits a full, timestamped audit trail.
+          FHIR R4 persistence, then AI annotation and a patient message draft.
+          Every stage emits timestamped audit trail events.
         </div>
 
         <div className="demo-wrap">
@@ -1968,58 +1983,108 @@ export default function Home() {
       </div>
 
       <div className="section" id="pipeline">
-        <div className="section-label">Data Flow</div>
-        <div className="section-title">From raw lab data to Ai enrichment</div>
+        <div className="section-label">PIPELINE</div>
+        <div className="section-title">From raw lab data to AI enrichment</div>
         <div className="section-sub">
-          Every file travels a deterministic path — parsed, validated, normalized, and persisted. No
-          partial writes, no surprises.
+          Every file travels one deterministic path, then it's handed to the 
+          governed AI layer for triage and message drafting.
+          No partial writes, no message sent without a clinician's approval.
         </div>
 
-        <div className="pipeline">
-          <div className="pipe-step">
-            <div className="pipe-input">CSV file</div>
-            <div className="pipe-box">
-              <div className="pipe-icon">📄</div>
-              <div className="pipe-name">Parser</div>
-              <div className="pipe-desc">Panel + Test relations</div>
-            </div>
-          </div>
-          <div className="pipe-arrow">→</div>
-          <div className="pipe-step">
-            <div className="pipe-input">&nbsp;</div>
-            <div className="pipe-box">
-              <div className="pipe-icon">🛡</div>
-              <div className="pipe-name">Validator</div>
-              <div className="pipe-desc">Business rule enforcement</div>
-            </div>
-          </div>
-          <div className="pipe-arrow">→</div>
-          <div className="pipe-step">
-            <div className="pipe-input">&nbsp;</div>
-            <div className="pipe-box">
-              <div className="pipe-icon">⚙️</div>
-              <div className="pipe-name">Normalizer</div>
-              <div className="pipe-desc">FHIR transformation</div>
-            </div>
-          </div>
-          <div className="pipe-arrow">→</div>
-          <div className="pipe-step">
-            <div className="pipe-input">&nbsp;</div>
-            <div className="pipe-box">
-              <div className="pipe-icon">🗄</div>
-              <div className="pipe-name">Persistence</div>
-              <div className="pipe-desc">DiagnosticReport + Observation</div>
-            </div>
-          </div>
-          <div className="pipe-arrow">→</div>
-          <div className="pipe-step">
-            <div className="pipe-input">&nbsp;</div>
-            <div className="pipe-box">
-              <div className="pipe-icon">📋</div>
-              <div className="pipe-name">Events</div>
-              <div className="pipe-desc">Full provenance log</div>
-            </div>
-          </div>
+        <div className="vf-flow">
+          <svg viewBox="0 0 680 400" role="img" aria-labelledby="vf-title vf-desc">
+            <title id="vf-title">Validor data flow</title>
+            <desc id="vf-desc">
+              A deterministic pipeline parses, validates, normalizes and persists every lab result.
+              De-identified data crosses into a governed AI layer, where retrieval of clinical
+              guidelines and patient history feeds AI annotation and a patient message draft that
+              needs clinician approval. An append-only, timestamped audit log records events from
+              every stage of both lanes.
+            </desc>
+
+            <defs>
+              <marker id="vf-arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+                <path d="M2 1L8 5L2 9" fill="none" stroke="context-stroke" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+              </marker>
+              <marker id="vf-arrow-bold" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+                <path d="M1.5 1L8.5 5L1.5 9" fill="none" stroke="context-stroke" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+              </marker>
+              <pattern id="vf-grid" width="40" height="40" patternUnits="userSpaceOnUse">
+                <path d="M40 0V40M0 40H40" fill="none" stroke="var(--border)" strokeWidth=".5" />
+              </pattern>
+            </defs>
+
+            <rect x="0" y="0" width="680" height="400" rx="12" fill="var(--navy)" />
+            <rect x="0" y="0" width="680" height="400" rx="12" fill="url(#vf-grid)" />
+
+            <text className="vf-eyebrow" x="40" y="56" fill="var(--blue3)">DETERMINISTIC PIPELINE: FROM RAW CSV</text>
+
+            <rect className="vf-card" x="40" y="72" width="94" height="56" rx="10" />
+            <text className="vf-title" x="87" y="94" textAnchor="middle" dominantBaseline="central">Parse</text>
+            <text className="vf-sub" x="87" y="112" textAnchor="middle" dominantBaseline="central">CSV rows</text>
+            <line className="vf-arrow" x1="136" y1="100" x2="153" y2="100" markerEnd="url(#vf-arrow)" />
+
+            <rect className="vf-card" x="155" y="72" width="94" height="56" rx="10" />
+            <text className="vf-title" x="202" y="94" textAnchor="middle" dominantBaseline="central">Validate</text>
+            <text className="vf-sub" x="202" y="112" textAnchor="middle" dominantBaseline="central">Rule checks</text>
+            <line className="vf-arrow" x1="251" y1="100" x2="268" y2="100" markerEnd="url(#vf-arrow)" />
+
+            <rect className="vf-card" x="270" y="72" width="94" height="56" rx="10" />
+            <text className="vf-title" x="317" y="94" textAnchor="middle" dominantBaseline="central">Normalize</text>
+            <text className="vf-sub" x="317" y="112" textAnchor="middle" dominantBaseline="central">FHIR map</text>
+            <line className="vf-arrow" x1="366" y1="100" x2="383" y2="100" markerEnd="url(#vf-arrow)" />
+
+            <rect className="vf-card" x="385" y="72" width="94" height="56" rx="10" />
+            <text className="vf-title" x="432" y="94" textAnchor="middle" dominantBaseline="central">Persist</text>
+            <text className="vf-sub" x="432" y="112" textAnchor="middle" dominantBaseline="central">Reports, obs</text>
+
+            <text className="vf-eyebrow" x="568" y="56" textAnchor="middle" fill="var(--warn)">AUDIT LOG</text>
+            <rect className="vf-audit-card" x="496" y="72" width="144" height="250" rx="10" />
+            <text className="vf-mono" x="568" y="100" textAnchor="middle" dominantBaseline="central" fill="#d6b98a">append-only</text>
+            <text className="vf-mono" x="568" y="120" textAnchor="middle" dominantBaseline="central" fill="#d6b98a">timestamped</text>
+            <line x1="516" y1="142" x2="620" y2="142" stroke="rgba(245,166,35,0.25)" strokeWidth=".5" />
+            <text className="vf-audit-body" x="568" y="168" textAnchor="middle" dominantBaseline="central">Records events</text>
+            <text className="vf-audit-body" x="568" y="186" textAnchor="middle" dominantBaseline="central">for every stage</text>
+            <text className="vf-audit-body" x="568" y="204" textAnchor="middle" dominantBaseline="central">of the pipeline,</text>
+            <text className="vf-audit-body" x="568" y="222" textAnchor="middle" dominantBaseline="central">end-to-end</text>
+            <line className="vf-audit-arrow" x1="481" y1="100" x2="494" y2="100" markerEnd="url(#vf-arrow)" />
+            <line className="vf-audit-arrow" x1="481" y1="290" x2="494" y2="290" markerEnd="url(#vf-arrow)" />
+
+            <line x1="267" y1="142" x2="267" y2="244" stroke="#8a72c4" strokeWidth="3" strokeLinecap="round" markerEnd="url(#vf-arrow-bold)" />
+            <rect x="282" y="179" width="150" height="28" rx="14" fill="rgba(164,143,214,0.12)" stroke="rgba(164,143,214,0.35)" strokeWidth=".5" />
+            <text className="vf-mono" x="357" y="194" textAnchor="middle" dominantBaseline="central" fill="#c9b8ef">de-identified data</text>
+
+            <text className="vf-eyebrow" x="40" y="240" fill="#a48fd6">GOVERNED AI LAYER</text>
+
+            <rect className="vf-card" x="40" y="262" width="136" height="60" rx="10" />
+            <text className="vf-title" x="108" y="281" textAnchor="middle" dominantBaseline="central">Retrieval</text>
+            <text className="vf-sub" x="108" y="299" textAnchor="middle" dominantBaseline="central">RAG guidelines</text>
+            <text className="vf-sub" x="108" y="314" textAnchor="middle" dominantBaseline="central">+ history query</text>
+            <line className="vf-ai-arrow" x1="178" y1="290" x2="202" y2="290" markerEnd="url(#vf-arrow)" />
+
+            <rect className="vf-ai-card" x="204" y="262" width="126" height="56" rx="10" />
+            <text className="vf-ai-title" x="267" y="284" textAnchor="middle" dominantBaseline="central">AI annotation</text>
+            <text className="vf-ai-sub" x="267" y="302" textAnchor="middle" dominantBaseline="central">Priority + trend</text>
+            <line className="vf-ai-arrow" x1="332" y1="290" x2="356" y2="290" markerEnd="url(#vf-arrow)" />
+
+            <rect className="vf-ai-card" x="358" y="262" width="121" height="56" rx="10" />
+            <text className="vf-ai-title" x="418" y="284" textAnchor="middle" dominantBaseline="central">Message draft</text>
+            <text className="vf-ai-sub" x="418" y="302" textAnchor="middle" dominantBaseline="central">Needs approval</text>
+
+            <path d="M108 322 L108 338 L418 338 L418 320" fill="none" stroke="rgba(164,143,214,0.3)" strokeWidth=".5" strokeDasharray="3 3" markerEnd="url(#vf-arrow)" />
+
+            <rect className="vf-chip" x="40" y="356" width="116" height="26" rx="6" />
+            <text className="vf-mono vf-chip-text" x="98" y="370" textAnchor="middle" dominantBaseline="central">RAG guidelines</text>
+
+            <rect className="vf-chip" x="168" y="356" width="110" height="26" rx="6" />
+            <text className="vf-mono vf-chip-text" x="223" y="370" textAnchor="middle" dominantBaseline="central">History query</text>
+
+            <rect className="vf-chip" x="290" y="356" width="123" height="26" rx="6" />
+            <text className="vf-mono vf-chip-text" x="351" y="370" textAnchor="middle" dominantBaseline="central">Schema-verified</text>
+
+            <rect className="vf-chip" x="425" y="356" width="136" height="26" rx="6" />
+            <text className="vf-mono vf-chip-text" x="493" y="370" textAnchor="middle" dominantBaseline="central">Clinician sign-off</text>
+          </svg>
         </div>
 
       </div>
@@ -2044,8 +2109,8 @@ export default function Home() {
       {contactOpen && (
         <div className="contact-overlay" onClick={() => contactStatus !== "sending" && setContactOpen(false)}>
           <div className="contact-modal" onClick={(e) => e.stopPropagation()}>
-            <h3>Contact</h3>
-            <p className="contact-sub">Send a message — it goes straight to the Validor team.</p>
+            <h3>Contact us</h3>
+            <p className="contact-sub">Send a message to Validor team.</p>
             <input
               type="text"
               className="contact-honeypot"
@@ -2060,6 +2125,14 @@ export default function Home() {
               className="contact-textarea"
               value={contactMessage}
               onChange={(e) => setContactMessage(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" && !e.shiftKey) {
+                  e.preventDefault();
+                  if (contactMessage.trim() && contactStatus !== "sending" && contactStatus !== "sent") {
+                    sendContact();
+                  }
+                }
+              }}
               placeholder="Type your message…"
               disabled={contactStatus === "sending" || contactStatus === "sent"}
               autoFocus

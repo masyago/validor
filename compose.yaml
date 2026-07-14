@@ -28,6 +28,8 @@ services:
       dockerfile: Dockerfile.web
       args:
         VALIDOR_API_ORIGIN: http://api:5000
+    env_file:
+      - .env
     ports:
       - ${WEB_PORT:-3000}:3000
     depends_on:
