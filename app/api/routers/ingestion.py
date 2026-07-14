@@ -37,6 +37,7 @@ from app.schemas.identifiers import PatientId
 
 from datetime import datetime, timedelta, timezone
 import os
+import time
 from uuid import UUID, uuid4
 from app.core.ingestion_status_enums import IngestionStatus
 from app.core.session_config import SESSION_COOKIE_NAME, SESSION_TTL_MINUTES
@@ -127,6 +128,89 @@ def _int_env(name: str) -> int | None:
         return int(raw)
     except ValueError:
         return None
+
+
+# Per-IP upload rate limit state. In-memory, per-process: correct only for a
+# single API worker (the demo runs one). With multiple workers/replicas each keeps
+# its own window, so the effective limit multiplies — swap this for Redis if the
+# API is ever scaled out (same caveat noted in pages/api/contact.js and the
+# CLAUDE.md roadmap). Keys are client IPs; values are monotonic hit timestamps.
+_UPLOAD_HITS: dict[str, list[float]] = {}
+
+
+def _resolve_client_ip(request: Request) -> str:
+    """Best-effort client IP for rate limiting.
+
+    Mirrors getClientIp in pages/api/contact.js: prefer the first hop of
+    X-Forwarded-For (the demo reaches FastAPI through the Next.js rewrite proxy),
+    else the direct peer, else "unknown".
+
+    Note: X-Forwarded-For is spoofable while the API port is publicly exposed, so a
+    determined attacker can rotate keys. This is an accepted limitation of a basic
+    demo cost guard; real hardening means not publishing the API port and/or a
+    trusted-proxy allowlist.
+    """
+
+    forwarded = request.headers.get("x-forwarded-for")
+    if forwarded:
+        first = forwarded.split(",")[0].strip()
+        if first:
+            return first
+    if request.client is not None and request.client.host:
+        return request.client.host
+    return "unknown"
+
+
+def _enforce_upload_rate_limit_or_429(request: Request) -> None:
+    """Per-IP cost guard: cap how fast one client can trigger uploads.
+
+    Each accepted upload spends Bedrock budget (AI enrichment + patient-message
+    drafting), so a public, unauthenticated endpoint is a cost-runaway target.
+
+    Enable by setting BOTH `CLA_DEMO_MAX_UPLOADS_PER_WINDOW` and
+    `CLA_DEMO_RATE_WINDOW_SECONDS` to positive integers. When either is unset/<=0
+    this is disabled — the same opt-in convention as `_enforce_inflight_limit_or_429`,
+    so unit/e2e tests and the batch CLI demo are unaffected unless the env is set.
+    """
+
+    max_uploads = _int_env("CLA_DEMO_MAX_UPLOADS_PER_WINDOW")
+    window_seconds = _int_env("CLA_DEMO_RATE_WINDOW_SECONDS")
+    if (
+        max_uploads is None
+        or max_uploads <= 0
+        or window_seconds is None
+        or window_seconds <= 0
+    ):
+        return
+
+    key = _resolve_client_ip(request)
+    now = time.monotonic()
+    cutoff = now - window_seconds
+
+    hits = [ts for ts in _UPLOAD_HITS.get(key, []) if ts > cutoff]
+
+    if len(hits) >= max_uploads:
+        # Oldest in-window hit determines when the client may retry.
+        retry_after_s = max(1, int(hits[0] + window_seconds - now) + 1)
+        # Keep the pruned list so the window keeps sliding on repeated attempts.
+        _UPLOAD_HITS[key] = hits
+        raise HTTPException(
+            status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+            headers={"Retry-After": str(retry_after_s)},
+            detail={
+                "code": "DEMO_RATE_LIMITED",
+                "retryable": True,
+                "message": (
+                    "Too many uploads from your address; please slow down and "
+                    "retry shortly."
+                ),
+                "limit": int(max_uploads),
+                "window_seconds": int(window_seconds),
+            },
+        )
+
+    hits.append(now)
+    _UPLOAD_HITS[key] = hits
 
 
 def _enforce_inflight_limit_or_429(db: Session) -> None:
@@ -231,6 +315,13 @@ async def create_ingestion(
 
 
     """
+    # Per-IP cost guard: reject abusive clients before any work (hashing, DB
+    # lookups, or enqueuing the Bedrock-spending background task). Placed before the
+    # dedup check on purpose — a client re-running the demo faster than the window
+    # is exactly what we want to throttle. This is distinct from the inflight check
+    # below, which guards queue saturation rather than per-client abuse/cost.
+    _enforce_upload_rate_limit_or_429(request)
+
     # Calculate file hash
     # `read()` here returns the content as bytes
     file_content = await file.read()

@@ -310,6 +310,94 @@ def test_429_backpressure_when_inflight_limit_reached(
     assert payload["detail"]["retryable"] is True
 
 
+def _second_upload_form_and_file(base_form):
+    """A distinct upload (different run_id) so dedup can't mask a rate-limit 429."""
+    run_id = f"{base_form['run_id']}_second"
+    form = {**base_form, "run_id": run_id}
+    csv = f"instrument_id,run_id\n{base_form['instrument_id']},{run_id}"
+    files = {"file": (f"{run_id}.csv", io.BytesIO(csv.encode("utf-8")), "text/csv")}
+    return form, files
+
+
+def test_demo_rate_limit_blocks_rapid_uploads_from_same_ip(
+    client,
+    valid_form_data,
+    valid_csv_file,
+    monkeypatch,
+):
+    from app.api.routers import ingestion as ingestion_module
+
+    ingestion_module._UPLOAD_HITS.clear()
+    monkeypatch.setenv("CLA_DEMO_MAX_UPLOADS_PER_WINDOW", "1")
+    monkeypatch.setenv("CLA_DEMO_RATE_WINDOW_SECONDS", "5")
+
+    headers = {"X-Forwarded-For": "203.0.113.7"}
+
+    first = client.post(
+        "/ingestions",
+        data=valid_form_data,
+        files=valid_csv_file,
+        headers=headers,
+    )
+    assert first.status_code == 202
+
+    second_form, second_file = _second_upload_form_and_file(valid_form_data)
+    second = client.post(
+        "/ingestions",
+        data=second_form,
+        files=second_file,
+        headers=headers,
+    )
+
+    assert second.status_code == 429
+    assert second.headers.get("Retry-After") is not None
+    detail = second.json()["detail"]
+    assert detail["code"] == "DEMO_RATE_LIMITED"
+    assert detail["retryable"] is True
+    assert detail["limit"] == 1
+
+    # A different IP is unaffected by the first client's usage.
+    third = client.post(
+        "/ingestions",
+        data=_second_upload_form_and_file(valid_form_data)[0],
+        files=_second_upload_form_and_file(valid_form_data)[1],
+        headers={"X-Forwarded-For": "198.51.100.4"},
+    )
+    assert third.status_code == 202
+
+
+def test_demo_rate_limit_disabled_by_default(
+    client,
+    valid_form_data,
+    valid_csv_file,
+    monkeypatch,
+):
+    from app.api.routers import ingestion as ingestion_module
+
+    ingestion_module._UPLOAD_HITS.clear()
+    monkeypatch.delenv("CLA_DEMO_MAX_UPLOADS_PER_WINDOW", raising=False)
+    monkeypatch.delenv("CLA_DEMO_RATE_WINDOW_SECONDS", raising=False)
+
+    headers = {"X-Forwarded-For": "203.0.113.9"}
+
+    first = client.post(
+        "/ingestions",
+        data=valid_form_data,
+        files=valid_csv_file,
+        headers=headers,
+    )
+    assert first.status_code == 202
+
+    second_form, second_file = _second_upload_form_and_file(valid_form_data)
+    second = client.post(
+        "/ingestions",
+        data=second_form,
+        files=second_file,
+        headers=headers,
+    )
+    assert second.status_code == 202
+
+
 def test_race_safe_idempotency_integrity_error_returns_200_duplicate_ok(
     client,
     valid_form_data,
