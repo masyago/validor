@@ -85,11 +85,15 @@ h1 em{font-style:normal;background:linear-gradient(90deg,var(--blue3),var(--cyan
 
 /* DEMO SECTION */
 .demo-wrap{background:var(--navy2);border:1px solid var(--border);border-radius:16px;overflow:hidden;margin-top:0}
-.demo-tabs{display:flex;border-bottom:1px solid var(--border)}
-.demo-tab{padding:14px 24px;font-size:13px;font-weight:500;cursor:pointer;color:var(--muted);border-bottom:2px solid transparent;margin-bottom:-1px;transition:all .2s;font-family:var(--mono)}
-.demo-tab.active{color:var(--blue3);border-bottom-color:var(--blue3)}
-.demo-tab:first-child{border-right:1px solid var(--border)}
 .demo-body{padding:24px;font-family:var(--mono);font-size:12px;line-height:1.8;color:#a8c4e0}
+.scenario-card{padding:24px 24px 0}
+.scenario-label{display:flex;align-items:center;gap:7px;margin-bottom:12px}
+.scenario-label span{font-size:11px;font-weight:500;letter-spacing:0.06em;color:var(--blue3);text-transform:uppercase;font-family:var(--mono)}
+.scenario-text{color:var(--white);font-size:14px;line-height:1.65;margin:0 0 14px;max-width:640px;opacity:0.9}
+.scenario-tags{display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap}
+.scenario-tag{border-radius:6px;padding:6px 10px;font-size:11.5px}
+.scenario-note{display:flex;gap:8px;align-items:flex-start;background:var(--navy3);border:1px solid var(--border);border-radius:8px;padding:10px 12px;margin-bottom:20px;max-width:640px}
+.scenario-note p{margin:0;font-size:12px;line-height:1.6;color:var(--muted)}
 .demo-panel{display:none}
 .demo-panel.active{display:block}
 .status-banner{padding:12px 16px;border-radius:6px;margin-bottom:20px;font-weight:600;font-size:13px}
@@ -102,11 +106,21 @@ h1 em{font-style:normal;background:linear-gradient(90deg,var(--blue3),var(--cyan
 .mono-err{color:var(--danger)}
 .mono-skip{color:#888}
 .mono-sep{color:#2a4060}
+.mono-ai-ok{color:#c4a6f5}
 .stage{display:flex;align-items:center;gap:12px;margin:4px 0}
 .stage-badge{font-size:10px;padding:2px 8px;border-radius:4px;font-weight:600;min-width:100px;text-align:center;letter-spacing:0.04em}
 .badge-pass{background:rgba(0,232,122,0.1);color:var(--success);border:1px solid rgba(0,232,122,0.2)}
 .badge-fail{background:rgba(255,77,106,0.1);color:var(--danger);border:1px solid rgba(255,77,106,0.2)}
 .badge-skip{background:rgba(120,120,120,0.1);color:#666;border:1px solid rgba(120,120,120,0.15)}
+.badge-ai-pass{background:rgba(124,95,196,0.15);color:#c4a6f5;border:1px solid rgba(124,95,196,0.35)}
+.run-trace{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;border-top:1px solid var(--border);padding-top:10px;margin-top:8px;font-size:11px;color:var(--muted);font-family:var(--mono)}
+.run-trace-id{display:inline-flex;align-items:center;gap:6px}
+.copy-btn{background:none;border:none;padding:2px;margin:0;cursor:pointer;color:var(--muted);display:inline-flex;align-items:center;position:relative}
+.copy-btn:hover{color:var(--blue3)}
+.copy-tooltip{position:absolute;bottom:calc(100% + 6px);left:50%;transform:translateX(-50%);background:var(--navy3);border:1px solid var(--border2);color:var(--white);font-size:10px;padding:3px 7px;border-radius:4px;white-space:nowrap;pointer-events:none}
+.ai-edge-divider{display:flex;align-items:center;gap:10px;margin:16px 0}
+.ai-edge-divider .line{flex:1;height:1px;background:var(--border)}
+.ai-edge-divider span{font-size:11px;font-weight:700;letter-spacing:0.08em;color:#a48fd6;font-family:var(--mono);text-transform:uppercase;white-space:nowrap}
 
 /* DEMO LOADING STATES */
 @keyframes spin{to{transform:rotate(360deg)}}
@@ -176,8 +190,11 @@ body>*{position:relative;z-index:1}
 /* ===== AI AUGMENTATION LAYER (scoped under .ai-aug) ===== */
 .ai-aug{margin-top:24px;border-top:1px solid var(--border);padding-top:20px}
 .ai-aug .ai-tabs{display:flex;border-bottom:1px solid var(--border);margin-bottom:20px}
-.ai-aug .ai-tab{padding:12px 20px;font-size:13px;font-weight:500;cursor:pointer;color:var(--muted);border-bottom:2px solid transparent;margin-bottom:-1px;transition:all .2s;font-family:var(--mono)}
-.ai-aug .ai-tab.active{color:var(--blue3);border-bottom-color:var(--blue3)}
+.ai-aug .ai-tab{padding:10px 20px 11px;cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-1px;transition:all .2s;font-family:var(--mono);text-align:left}
+.ai-aug .ai-tab.active{border-bottom-color:var(--blue3)}
+.ai-aug .ai-tab-label{font-size:13.5px;font-weight:500;color:var(--muted)}
+.ai-aug .ai-tab.active .ai-tab-label{color:var(--blue3)}
+.ai-aug .ai-tab-sub{font-size:11px;margin-top:2px;color:#5c6472}
 .ai-aug .section-label{font-size:10px;font-weight:600;color:var(--blue3);letter-spacing:0.1em;text-transform:uppercase;font-family:var(--mono);margin-bottom:10px}
 .ai-aug .meta-row{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:var(--border);border:1px solid var(--border);border-radius:10px;overflow:hidden;margin-bottom:20px}
 .ai-aug .meta-cell{background:var(--navy2);padding:12px 16px;min-width:0}
@@ -255,7 +272,9 @@ body>*{position:relative;z-index:1}
 .ai-aug .other-flag{text-align:right}
 .ai-aug .collapse-head{display:flex;align-items:center;justify-content:space-between;cursor:pointer;user-select:none;padding:12px 16px;background:var(--navy2);border:1px solid var(--border);border-radius:10px;margin-bottom:12px}
 .ai-aug .collapse-head:hover{border-color:var(--border2)}
-.ai-aug .audit-footer{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;padding:12px 16px;background:rgba(10,22,40,0.6);border:1px solid var(--border);border-radius:8px;margin-top:4px}
+.ai-aug .audit-footer{padding:12px 16px;background:rgba(10,22,40,0.6);border:1px solid var(--border);border-radius:8px;margin-top:20px}
+.ai-aug .audit-trace-title{font-size:11px;color:var(--muted);font-family:var(--mono);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:10px}
+.ai-aug .audit-trace-row{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
 .ai-aug .audit-item{font-size:11px;color:var(--muted);font-family:var(--mono)}
 .ai-aug .audit-item span{color:var(--blue4)}
 .ai-aug .disclaimer{font-size:11px;color:#4a6585;font-style:italic;text-align:center;margin-top:14px;line-height:1.6}
@@ -334,6 +353,11 @@ function deriveStageSummary(events) {
     if (types.has(ok)) return { label, state: "pass" };
     return { label, state: "skip" };
   });
+}
+
+function truncateIngestionId(id) {
+  if (!id || id.length <= 15) return id || "";
+  return `${id.slice(0, 8)}…${id.slice(-5)}`;
 }
 
 function flagPointColor(flag) {
@@ -470,7 +494,6 @@ function HistoryChart({ series, unit, refLow, refHigh }) {
 }
 
 export default function Home() {
-  const [activeTab, setActiveTab] = useState("valid");
   const [demoPhase, setDemoPhase] = useState("idle");
   const [loadingStage, setLoadingStage] = useState(0);
   const [demoResult, setDemoResult] = useState(null);
@@ -490,9 +513,12 @@ export default function Home() {
   const [rejecting, setRejecting] = useState(false);
   const [rejectReason, setRejectReason] = useState("");
   const [aiReady, setAiReady] = useState(false);
+  const [persistReady, setPersistReady] = useState(false);
+  const [copiedIngestionId, setCopiedIngestionId] = useState(false);
   const pollRef = useRef(null);
   const textareaRef = useRef(null);
   const aiReadyCheckedRef = useRef(false);
+  const persistReadyCheckedRef = useRef(false);
 
   useEffect(() => () => clearInterval(pollRef.current), []);
 
@@ -502,28 +528,6 @@ export default function Home() {
     fetch("/v1/session/start", { method: "POST", credentials: "include" }).catch(() => {});
   }, []);
 
-  function handleTabChange(tab) {
-    if (tab === activeTab) return;
-    clearInterval(pollRef.current);
-    setActiveTab(tab);
-    setDemoPhase("idle");
-    setDemoResult(null);
-    setDemoError(null);
-    setLoadingStage(0);
-    setShowReports(false);
-    setShowObservations(false);
-    setShowAudit(false);
-    setShowErrorDetails(false);
-    setAiTab("annotation");
-    setOpenFindings({});
-    setHistory({});
-    setShowOther(false);
-    setEmailBody("");
-    setPatientMessage(null);
-    setAiReady(false);
-    aiReadyCheckedRef.current = false;
-  }
-
   async function runDemo() {
     clearInterval(pollRef.current);
     setDemoPhase("loading");
@@ -532,10 +536,12 @@ export default function Home() {
     setLoadingStage(0);
     setAiReady(false);
     aiReadyCheckedRef.current = false;
+    setPersistReady(false);
+    persistReadyCheckedRef.current = false;
 
-    const csvPath = activeTab === "valid" ? "/demo-csv/visit4_latest.csv" : "/demo-csv/invalid_missing_fields.csv";
-    const instrumentId = activeTab === "valid" ? "demo-instrument-01" : "demo-instrument-02";
-    const fileName = activeTab === "valid" ? "visit4_latest.csv" : "invalid_missing_fields.csv";
+    const csvPath = "/demo-csv/visit4_latest.csv";
+    const instrumentId = "demo-instrument-01";
+    const fileName = "visit4_latest.csv";
 
     const csvBlob = await fetch(csvPath)
       .then((r) => r.blob())
@@ -563,6 +569,36 @@ export default function Home() {
       return;
     }
     setLoadingStage(1);
+
+    // Reveal persisted resources + ingestion_id as soon as the PERSIST stage
+    // finishes, without waiting for the AI stages that follow it.
+    async function checkPersistReadyEarly() {
+      if (persistReadyCheckedRef.current) return;
+      const evRes = await fetch(`/v1/ingestions/${ingestionId}/processing-events`).catch(() => null);
+      const events = evRes ? await evRes.json().catch(() => null) : null;
+      if (!Array.isArray(events)) return;
+      const types = new Set(events.map((e) => e.event_type));
+      const succeeded = types.has("FHIR_JSON_GENERATION_SUCCEEDED");
+      const failed = types.has("FHIR_JSON_GENERATION_FAILED");
+      if (!succeeded && !failed) return;
+      persistReadyCheckedRef.current = true;
+      if (!succeeded) return;
+
+      const [rpRes, obRes] = await Promise.allSettled([
+        fetch(`/v1/ingestions/${ingestionId}/diagnostic-reports?include_json=1`).then((r) => r.json()),
+        fetch(`/v1/ingestions/${ingestionId}/observations?include_json=1&limit=200`).then((r) => r.json()),
+      ]);
+      const observations = obRes.status === "fulfilled" && Array.isArray(obRes.value) ? obRes.value : [];
+      const reports = rpRes.status === "fulfilled" && Array.isArray(rpRes.value) ? rpRes.value : [];
+      setDemoResult((prev) => ({
+        ...(prev || {}),
+        ingestionId,
+        reports,
+        observations,
+        events,
+      }));
+      setPersistReady(true);
+    }
 
     // Reveal the AI annotation tab as soon as its own stage finishes, without
     // waiting for message-draft (which runs after it and can take longer) —
@@ -620,6 +656,7 @@ export default function Home() {
         if (!body) return;
         if (body.status === "PROCESSING") {
           setLoadingStage((s) => Math.min(s + 1, 5));
+          checkPersistReadyEarly();
           checkAiReadyEarly();
         }
         if (TERMINAL.has(body.status)) {
@@ -1002,6 +1039,196 @@ export default function Home() {
       }));
   }
 
+  function renderIngestionTrace(ingestionId) {
+    return (
+      <div className="run-trace">
+        <span className="run-trace-id">
+          ingestion_id: {truncateIngestionId(ingestionId)}
+          <button
+            type="button"
+            className="copy-btn"
+            aria-label="Copy full ingestion ID"
+            title={ingestionId}
+            onClick={() => {
+              navigator.clipboard?.writeText(ingestionId).then(() => {
+                setCopiedIngestionId(true);
+                setTimeout(() => setCopiedIngestionId(false), 1500);
+              });
+            }}
+          >
+            {copiedIngestionId && <span className="copy-tooltip">Copied!</span>}
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+              <rect x="9" y="9" width="13" height="13" rx="2" />
+              <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
+            </svg>
+          </button>
+        </span>
+      </div>
+    );
+  }
+
+  function renderPersistedResources(reports, observations) {
+    return (
+      <>
+        <div
+          style={{
+            color: "var(--muted)",
+            fontSize: 11,
+            marginBottom: 12,
+            letterSpacing: "0.06em",
+          }}
+        >
+          PERSISTED RESOURCES
+        </div>
+        <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 16 }}>
+          <button
+            onClick={() => setShowReports(!showReports)}
+            style={{
+              background: showReports ? "rgba(0,212,255,0.15)" : "rgba(0,212,255,0.08)",
+              border: "1px solid rgba(0,212,255,0.2)",
+              color: "var(--cyan)",
+              padding: "4px 12px",
+              borderRadius: 4,
+              fontSize: 11,
+              fontWeight: 600,
+              cursor: "pointer",
+              transition: "background 0.2s",
+            }}
+          >
+            DiagnosticReports ×{reports.length}
+          </button>
+          <button
+            onClick={() => setShowObservations(!showObservations)}
+            style={{
+              background: showObservations ? "rgba(0,212,255,0.15)" : "rgba(0,212,255,0.08)",
+              border: "1px solid rgba(0,212,255,0.2)",
+              color: "var(--cyan)",
+              padding: "4px 12px",
+              borderRadius: 4,
+              fontSize: 11,
+              fontWeight: 600,
+              cursor: "pointer",
+              transition: "background 0.2s",
+            }}
+          >
+            Observations ×{observations.length}
+          </button>
+        </div>
+        <div className="scenario-note">
+          <p>
+            Only lab results that pass validation and normalization are
+            persisted as FHIR resources and reach the AI layer. Invalid lab
+            reports are rejected, with details recorded in the audit
+            log.
+          </p>
+        </div>
+        {showReports && (
+          <div style={{ marginBottom: 16, maxHeight: 300, overflowY: "auto" }}>
+            <pre
+              style={{
+                background: "rgba(58,155,255,0.05)",
+                border: "1px solid var(--border)",
+                borderRadius: 6,
+                padding: 12,
+                fontSize: 10,
+                color: "var(--cyan)",
+                margin: 0,
+              }}
+            >
+              {JSON.stringify(reports, null, 2)}
+            </pre>
+          </div>
+        )}
+        {showObservations && (
+          <div style={{ marginBottom: 16, maxHeight: 300, overflowY: "auto" }}>
+            <pre
+              style={{
+                background: "rgba(58,155,255,0.05)",
+                border: "1px solid var(--border)",
+                borderRadius: 6,
+                padding: 12,
+                fontSize: 10,
+                color: "var(--cyan)",
+                margin: 0,
+              }}
+            >
+              {JSON.stringify(observations.slice(0, 3), null, 2)}
+              {observations.length > 3 && (
+                <div style={{ marginTop: 8, color: "var(--muted)" }}>
+                  ... and {observations.length - 3} more
+                </div>
+              )}
+            </pre>
+          </div>
+        )}
+      </>
+    );
+  }
+
+  function renderAuditLog(events) {
+    return (
+      <>
+        <div
+          style={{
+            color: "var(--muted)",
+            fontSize: 11,
+            marginBottom: 12,
+            letterSpacing: "0.06em",
+          }}
+        >
+          AUDIT LOG
+        </div>
+        <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 16 }}>
+          <button
+            onClick={() => setShowAudit(!showAudit)}
+            style={{
+              background: showAudit ? "rgba(0,212,255,0.15)" : "rgba(0,212,255,0.08)",
+              border: "1px solid rgba(0,212,255,0.2)",
+              color: "var(--cyan)",
+              padding: "4px 12px",
+              borderRadius: 4,
+              fontSize: 11,
+              fontWeight: 600,
+              cursor: "pointer",
+              transition: "background 0.2s",
+            }}
+          >
+            See Audit Log
+          </button>
+        </div>
+        {showAudit && (
+          <div style={{ marginBottom: 16, maxHeight: 300, overflowY: "auto", background: "rgba(58,155,255,0.05)", border: "1px solid var(--border)", borderRadius: 6, padding: 12 }}>
+            {(events || []).map((evt) => {
+              const date = new Date(evt.occurred_at || evt.timestamp || evt.created_at || "");
+              const ts = !isNaN(date.getTime())
+                ? `${date.toLocaleTimeString("en-US", { hour12: false })}.${String(date.getMilliseconds()).padStart(3, "0")}`
+                : "N/A";
+              const isFailed = evt.event_type.endsWith("_FAILED");
+              let stageClass = "es-parse";
+              if (evt.event_type.includes("VALIDATION")) stageClass = "es-valid";
+              else if (evt.event_type.includes("NORMALIZATION")) stageClass = "es-norm";
+              else if (evt.event_type.includes("FHIR")) stageClass = "es-fhir";
+              return (
+                <div key={evt.event_id} className="event-row">
+                  <span className="event-ts">{ts}</span>
+                  <span
+                    className={`event-stage ${!isFailed ? stageClass : ""}`}
+                    style={isFailed ? { background: "rgba(255,77,106,0.08)", color: "var(--danger)" } : {}}
+                  >
+                    {evt.event_type.replace(/_SUCCEEDED|_FAILED/g, "").replace(/_/g, " ")}
+                  </span>
+                  <span className="event-msg" style={isFailed ? { color: "var(--danger)" } : {}}>
+                    {evt.message}
+                  </span>
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </>
+    );
+  }
+
   function renderAiAugSection() {
     if (!demoResult) return null;
     const messageDraftPending = demoPhase !== "done";
@@ -1052,11 +1279,24 @@ export default function Home() {
     const emailLabDate = labDateFromResult(demoResult);
     const emailPmContent = (patientMessage && (patientMessage.final_content_json || patientMessage.draft_content_json)) || {};
     const emailSubject = emailPmContent.subject || "Blood test results";
+    const messageStatusSubtitle = messageDraftPending
+      ? "pending approval"
+      : patientMessage?.review_status === "REJECTED"
+      ? "rejected"
+      : patientMessage?.review_status === "SENT"
+      ? "approved and sent"
+      : "pending approval";
     return (
       <div className="ai-aug">
         <div className="ai-tabs">
-          <div className={`ai-tab${aiTab === "annotation" ? " active" : ""}`} onClick={() => setAiTab("annotation")}>AI annotation</div>
-          <div className={`ai-tab${aiTab === "email" ? " active" : ""}`} onClick={() => setAiTab("email")}>Message draft</div>
+          <div className={`ai-tab${aiTab === "annotation" ? " active" : ""}`} onClick={() => setAiTab("annotation")}>
+            <div className="ai-tab-label">AI annotation</div>
+            <div className="ai-tab-sub">clinician-facing</div>
+          </div>
+          <div className={`ai-tab${aiTab === "email" ? " active" : ""}`} onClick={() => setAiTab("email")}>
+            <div className="ai-tab-label">Patient message</div>
+            <div className="ai-tab-sub">{messageStatusSubtitle}</div>
+          </div>
         </div>
 
         {aiTab === "annotation" && (
@@ -1190,9 +1430,12 @@ export default function Home() {
             )}
 
             <div className="audit-footer">
-              <span className="audit-item">Model: <span title={ai.model_id || ""}>{shortModelName(ai.model_id)}</span></span>
-              <span className="audit-item">Generated: <span>{fmtGenerated(ai.created_at)}</span></span>
-              <span className="audit-item">Schema: <span>{ai.content_schema_version || "—"}</span></span>
+              <div className="audit-trace-title">OUTPUT TRACE</div>
+              <div className="audit-trace-row">
+                <span className="audit-item">Model: <span title={ai.model_id || ""}>{shortModelName(ai.model_id)}</span></span>
+                <span className="audit-item">Annotation Schema: <span>{ai.content_schema_version || "—"}</span></span>
+                <span className="audit-item">Generated: <span>{fmtGenerated(ai.created_at)}</span></span>
+              </div>
             </div>
             <div className="disclaimer">
               AI annotations are non-authoritative and generated by an automated pipeline. They are not medical advice, do not constitute a clinical diagnosis, and must not be used as a substitute for clinician review. All findings require independent clinical interpretation.
@@ -1306,9 +1549,12 @@ export default function Home() {
               <div className="rejected-notice">The message was rejected and cannot be sent to patient.</div>
             )}
             <div className="audit-footer">
-              <span className="audit-item">Model: <span title={(patientMessage?.model_id || ai.model_id) || ""}>{shortModelName(patientMessage?.model_id || ai.model_id)}</span></span>
-              <span className="audit-item">Generated: <span>{fmtGenerated(patientMessage?.created_at || ai.created_at)}</span></span>
-              <span className="audit-item">Schema: <span>{(patientMessage?.content_schema_version || ai.content_schema_version) || "—"}</span></span>
+              <div className="audit-trace-title">OUTPUT TRACE</div>
+              <div className="audit-trace-row">
+                <span className="audit-item">Model: <span title={(patientMessage?.model_id || ai.model_id) || ""}>{shortModelName(patientMessage?.model_id || ai.model_id)}</span></span>
+                <span className="audit-item">Patient Message Schema: <span>{(patientMessage?.content_schema_version || ai.content_schema_version) || "—"}</span></span>
+                <span className="audit-item">Generated: <span>{fmtGenerated(patientMessage?.created_at || ai.created_at)}</span></span>
+              </div>
             </div>
             <div className="physician-note">
               <div className="pn-text">
@@ -1549,25 +1795,23 @@ export default function Home() {
         <div className="section-label">Live Demo</div>
         <div className="section-title">See Validor in action</div>
         <div className="section-sub">
-          Two scenarios: a valid file completing the full pipeline, and an invalid file caught at
-          validation. Every run emits a full, timestamped audit trail — expand it inline with the
-          persisted resources below.
+          A single run through the full pipeline, replayed end to end — ingestion, validation,
+          FHIR persistence, then AI review. Every run emits a full, timestamped audit trail —
+          expand it inline with the persisted resources below.
         </div>
 
         <div className="demo-wrap">
-          <div className="demo-tabs">
-            <div
-              className={`demo-tab${activeTab === "valid" ? " active" : ""}`}
-              onClick={() => handleTabChange("valid")}
-            >
-              ✓ Valid CSV
+          <div className="scenario-card">
+            <div className="scenario-label">
+              <span>Clinical scenario</span>
             </div>
-            <div
-              className={`demo-tab${activeTab === "invalid" ? " active" : ""}`}
-              onClick={() => handleTabChange("invalid")}
-            >
-              ✗ Invalid CSV
-            </div>
+            <p className="scenario-text">
+              Patient on long-term statin therapy had four lab visits
+              (BMP, LFT, lipid panel) in the past year. Most analytes stay within
+              range, some are improving over time, but one test (Glucose) has
+              concerning trend. AI has to identify the trends, list priority findings
+              and draft a patient message for clinician approval.
+            </p>
           </div>
           <button
             className="btn-primary demo-run-btn"
@@ -1580,35 +1824,62 @@ export default function Home() {
           <div className="demo-body">
             {demoPhase === "idle" && (
               <div style={{ padding: 24, color: "var(--muted)", fontSize: 13, fontFamily: "var(--mono)" }}>
-                <p>Select a scenario above, then click <strong style={{ color: "var(--white)" }}>Run Demo</strong> to call the live API.</p>
+                <p>Click <strong style={{ color: "var(--white)" }}>Run Demo</strong> to call the live API.</p>
               </div>
             )}
 
             {demoPhase === "loading" && (
               <div style={{ padding: 24 }}>
-                <div style={{ color: "var(--muted)", fontSize: 12, marginBottom: 16, fontFamily: "var(--mono)" }}>
-                  <span className="spinner" /> Processing through pipeline...
-                </div>
-                {["Parse", "Validate", "Normalize", "Persist", "AI annotation", "Message draft"].map((name, i) => (
-                  <div className="stage" key={name}>
-                    <span
-                      className={`stage-badge ${
-                        i < loadingStage ? "badge-pass" : i === loadingStage ? "badge-pass stage-active" : "badge-skip"
-                      }`}
-                    >
-                      {name.toUpperCase()}
-                    </span>
-                    <span
-                      className={i < loadingStage ? "mono-ok" : i === loadingStage ? "mono-val stage-active" : "mono-skip"}
-                    >
-                      {i < loadingStage ? "✓ completed" : i === loadingStage ? "● running…" : "· waiting"}
-                    </span>
+                <div className="result-grid">
+                  <div>
+                    <div style={{ color: "var(--muted)", fontSize: 12, marginBottom: 16, fontFamily: "var(--mono)" }}>
+                      <span className="spinner" /> Processing through pipeline...
+                    </div>
+                    {["Parse", "Validate", "Normalize", "Persist", "AI annotation", "Message draft"].map((name, i) => {
+                      const isAiStage = i >= 4;
+                      const passBadge = isAiStage ? "badge-ai-pass" : "badge-pass";
+                      const passMono = isAiStage ? "mono-ai-ok" : "mono-ok";
+                      return (
+                        <div className="stage" key={name}>
+                          <span
+                            className={`stage-badge ${
+                              i < loadingStage ? passBadge : i === loadingStage ? `${passBadge} stage-active` : "badge-skip"
+                            }`}
+                          >
+                            {name.toUpperCase()}
+                          </span>
+                          <span
+                            className={i < loadingStage ? passMono : i === loadingStage ? "mono-val stage-active" : "mono-skip"}
+                          >
+                            {i < loadingStage ? "✓ completed" : i === loadingStage ? "● running…" : "· waiting"}
+                          </span>
+                        </div>
+                      );
+                    })}
                   </div>
-                ))}
+                  <div>
+                    {persistReady && demoResult && (
+                      <>
+                        {renderPersistedResources(demoResult.reports, demoResult.observations)}
+                        {renderAuditLog(demoResult.events)}
+                      </>
+                    )}
+                  </div>
+                </div>
+                {persistReady && demoResult && renderIngestionTrace(demoResult.ingestionId)}
               </div>
             )}
 
-            {demoPhase === "loading" && aiReady && renderAiAugSection()}
+            {demoPhase === "loading" && aiReady && (
+              <>
+                <div className="ai-edge-divider">
+                  <div className="line" />
+                  <span>AI layer output</span>
+                  <div className="line" />
+                </div>
+                {renderAiAugSection()}
+              </>
+            )}
 
             {demoPhase === "done" && demoResult && (
               <>
@@ -1631,164 +1902,45 @@ export default function Home() {
                     >
                       PIPELINE STAGES
                     </div>
-                    {deriveStageSummary(demoResult.events).map(({ label, state }) => (
-                      <div className="stage" key={label}>
-                        <span
-                          className={`stage-badge ${
-                            state === "pass" ? "badge-pass" : state === "fail" ? "badge-fail" : "badge-skip"
-                          }`}
-                        >
-                          {label}
-                        </span>
-                        <span
-                          className={state === "pass" ? "mono-ok" : state === "fail" ? "mono-err" : "mono-skip"}
-                        >
-                          {state === "pass" ? "✓ completed" : state === "fail" ? "✗ failed" : "↷ skipped"}
-                        </span>
-                      </div>
-                    ))}
+                    {deriveStageSummary(demoResult.events).map(({ label, state }) => {
+                      const isAiStage = label === "AI ANNOTATION" || label === "MESSAGE DRAFT";
+                      return (
+                        <div className="stage" key={label}>
+                          <span
+                            className={`stage-badge ${
+                              state === "pass"
+                                ? isAiStage
+                                  ? "badge-ai-pass"
+                                  : "badge-pass"
+                                : state === "fail"
+                                ? "badge-fail"
+                                : "badge-skip"
+                            }`}
+                          >
+                            {label}
+                          </span>
+                          <span
+                            className={
+                              state === "pass"
+                                ? isAiStage
+                                  ? "mono-ai-ok"
+                                  : "mono-ok"
+                                : state === "fail"
+                                ? "mono-err"
+                                : "mono-skip"
+                            }
+                          >
+                            {state === "pass" ? "✓ completed" : state === "fail" ? "✗ failed" : "↷ skipped"}
+                          </span>
+                        </div>
+                      );
+                    })}
                   </div>
                   <div>
                     {demoResult.status === "COMPLETED" ? (
                       <>
-                        <div
-                          style={{
-                            color: "var(--muted)",
-                            fontSize: 11,
-                            marginBottom: 12,
-                            letterSpacing: "0.06em",
-                          }}
-                        >
-                          PERSISTED RESOURCES
-                        </div>
-                        <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 16 }}>
-                          <button
-                            onClick={() => setShowReports(!showReports)}
-                            style={{
-                              background: showReports ? "rgba(0,212,255,0.15)" : "rgba(0,212,255,0.08)",
-                              border: "1px solid rgba(0,212,255,0.2)",
-                              color: "var(--cyan)",
-                              padding: "4px 12px",
-                              borderRadius: 4,
-                              fontSize: 11,
-                              fontWeight: 600,
-                              cursor: "pointer",
-                              transition: "background 0.2s",
-                            }}
-                          >
-                            DiagnosticReports ×{demoResult.reports.length}
-                          </button>
-                          <button
-                            onClick={() => setShowObservations(!showObservations)}
-                            style={{
-                              background: showObservations ? "rgba(0,212,255,0.15)" : "rgba(0,212,255,0.08)",
-                              border: "1px solid rgba(0,212,255,0.2)",
-                              color: "var(--cyan)",
-                              padding: "4px 12px",
-                              borderRadius: 4,
-                              fontSize: 11,
-                              fontWeight: 600,
-                              cursor: "pointer",
-                              transition: "background 0.2s",
-                            }}
-                          >
-                            Observations ×{demoResult.observations.length}
-                          </button>
-                          <button
-                            onClick={() => setShowAudit(!showAudit)}
-                            style={{
-                              background: showAudit ? "rgba(0,212,255,0.15)" : "rgba(0,212,255,0.08)",
-                              border: "1px solid rgba(0,212,255,0.2)",
-                              color: "var(--cyan)",
-                              padding: "4px 12px",
-                              borderRadius: 4,
-                              fontSize: 11,
-                              fontWeight: 600,
-                              cursor: "pointer",
-                              transition: "background 0.2s",
-                            }}
-                          >
-                            Audit log ×{(demoResult.events || []).length}
-                          </button>
-                        </div>
-                        {showReports && (
-                          <div style={{ marginBottom: 16, maxHeight: 300, overflowY: "auto" }}>
-                            <pre
-                              style={{
-                                background: "rgba(58,155,255,0.05)",
-                                border: "1px solid var(--border)",
-                                borderRadius: 6,
-                                padding: 12,
-                                fontSize: 10,
-                                color: "var(--cyan)",
-                                margin: 0,
-                              }}
-                            >
-                              {JSON.stringify(demoResult.reports, null, 2)}
-                            </pre>
-                          </div>
-                        )}
-                        {showObservations && (
-                          <div style={{ marginBottom: 16, maxHeight: 300, overflowY: "auto" }}>
-                            <pre
-                              style={{
-                                background: "rgba(58,155,255,0.05)",
-                                border: "1px solid var(--border)",
-                                borderRadius: 6,
-                                padding: 12,
-                                fontSize: 10,
-                                color: "var(--cyan)",
-                                margin: 0,
-                              }}
-                            >
-                              {JSON.stringify(demoResult.observations.slice(0, 3), null, 2)}
-                              {demoResult.observations.length > 3 && (
-                                <div style={{ marginTop: 8, color: "var(--muted)" }}>
-                                  ... and {demoResult.observations.length - 3} more
-                                </div>
-                              )}
-                            </pre>
-                          </div>
-                        )}
-                        {showAudit && (
-                          <div style={{ marginBottom: 16, maxHeight: 300, overflowY: "auto", background: "rgba(58,155,255,0.05)", border: "1px solid var(--border)", borderRadius: 6, padding: 12 }}>
-                            {(demoResult.events || []).map((evt) => {
-                              const date = new Date(evt.occurred_at || evt.timestamp || evt.created_at || "");
-                              const ts = !isNaN(date.getTime())
-                                ? `${date.toLocaleTimeString("en-US", { hour12: false })}.${String(date.getMilliseconds()).padStart(3, "0")}`
-                                : "N/A";
-                              const isFailed = evt.event_type.endsWith("_FAILED");
-                              let stageClass = "es-parse";
-                              if (evt.event_type.includes("VALIDATION")) stageClass = "es-valid";
-                              else if (evt.event_type.includes("NORMALIZATION")) stageClass = "es-norm";
-                              else if (evt.event_type.includes("FHIR")) stageClass = "es-fhir";
-                              return (
-                                <div key={evt.event_id} className="event-row">
-                                  <span className="event-ts">{ts}</span>
-                                  <span
-                                    className={`event-stage ${!isFailed ? stageClass : ""}`}
-                                    style={isFailed ? { background: "rgba(255,77,106,0.08)", color: "var(--danger)" } : {}}
-                                  >
-                                    {evt.event_type.replace(/_SUCCEEDED|_FAILED/g, "").replace(/_/g, " ")}
-                                  </span>
-                                  <span className="event-msg" style={isFailed ? { color: "var(--danger)" } : {}}>
-                                    {evt.message}
-                                  </span>
-                                </div>
-                              );
-                            })}
-                          </div>
-                        )}
-                        <div
-                          style={{
-                            marginTop: 8,
-                            color: "var(--muted)",
-                            fontSize: 11,
-                            marginBottom: 16,
-                          }}
-                        >
-                          ingestion_id: <span style={{ color: "var(--blue3)" }}>{demoResult.ingestionId}</span>
-                        </div>
+                        {renderPersistedResources(demoResult.reports, demoResult.observations)}
+                        {renderAuditLog(demoResult.events)}
                       </>
                     ) : (
                       <>
@@ -1910,7 +2062,17 @@ export default function Home() {
                     )}
                   </div>
                 </div>
-                {aiReady && renderAiAugSection()}
+                {renderIngestionTrace(demoResult.ingestionId)}
+                {aiReady && (
+                  <>
+                    <div className="ai-edge-divider">
+                      <div className="line" />
+                      <span>AI layer output</span>
+                      <div className="line" />
+                    </div>
+                    {renderAiAugSection()}
+                  </>
+                )}
               </>
             )}
           </div>

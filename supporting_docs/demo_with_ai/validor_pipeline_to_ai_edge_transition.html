@@ -1,0 +1,82 @@
+<div style="background:var(--surface-1); border-radius:12px; padding:1rem;">
+<h2 class="sr-only">Mockup of the boundary between the pipeline stage list and the AI output tabs, showing that the pipeline has one shared ingestion trace while each AI output tab, annotation and patient message, carries its own schema, model and timestamp since they come from separate calls</h2>
+<div style="background:#0a0e17; border-radius:10px; padding:1.5rem; font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;">
+
+  <div style="opacity:0.55; display:flex; flex-direction:column; gap:6px; margin-bottom:10px;">
+    <div style="display:flex; align-items:center; justify-content:space-between;">
+      <span style="font-family:ui-monospace,monospace; font-size:11px; font-weight:600; border-radius:6px; padding:7px 12px; border:0.5px solid #1d4d33; color:#4ade80; background:#0f2b1c; min-width:150px; text-align:center;">PERSIST</span>
+      <span style="font-size:12px; color:#4ade80;">completed</span>
+    </div>
+    <div style="display:flex; align-items:center; justify-content:space-between;">
+      <span style="font-family:ui-monospace,monospace; font-size:11px; font-weight:600; border-radius:6px; padding:7px 12px; border:0.5px solid #3a2e5c; color:#c4a6f5; background:#1a1428; min-width:150px; text-align:center;">AI ANNOTATION</span>
+      <span style="font-size:12px; color:#c4a6f5;">completed</span>
+    </div>
+    <div style="display:flex; align-items:center; justify-content:space-between;">
+      <span style="font-family:ui-monospace,monospace; font-size:11px; font-weight:600; border-radius:6px; padding:7px 12px; border:0.5px solid #3a2e5c; color:#c4a6f5; background:#1a1428; min-width:150px; text-align:center;">MESSAGE DRAFT</span>
+      <span style="font-size:12px; color:#c4a6f5;">completed</span>
+    </div>
+  </div>
+
+  <div style="border-top:0.5px solid #1c2333; padding-top:10px; margin-bottom:16px; display:flex; justify-content:space-between; font-size:11px; color:#5a6472; font-family:ui-monospace,monospace;">
+    <span>ingestion_id: db732438&#8230;502d1</span>
+    <span>run completed in 2.4s</span>
+  </div>
+
+  <div style="display:flex; align-items:center; gap:10px; margin:4px 0 16px;">
+    <div style="flex:1; height:1px; background:#1c2333;"></div>
+    <span style="font-size:11px; letter-spacing:0.08em; color:#7c5fc4; font-family:ui-monospace,monospace; text-transform:uppercase; white-space:nowrap;">AI layer output &#183; separate schemas below</span>
+    <div style="flex:1; height:1px; background:#1c2333;"></div>
+  </div>
+
+  <div style="border:0.5px solid #2a2140; border-radius:10px; padding:14px 16px; background:#0d0a17;">
+
+    <div style="display:flex; gap:22px; border-bottom:0.5px solid #241f38; padding-bottom:11px; margin-bottom:14px;">
+      <button id="tab-annotation" style="background:none; border:none; padding:0; cursor:pointer; text-align:left;">
+        <div id="ann-label" style="color:#c4a6f5; font-size:13.5px; font-weight:500;">AI annotation</div>
+        <div style="color:#6b7280; font-size:11px; margin-top:2px;">clinician-facing</div>
+      </button>
+      <button id="tab-message" style="background:none; border:none; padding:0; cursor:pointer; text-align:left;">
+        <div id="msg-label" style="color:#6b7280; font-size:13.5px; font-weight:500;">Patient message</div>
+        <div style="color:#4b5563; font-size:11px; margin-top:2px;">pending approval</div>
+      </button>
+    </div>
+
+    <p id="tab-body-note" style="margin:0 0 14px; font-size:11.5px; color:#5c6472; font-style:italic;">Tab content unchanged &#8212; panel summary and priority findings below.</p>
+
+    <div style="border-top:0.5px solid #241f38; padding-top:10px;">
+      <div style="font-size:11px; color:#5a6472; font-family:ui-monospace,monospace; text-transform:uppercase; letter-spacing:0.05em; margin-bottom:6px;">Output trace &#183; scoped to this tab</div>
+      <div id="trace-row" style="display:flex; gap:18px; flex-wrap:wrap; font-size:11.5px; color:#5a6472; font-family:ui-monospace,monospace;"></div>
+    </div>
+
+  </div>
+
+</div>
+</div>
+<script>
+(function(){
+  var traces={
+    annotation:{model:'claude-haiku-4-5',schema:'annotation/v2.1',generated:'2026-07-13 14:26:08 PDT'},
+    message:{model:'claude-haiku-4-5',schema:'patient-message/v1.3',generated:'2026-07-13 14:26:16 PDT'}
+  };
+  var annLabel=document.getElementById('ann-label');
+  var msgLabel=document.getElementById('msg-label');
+  var note=document.getElementById('tab-body-note');
+  var row=document.getElementById('trace-row');
+  function render(t){
+    var d=traces[t];
+    row.innerHTML='<span>model: <span style="color:#a48fd6;">'+d.model+'</span></span>'+
+      '<span>schema: <span style="color:#7c8798;">'+d.schema+'</span></span>'+
+      '<span>generated: <span style="color:#7c8798;">'+d.generated+'</span></span>';
+    if(t==='annotation'){
+      annLabel.style.color='#c4a6f5';msgLabel.style.color='#6b7280';
+      note.textContent='Tab content unchanged \u2014 panel summary and priority findings below.';
+    } else {
+      annLabel.style.color='#6b7280';msgLabel.style.color='#c4a6f5';
+      note.textContent='Tab content unchanged \u2014 draft subject and body below.';
+    }
+  }
+  document.getElementById('tab-annotation').addEventListener('click',function(){render('annotation');});
+  document.getElementById('tab-message').addEventListener('click',function(){render('message');});
+  render('annotation');
+})();
+</script>
