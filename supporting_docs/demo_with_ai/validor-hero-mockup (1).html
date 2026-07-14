@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Validor — Less to review. More to say.</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --navy:#050e1a;
+  --navy2:#0a1628;
+  --blue1:#0d4fa8;
+  --blue3:#3a9bff;
+  --blue4:#7ec4ff;
+  --violet:#7c5fc4;
+  --violet-light:#c4a6f5;
+  --violet-dim:rgba(124,95,196,0.12);
+  --amber:#f0a500;
+  --danger:#ff6b6b;
+  --white:#f0f6ff;
+  --muted:#7a99c4;
+  --border:rgba(58,155,255,0.15);
+  --border2:rgba(58,155,255,0.3);
+  --success:#00e87a;
+  --font:'Space Grotesk',sans-serif;
+  --mono:'JetBrains Mono',monospace;
+}
+body{background:var(--navy);color:var(--white);font-family:var(--font);line-height:1.6;overflow-x:hidden}
+
+body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(var(--border) 1px,transparent 1px),linear-gradient(90deg,var(--border) 1px,transparent 1px);background-size:60px 60px;opacity:0.35;pointer-events:none;z-index:0}
+body>*{position:relative;z-index:1}
+
+nav{display:flex;align-items:center;justify-content:space-between;padding:20px 48px;border-bottom:1px solid var(--border)}
+.nav-logo{display:flex;align-items:center;gap:10px}
+.nav-logo-icon{width:32px;height:32px;background:linear-gradient(135deg,var(--blue1),var(--blue3));border-radius:8px;display:flex;align-items:center;justify-content:center}
+.nav-logo-icon svg{width:18px;height:18px}
+.nav-logo-text{font-size:18px;font-weight:700;letter-spacing:-0.02em}
+.nav-links{display:flex;gap:28px;font-size:14px;color:var(--muted)}
+.nav-links a{color:inherit;text-decoration:none}
+.nav-cta{background:var(--blue3);color:var(--navy);padding:8px 20px;border-radius:6px;font-size:13px;font-weight:600;text-decoration:none}
+
+.hero{padding:80px 48px 56px;max-width:900px;margin:0 auto;text-align:center}
+.hero-badge{display:inline-flex;align-items:center;gap:8px;background:rgba(58,155,255,0.1);border:1px solid var(--border2);border-radius:100px;padding:6px 16px;font-family:var(--mono);font-size:12px;color:var(--blue4);margin-bottom:28px}
+.hero-badge-dot{width:6px;height:6px;border-radius:50%;background:var(--success);box-shadow:0 0 8px var(--success)}
+.hero h1{font-size:60px;font-weight:700;letter-spacing:-0.03em;line-height:1.1;margin-bottom:22px}
+.hero h1 .accent{color:var(--blue3)}
+.hero-sub{font-size:17px;color:var(--muted);max-width:560px;margin:0 auto}
+
+.features{max-width:1000px;margin:0 auto;padding:8px 48px 56px;display:grid;grid-template-columns:repeat(3,1fr);gap:20px}
+.feature{border:1px solid var(--border);border-radius:12px;padding:22px 20px;background:var(--navy2)}
+.feature-icon{width:34px;height:34px;border-radius:8px;background:rgba(58,155,255,0.12);display:flex;align-items:center;justify-content:center;color:var(--blue4);margin-bottom:14px}
+.feature-icon svg{width:18px;height:18px}
+.feature h3{font-size:14.5px;font-weight:600;margin-bottom:6px}
+.feature p{font-size:13px;color:var(--muted);line-height:1.5}
+
+.scenario{max-width:900px;margin:0 auto;padding:0 48px 100px}
+.scenario-box{border:1px solid var(--border2);border-radius:16px;padding:40px;background:linear-gradient(135deg,rgba(58,155,255,0.07),rgba(124,95,196,0.05))}
+.scenario-label{font-family:var(--mono);font-size:12px;letter-spacing:0.1em;text-transform:uppercase;color:var(--blue3);margin-bottom:14px}
+.scenario-box p{font-size:16px;color:var(--white);opacity:0.9;max-width:640px;margin-bottom:28px;line-height:1.6}
+.btn-primary{display:inline-block;background:var(--blue3);color:var(--navy);padding:15px 30px;border-radius:8px;font-size:15.5px;font-weight:600;text-decoration:none}
+
+.preview-row{display:flex;gap:10px;margin-top:26px;flex-wrap:wrap}
+.pill{font-family:var(--mono);font-size:11px;border-radius:5px;padding:4px 10px;border:1px solid}
+.pill.amber{color:var(--amber);border-color:rgba(240,165,0,0.4);background:rgba(240,165,0,0.08)}
+.pill.danger{color:var(--danger);border-color:rgba(255,107,107,0.4);background:rgba(255,107,107,0.08)}
+.pill.violet{color:var(--violet-light);border-color:rgba(124,95,196,0.4);background:var(--violet-dim)}
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="nav-logo">
+    <div class="nav-logo-icon">
+      <svg viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M9 2L15 5.5V12.5L9 16L3 12.5V5.5L9 2Z" stroke="white" stroke-width="1.5" stroke-linejoin="round"/>
+        <path d="M9 7L11.5 8.5V11.5L9 13L6.5 11.5V8.5L9 7Z" fill="white"/>
+      </svg>
+    </div>
+    <span class="nav-logo-text">Validor</span>
+  </div>
+  <div class="nav-links">
+    <a href="#">Pipeline</a>
+    <a href="#">For Clinicians</a>
+    <a href="#">Demo</a>
+    <a href="#">Docs</a>
+  </div>
+  <a href="#" class="nav-cta">Try Demo →</a>
+</nav>
+
+<div class="hero">
+  <div class="hero-badge">
+    <span class="hero-badge-dot"></span>
+    FHIR R4 · AI-Assisted, Clinician-Approved
+  </div>
+  <h1>Less to review.<br><span class="accent">More to say.</span></h1>
+  <p class="hero-sub">Validor checks every result against a patient's history, flags only what needs attention, and drafts the message that explains it — a clinician approves before anything is sent.</p>
+</div>
+
+<div class="features">
+  <div class="feature">
+    <div class="feature-icon">
+      <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M6 3v18" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
+        <path d="M6 4.2c2-1.1 4-1.1 6 0s4 1.1 6 0v7.6c-2 1.1-4 1.1-6 0s-4-1.1-6 0V4.2z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round" stroke-linecap="round"/>
+      </svg>
+    </div>
+    <h3>Priority findings</h3>
+    <p>Not every result needs a flag. These do — ranked, not listed.</p>
+  </div>
+  <div class="feature">
+    <div class="feature-icon">
+      <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M3 20h18" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" opacity="0.35"/>
+        <path d="M4 15.5l4-2.8 4 1.3 4-5.6 3.4-2.2" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+        <circle cx="19.4" cy="6.2" r="2.1" fill="#f0a500"/>
+      </svg>
+    </div>
+    <h3>History under every flag</h3>
+    <p>Months of trend behind every abnormal value, one glance away.</p>
+  </div>
+  <div class="feature">
+    <div class="feature-icon">
+      <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <rect x="3" y="5.5" width="18" height="13" rx="2.2" stroke="currentColor" stroke-width="1.6"/>
+        <path d="M4 7.5l8 6 8-6" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+    </div>
+    <h3>Patient-ready drafts</h3>
+    <p>Plain language, right tone, always approved before it's sent.</p>
+  </div>
+</div>
+
+<div class="scenario">
+  <div class="scenario-box">
+    <div class="scenario-label">Clinical scenario</div>
+    <p>A patient on long-term statin therapy, four visits, one test trending up. Validor flags it, plots the history, and drafts the patient message — ready for your review.</p>
+    <a href="#" class="btn-primary">Run demo →</a>
+    <div class="preview-row">
+      <span class="pill amber">HIGH: Glucose 111.2</span>
+      <span class="pill danger">requires_review</span>
+      <span class="pill violet">AI draft pending approval</span>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>

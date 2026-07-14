@@ -36,7 +36,9 @@ nav{display:flex;align-items:center;justify-content:space-between;padding:20px 4
 .nav-cta:hover{background:var(--blue4)}
 
 /* HERO */
-.hero{padding:100px 48px 80px;max-width:1100px;margin:0 auto;position:relative}
+.hero{padding:100px 48px 80px;max-width:1100px;margin:0 auto;position:relative;text-align:center}
+.hero-sub{margin-left:auto;margin-right:auto}
+.hero-actions{justify-content:center}
 .hero-badge{display:inline-flex;align-items:center;gap:8px;background:rgba(58,155,255,0.1);border:1px solid var(--border2);border-radius:100px;padding:6px 14px;font-size:12px;font-weight:500;color:var(--blue3);margin-bottom:32px;font-family:var(--mono)}
 .hero-badge-dot{width:6px;height:6px;border-radius:50%;background:var(--cyan);animation:pulse 2s infinite}
 @keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.6;transform:scale(0.8)}}
@@ -44,16 +46,17 @@ h1{font-size:clamp(40px,5vw,64px);font-weight:700;letter-spacing:-0.03em;line-he
 h1 em{font-style:normal;background:linear-gradient(90deg,var(--blue3),var(--cyan));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
 .hero-sub{font-size:18px;color:var(--muted);max-width:580px;margin-bottom:48px;font-weight:400;line-height:1.7}
 .hero-actions{display:flex;gap:16px;flex-wrap:wrap}
+.hero-features{max-width:1100px;margin:8px auto 0;padding:0 48px;display:grid;grid-template-columns:repeat(3,1fr);gap:20px}
+.hero-feature{border:1px solid var(--border);border-radius:12px;padding:22px 20px;background:var(--navy2)}
+.hero-feature-icon{width:34px;height:34px;border-radius:8px;background:rgba(58,155,255,0.12);display:flex;align-items:center;justify-content:center;color:var(--blue4);margin-bottom:14px}
+.hero-feature-icon svg{width:18px;height:18px}
+.hero-feature h3{font-size:14.5px;font-weight:600;margin-bottom:6px}
+.hero-feature p{font-size:13px;color:var(--muted);line-height:1.5}
+@media (max-width:800px){.hero-features{grid-template-columns:1fr}}
 .btn-primary{background:var(--blue3);color:var(--navy);padding:14px 28px;border-radius:8px;font-weight:600;font-size:15px;text-decoration:none;transition:all .2s;border:none;cursor:pointer}
 .btn-primary:hover{background:var(--blue4);transform:translateY(-1px)}
 .btn-ghost{background:transparent;color:var(--white);padding:14px 28px;border-radius:8px;font-weight:500;font-size:15px;text-decoration:none;border:1px solid var(--border2);transition:all .2s;cursor:pointer}
 .btn-ghost:hover{border-color:var(--blue3);color:var(--blue3)}
-
-/* STATS STRIP */
-.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:var(--border);border:1px solid var(--border);border-radius:12px;overflow:hidden;max-width:1100px;margin:0 auto 80px;padding:0 48px}
-.stat{background:var(--navy2);padding:28px 32px}
-.stat-num{font-size:28px;font-weight:700;color:var(--blue3);font-family:var(--mono);letter-spacing:-0.02em}
-.stat-label{font-size:13px;color:var(--muted);margin-top:4px}
 
 /* PIPELINE SECTION */
 .section{padding:80px 48px;max-width:1100px;margin:0 auto}
@@ -71,17 +74,6 @@ h1 em{font-style:normal;background:linear-gradient(90deg,var(--blue3),var(--cyan
 .pipe-desc{font-size:11px;color:var(--muted)}
 .pipe-arrow{color:var(--blue2);font-size:18px;flex-shrink:0;padding:0 8px;margin-top:-20px}
 .pipe-input{font-family:var(--mono);font-size:11px;color:var(--muted);text-align:center;margin-bottom:8px}
-
-/* FEATURES GRID */
-.features{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:1px;background:var(--border);border:1px solid var(--border);border-radius:16px;overflow:hidden;margin-top:56px}
-.feature{background:var(--navy2);padding:32px;transition:background .2s}
-.feature:hover{background:var(--navy3)}
-.feature-icon{width:40px;height:40px;border-radius:10px;margin-bottom:20px;display:flex;align-items:center;justify-content:center;font-size:20px}
-.feature-icon.blue{background:rgba(58,155,255,0.12)}
-.feature-icon.cyan{background:rgba(0,212,255,0.1)}
-.feature-icon.green{background:rgba(0,232,122,0.1)}
-.feature-title{font-size:16px;font-weight:600;margin-bottom:8px}
-.feature-desc{font-size:14px;color:var(--muted);line-height:1.6}
 
 /* DEMO SECTION */
 .demo-wrap{background:var(--navy2);border:1px solid var(--border);border-radius:16px;overflow:hidden;margin-top:0}
@@ -144,13 +136,22 @@ h1 em{font-style:normal;background:linear-gradient(90deg,var(--blue3),var(--cyan
 .event-msg{color:var(--muted)}
 
 /* FOOTER SECTION */
-.cta-band{background:linear-gradient(135deg,var(--navy2),var(--navy3));border:1px solid var(--border);border-radius:20px;padding:64px;text-align:center;margin:80px 48px}
-.cta-band h2{font-size:36px;font-weight:700;letter-spacing:-0.02em;margin-bottom:16px}
-.cta-band p{font-size:16px;color:var(--muted);max-width:440px;margin:0 auto 40px}
+footer{border-top:1px solid var(--border);padding:48px 48px;font-size:13px;color:var(--muted);display:flex;flex-direction:column;align-items:center;gap:16px;text-align:center}
+.footer-title{font-weight:700;font-size:20px;color:var(--white);letter-spacing:-0.02em}
+.footer-links{display:flex;gap:24px}
+.footer-link{background:none;border:none;padding:0;font:inherit;color:var(--muted);text-decoration:none;cursor:pointer;letter-spacing:0.04em;text-transform:uppercase;font-size:12px;transition:color .2s}
+.footer-link:hover{color:var(--blue3)}
 
-footer{border-top:1px solid var(--border);padding:32px 48px;display:grid;grid-template-columns:1fr 1fr;gap:24px;font-size:13px;color:var(--muted)}
-.footer-logo{font-weight:700;font-size:15px;color:var(--white);grid-column:1/-1;text-align:left;margin-bottom:16px}
-footer > span:nth-child(3){text-align:right}
+/* CONTACT MODAL */
+.contact-overlay{position:fixed;inset:0;background:rgba(3,8,16,0.7);backdrop-filter:blur(4px);display:flex;align-items:center;justify-content:center;z-index:100;padding:24px}
+.contact-modal{background:var(--navy2);border:1px solid var(--border2);border-radius:16px;padding:32px;max-width:440px;width:100%}
+.contact-modal h3{font-size:20px;font-weight:700;margin-bottom:8px}
+.contact-honeypot{position:absolute;left:-9999px;width:1px;height:1px;opacity:0;pointer-events:none}
+.contact-sub{color:var(--muted);font-size:14px;margin-bottom:20px}
+.contact-textarea{width:100%;min-height:140px;background:var(--navy);border:1px solid var(--border);border-radius:8px;padding:14px;color:var(--white);font-family:inherit;font-size:14px;resize:vertical}
+.contact-textarea:focus{outline:none;border-color:var(--blue3)}
+.contact-error{color:var(--danger);font-size:13px;margin-top:10px}
+.contact-actions{display:flex;justify-content:flex-end;gap:12px;margin-top:20px}
 
 /* Result Grid */
 .result-grid{display:grid;grid-template-columns:1fr 1fr;gap:24px}
@@ -179,10 +180,7 @@ body>*{position:relative;z-index:1}
   .event-row{align-items:flex-start;flex-wrap:wrap}
   .event-msg{flex:1;min-width:150px}
 
-  footer{gap:16px;align-items:center}
-  .footer-logo{grid-column:1;grid-row:1;margin-bottom:0;font-size:13px}
-  footer > span:nth-child(2){grid-column:1/-1;grid-row:2;text-align:center}
-  footer > span:nth-child(3){grid-column:2;grid-row:1;text-align:right}
+  .footer-logo{font-size:13px}
 
   .result-grid{grid-template-columns:1fr}
 }
@@ -494,6 +492,10 @@ function HistoryChart({ series, unit, refLow, refHigh }) {
 }
 
 export default function Home() {
+  const [contactOpen, setContactOpen] = useState(false);
+  const [contactMessage, setContactMessage] = useState("");
+  const [contactStatus, setContactStatus] = useState("idle"); // idle | sending | sent | error
+  const [contactHoneypot, setContactHoneypot] = useState("");
   const [demoPhase, setDemoPhase] = useState("idle");
   const [loadingStage, setLoadingStage] = useState(0);
   const [demoResult, setDemoResult] = useState(null);
@@ -1003,6 +1005,28 @@ export default function Home() {
     }
     setRejecting(false);
     setRejectReason("");
+  }
+
+  async function sendContact() {
+    if (!contactMessage.trim()) return;
+    setContactStatus("sending");
+    try {
+      const res = await fetch("/api/contact", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ message: contactMessage, honeypot: contactHoneypot }),
+      });
+      if (!res.ok) throw new Error("send failed");
+      setContactStatus("sent");
+      setTimeout(() => {
+        setContactOpen(false);
+        setContactStatus("idle");
+        setContactMessage("");
+        setContactHoneypot("");
+      }, 1500);
+    } catch {
+      setContactStatus("error");
+    }
   }
 
   async function copyDraft() {
@@ -1595,7 +1619,6 @@ export default function Home() {
         </a>
         <div className="nav-links">
           <a href="#pipeline">Pipeline</a>
-          <a href="#features">Features</a>
           <a href="#demo">Demo</a>
           <a href="https://github.com/masyago/validor" target="_blank" rel="noopener noreferrer">Docs</a>
         </div>
@@ -1607,187 +1630,52 @@ export default function Home() {
       <div className="hero">
         <div className="hero-badge">
           <span className="hero-badge-dot" />
-          FHIR-Compliant · Lab Data Infrastructure
+          AI-Assisted, Clinician-Approved
         </div>
         <h1>
-          Lab data
+          Less to review.
           <br />
-          you can <em>trust.</em>
+          <em>More to say.</em>
         </h1>
         <p className="hero-sub">
-          Validor ingests lab analyzer output, validates against business rules, normalizes to FHIR,
-          and persists with full provenance — deterministically, atomically, every time.
+          Validor checks every result, but only flags what needs attention.
+          It drafts the message that puts those findings in perspective.
+          Nothing is sent without a clinician's approval.
         </p>
-        <div className="hero-actions">
-          <a href="#demo" className="btn-primary">
-            See it in action
-          </a>
-          <a href="#pipeline" className="btn-ghost">
-            Explore the pipeline
-          </a>
-        </div>
       </div>
 
-      <div className="stats">
-        <div className="stat">
-          <div className="stat-num">4</div>
-          <div className="stat-label">Pipeline stages</div>
+      <div className="hero-features">
+        <div className="hero-feature">
+          <div className="hero-feature-icon">
+            <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M6 3v18" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"/>
+              <path d="M6 4.2c2-1.1 4-1.1 6 0s4 1.1 6 0v7.6c-2 1.1-4 1.1-6 0s-4-1.1-6 0V4.2z" stroke="currentColor" strokeWidth="1.6" strokeLinejoin="round" strokeLinecap="round"/>
+            </svg>
+          </div>
+          <h3>Priority findings</h3>
+          <p>Not every result needs a flag. These do.</p>
         </div>
-        <div className="stat">
-          <div className="stat-num">SHA-256</div>
-          <div className="stat-label">Content deduplication</div>
+        <div className="hero-feature">
+          <div className="hero-feature-icon">
+            <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M3 20h18" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" opacity="0.35"/>
+              <path d="M4 15.5l4-2.8 4 1.3 4-5.6 3.4-2.2" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/>
+              <circle cx="19.4" cy="6.2" r="2.1" fill="#f0a500"/>
+            </svg>
+          </div>
+          <h3>History under every flag</h3>
+          <p>Plotted trend for every abnormal value.</p>
         </div>
-        <div className="stat">
-          <div className="stat-num">100%</div>
-          <div className="stat-label">Deterministic output</div>
-        </div>
-        <div className="stat">
-          <div className="stat-num">FHIR R4</div>
-          <div className="stat-label">Compliance standard</div>
-        </div>
-      </div>
-
-      <div className="section" id="pipeline">
-        <div className="section-label">Data Flow</div>
-        <div className="section-title">From raw CSV to FHIR resources</div>
-        <div className="section-sub">
-          Every file travels a deterministic path — parsed, validated, normalized, and persisted. No
-          partial writes, no surprises.
-        </div>
-
-        <div className="pipeline">
-          <div className="pipe-step">
-            <div className="pipe-input">CSV file</div>
-            <div className="pipe-box">
-              <div className="pipe-icon">📄</div>
-              <div className="pipe-name">Parser</div>
-              <div className="pipe-desc">Panel + Test relations</div>
-            </div>
+        <div className="hero-feature">
+          <div className="hero-feature-icon">
+            <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <rect x="3" y="5.5" width="18" height="13" rx="2.2" stroke="currentColor" strokeWidth="1.6"/>
+              <path d="M4 7.5l8 6 8-6" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/>
+            </svg>
           </div>
-          <div className="pipe-arrow">→</div>
-          <div className="pipe-step">
-            <div className="pipe-input">&nbsp;</div>
-            <div className="pipe-box">
-              <div className="pipe-icon">🛡</div>
-              <div className="pipe-name">Validator</div>
-              <div className="pipe-desc">Business rule enforcement</div>
-            </div>
-          </div>
-          <div className="pipe-arrow">→</div>
-          <div className="pipe-step">
-            <div className="pipe-input">&nbsp;</div>
-            <div className="pipe-box">
-              <div className="pipe-icon">⚙️</div>
-              <div className="pipe-name">Normalizer</div>
-              <div className="pipe-desc">FHIR transformation</div>
-            </div>
-          </div>
-          <div className="pipe-arrow">→</div>
-          <div className="pipe-step">
-            <div className="pipe-input">&nbsp;</div>
-            <div className="pipe-box">
-              <div className="pipe-icon">🗄</div>
-              <div className="pipe-name">Persistence</div>
-              <div className="pipe-desc">DiagnosticReport + Observation</div>
-            </div>
-          </div>
-          <div className="pipe-arrow">→</div>
-          <div className="pipe-step">
-            <div className="pipe-input">&nbsp;</div>
-            <div className="pipe-box">
-              <div className="pipe-icon">📋</div>
-              <div className="pipe-name">Events</div>
-              <div className="pipe-desc">Full provenance log</div>
-            </div>
-          </div>
-        </div>
-
-      </div>
-
-      <div className="section" id="features">
-        <div className="section-label">Key Properties</div>
-        <div className="section-title">Built-in guarantees</div>
-        <div className="section-sub">
-          Six core properties that make Validor reliable for healthcare data workflows.
-        </div>
-
-        <div className="features">
-          <div className="feature">
-            <div className="feature-icon blue">🔒</div>
-            <div className="feature-title">Idempotency</div>
-            <div className="feature-desc">
-              Ingestion uniqueness enforced by{" "}
-              <code
-                style={{
-                  color: "var(--blue3)",
-                  fontFamily: "var(--mono)",
-                  fontSize: 12,
-                }}
-              >
-                (instrument_id, run_id)
-              </code>{" "}
-              constraint. Resubmit the same file — nothing changes.
-            </div>
-          </div>
-          <div className="feature">
-            <div className="feature-icon cyan">🔍</div>
-            <div className="feature-title">Deduplication</div>
-            <div className="feature-desc">
-              SHA-256 content hash detects exact duplicates. Mismatched hashes for the same key are
-              rejected before touching the database.
-            </div>
-          </div>
-          <div className="feature">
-            <div className="feature-icon green">⚛</div>
-            <div className="feature-title">Atomicity</div>
-            <div className="feature-desc">
-              Validation or normalization failures produce no partial writes. Raw data is always
-              persisted; derived resources only on full success.
-            </div>
-          </div>
-          <div className="feature">
-            <div className="feature-icon blue">📐</div>
-            <div className="feature-title">Determinism</div>
-            <div className="feature-desc">
-              Same input always produces same output. All transformations are reproducible — no hidden
-              state, no runtime variance.
-            </div>
-          </div>
-          <div className="feature">
-            <div className="feature-icon cyan">🕐</div>
-            <div className="feature-title">Auditability</div>
-            <div className="feature-desc">
-              Every processing step recorded as a timestamped event with status. Full provenance chain
-              from raw upload to persisted FHIR resource.
-            </div>
-          </div>
-          <div className="feature">
-            <div className="feature-icon green">📊</div>
-            <div className="feature-title">FHIR R4 Output</div>
-            <div className="feature-desc">
-              Lab results persisted as{" "}
-              <code
-                style={{
-                  color: "var(--blue3)",
-                  fontFamily: "var(--mono)",
-                  fontSize: 12,
-                }}
-              >
-                DiagnosticReport
-              </code>{" "}
-              and{" "}
-              <code
-                style={{
-                  color: "var(--blue3)",
-                  fontFamily: "var(--mono)",
-                  fontSize: 12,
-                }}
-              >
-                Observation
-              </code>{" "}
-              resources, ready for downstream healthcare systems.
-            </div>
-          </div>
+          <h3>Patient-ready drafts</h3>
+          <p>Results explained in plain language. Approved by clinician before
+            sending.</p>
         </div>
       </div>
 
@@ -1795,9 +1683,9 @@ export default function Home() {
         <div className="section-label">Live Demo</div>
         <div className="section-title">See Validor in action</div>
         <div className="section-sub">
-          A single run through the full pipeline, replayed end to end — ingestion, validation,
-          FHIR persistence, then AI review. Every run emits a full, timestamped audit trail —
-          expand it inline with the persisted resources below.
+          A single run through the full pipeline, replayed end to end: ingestion, validation,
+          FHIR persistence, then AI annotation and a patient message draft.
+          Every run emits a full, timestamped audit trail.
         </div>
 
         <div className="demo-wrap">
@@ -1806,11 +1694,11 @@ export default function Home() {
               <span>Clinical scenario</span>
             </div>
             <p className="scenario-text">
-              Patient on long-term statin therapy had four lab visits
+              A patient on long-term statin therapy had four lab visits
               (BMP, LFT, lipid panel) in the past year. Most analytes stay within
               range, some are improving over time, but one test (Glucose) has
-              concerning trend. AI has to identify the trends, list priority findings
-              and draft a patient message for clinician approval.
+              concerning trend. Validor identifies the trends, lists priority findings
+              and drafts a patient message for clinician approval.
             </p>
           </div>
           <button
@@ -2079,28 +1967,127 @@ export default function Home() {
         </div>
       </div>
 
-      <div className="cta-band">
-        <h2>
-          Built for reliability.
-          <br />
-          Designed for healthcare.
-        </h2>
-        <p>Explore the full pipeline, read the source, or connect to the live API.</p>
-        <div style={{ display: "flex", gap: 16, justifyContent: "center", flexWrap: "wrap" }}>
-          <a href="#demo" className="btn-primary">
-            Open Live Demo →
-          </a>
-          <a href="https://github.com/masyago/validor" target="_blank" rel="noopener noreferrer" className="btn-ghost">
-            View on GitHub
-          </a>
+      <div className="section" id="pipeline">
+        <div className="section-label">Data Flow</div>
+        <div className="section-title">From raw lab data to Ai enrichment</div>
+        <div className="section-sub">
+          Every file travels a deterministic path — parsed, validated, normalized, and persisted. No
+          partial writes, no surprises.
         </div>
+
+        <div className="pipeline">
+          <div className="pipe-step">
+            <div className="pipe-input">CSV file</div>
+            <div className="pipe-box">
+              <div className="pipe-icon">📄</div>
+              <div className="pipe-name">Parser</div>
+              <div className="pipe-desc">Panel + Test relations</div>
+            </div>
+          </div>
+          <div className="pipe-arrow">→</div>
+          <div className="pipe-step">
+            <div className="pipe-input">&nbsp;</div>
+            <div className="pipe-box">
+              <div className="pipe-icon">🛡</div>
+              <div className="pipe-name">Validator</div>
+              <div className="pipe-desc">Business rule enforcement</div>
+            </div>
+          </div>
+          <div className="pipe-arrow">→</div>
+          <div className="pipe-step">
+            <div className="pipe-input">&nbsp;</div>
+            <div className="pipe-box">
+              <div className="pipe-icon">⚙️</div>
+              <div className="pipe-name">Normalizer</div>
+              <div className="pipe-desc">FHIR transformation</div>
+            </div>
+          </div>
+          <div className="pipe-arrow">→</div>
+          <div className="pipe-step">
+            <div className="pipe-input">&nbsp;</div>
+            <div className="pipe-box">
+              <div className="pipe-icon">🗄</div>
+              <div className="pipe-name">Persistence</div>
+              <div className="pipe-desc">DiagnosticReport + Observation</div>
+            </div>
+          </div>
+          <div className="pipe-arrow">→</div>
+          <div className="pipe-step">
+            <div className="pipe-input">&nbsp;</div>
+            <div className="pipe-box">
+              <div className="pipe-icon">📋</div>
+              <div className="pipe-name">Events</div>
+              <div className="pipe-desc">Full provenance log</div>
+            </div>
+          </div>
+        </div>
+
       </div>
 
       <footer>
-        <span className="footer-logo">Validor</span>
-        <span>FHIR R4 · PostgreSQL · REST API</span>
-        <span>Built with purpose.</span>
+        <span className="footer-title">Validor</span>
+        <div className="footer-links">
+          <button type="button" className="footer-link" onClick={() => setContactOpen(true)}>
+            Contact
+          </button>
+          <a
+            className="footer-link"
+            href="https://github.com/masyago/vlast-health"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            GitHub
+          </a>
+        </div>
       </footer>
+
+      {contactOpen && (
+        <div className="contact-overlay" onClick={() => contactStatus !== "sending" && setContactOpen(false)}>
+          <div className="contact-modal" onClick={(e) => e.stopPropagation()}>
+            <h3>Contact</h3>
+            <p className="contact-sub">Send a message — it goes straight to the Validor team.</p>
+            <input
+              type="text"
+              className="contact-honeypot"
+              value={contactHoneypot}
+              onChange={(e) => setContactHoneypot(e.target.value)}
+              tabIndex={-1}
+              autoComplete="off"
+              aria-hidden="true"
+              name="company"
+            />
+            <textarea
+              className="contact-textarea"
+              value={contactMessage}
+              onChange={(e) => setContactMessage(e.target.value)}
+              placeholder="Type your message…"
+              disabled={contactStatus === "sending" || contactStatus === "sent"}
+              autoFocus
+            />
+            {contactStatus === "error" && (
+              <div className="contact-error">Something went wrong. Please try again.</div>
+            )}
+            <div className="contact-actions">
+              <button
+                type="button"
+                className="draft-btn secondary"
+                onClick={() => { setContactOpen(false); setContactMessage(""); setContactHoneypot(""); setContactStatus("idle"); }}
+                disabled={contactStatus === "sending"}
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                className="draft-btn primary"
+                onClick={sendContact}
+                disabled={!contactMessage.trim() || contactStatus === "sending" || contactStatus === "sent"}
+              >
+                {contactStatus === "sending" ? "Sending…" : contactStatus === "sent" ? "Sent ✓" : "Send"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </>
   );
 }
