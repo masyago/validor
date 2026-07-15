@@ -470,6 +470,8 @@ def _print_patient_message_section(
         opening = content.get("opening")
         normal_summary = content.get("normal_summary")
         recommendation = content.get("recommendation")
+        # Extra blank line before the message body to set it apart.
+        out.print("")
         out.print("")
         if isinstance(subject, str) and subject.strip():
             out.print(f"Subject: {subject}")
@@ -492,6 +494,8 @@ def _print_patient_message_section(
         if isinstance(recommendation, str) and recommendation.strip():
             out.print("")
             out.print(recommendation)
+        # Extra blank line after the message body.
+        out.print("")
 
     validation_error = message.get("validation_error")
     if isinstance(validation_error, str) and validation_error.strip():
@@ -507,18 +511,24 @@ def _print_ingestion_processing_status(
     status_payload_override: dict[str, Any] | None = None,
 ) -> None:
     out = console_out or console
-    # Wait for terminal so the stage metrics are stable.
-    status_payload = (
-        status_payload_override
-        if status_payload_override is not None
-        else csv_uploader.poll_until_terminal(
-            ingestion_id=ingestion_id,
-            config=config,
-            session=session,
-            request_timeout_seconds=csv_uploader.REQUEST_TIMEOUT_SECONDS,
-            status_poll_seconds=1,
-        )
-    )
+    # Wait for terminal so the stage metrics are stable. Normalization plus the
+    # AI enrichment and patient-message stages run before the status flips to
+    # COMPLETED, so this poll can take several seconds — show a spinner so the
+    # user sees that work is in progress.
+    if status_payload_override is not None:
+        status_payload = status_payload_override
+    else:
+        with out.status(
+            "Processing ingestion — validation, normalization, and AI stages…",
+            spinner="dots",
+        ):
+            status_payload = csv_uploader.poll_until_terminal(
+                ingestion_id=ingestion_id,
+                config=config,
+                session=session,
+                request_timeout_seconds=csv_uploader.REQUEST_TIMEOUT_SECONDS,
+                status_poll_seconds=1,
+            )
 
     base_url = str(config.get("api_base_url", "http://localhost:3000")).rstrip(
         "/"
@@ -573,13 +583,25 @@ def _print_ingestion_processing_status(
     fhir_failed = "FHIR_JSON_GENERATION_FAILED" in types
     fhir_succeeded = "FHIR_JSON_GENERATION_SUCCEEDED" in types
 
+    ai_annotation_started = "AI_ENRICHMENT_STARTED" in types
+    ai_annotation_failed = "AI_ENRICHMENT_FAILED" in types
+    ai_annotation_succeeded = "AI_ENRICHMENT_SUCCEEDED" in types
+    ai_annotation_skipped_event = "AI_ENRICHMENT_SKIPPED" in types
+
+    patient_message_started = "MESSAGE_DRAFT_STARTED" in types
+    patient_message_failed = "MESSAGE_DRAFT_FAILED" in types
+    patient_message_succeeded = "MESSAGE_DRAFT_SUCCEEDED" in types
+    patient_message_skipped_event = "MESSAGE_DRAFT_SKIPPED" in types
+
     def _stage_symbol_and_label(
-        *, failed: bool, succeeded: bool, skipped: bool
+        *, failed: bool, succeeded: bool, skipped: bool, running: bool
     ) -> tuple[str, str]:
         if failed:
             return "✖", "failed"
         if succeeded:
             return "✔", "completed"
+        if running:
+            return "⟳", "in progress"
         if skipped:
             return "↷", "skipped"
         return "…", "pending"
@@ -591,11 +613,13 @@ def _print_ingestion_processing_status(
         succeeded: bool,
         skipped: bool,
         detail: str,
+        running: bool = False,
     ) -> None:
         symbol, status = _stage_symbol_and_label(
             failed=failed,
             succeeded=succeeded,
             skipped=skipped,
+            running=running,
         )
         out.print(f"{label:<16} {symbol} {status}{detail}")
 
@@ -661,6 +685,50 @@ def _print_ingestion_processing_status(
         skipped=fhir_skipped,
         detail="",
     )
+    previous_stage_failed = previous_stage_failed or fhir_failed
+
+    ai_annotation_skipped = ai_annotation_skipped_event or (
+        previous_stage_failed
+        and not ai_annotation_started
+        and not ai_annotation_failed
+        and not ai_annotation_succeeded
+    )
+    ai_annotation_running = ai_annotation_started and not (
+        ai_annotation_failed
+        or ai_annotation_succeeded
+        or ai_annotation_skipped_event
+    )
+    _print_stage_line(
+        label="[AI ANNOTATION]",
+        failed=ai_annotation_failed,
+        succeeded=ai_annotation_succeeded,
+        skipped=ai_annotation_skipped,
+        running=ai_annotation_running,
+        detail="",
+    )
+
+    # Patient-message drafting is gated on AI annotation succeeding, so a
+    # missing draft after a failed/skipped annotation counts as skipped.
+    patient_message_gate_open = ai_annotation_succeeded
+    patient_message_skipped = patient_message_skipped_event or (
+        not patient_message_gate_open
+        and not patient_message_started
+        and not patient_message_failed
+        and not patient_message_succeeded
+    )
+    patient_message_running = patient_message_started and not (
+        patient_message_failed
+        or patient_message_succeeded
+        or patient_message_skipped_event
+    )
+    _print_stage_line(
+        label="[PATIENT MESSAGE]",
+        failed=patient_message_failed,
+        succeeded=patient_message_succeeded,
+        skipped=patient_message_skipped,
+        running=patient_message_running,
+        detail="",
+    )
 
     out.print("")
     final_status = (
@@ -687,6 +755,19 @@ def _print_ingestion_processing_status(
         out.print(final_status)
 
     if isinstance(final_status, str) and final_status.upper() == "COMPLETED":
+        _print_ai_annotation_section(
+            ingestion_id=ingestion_id,
+            base_url=base_url,
+            session=session,
+            console_out=out,
+        )
+        _print_patient_message_section(
+            ingestion_id=ingestion_id,
+            base_url=base_url,
+            session=session,
+            console_out=out,
+        )
+
         out.print("")
         out.print("")
         out.print("LINKS", style="bold")
@@ -702,25 +783,17 @@ def _print_ingestion_processing_status(
         )
         out.print("")
         out.print(
+            "FHIR JSON: add `?include_json=1` to DiagnosticReports/Observations."
+        )
+        out.print("")
+        out.print(
             f"AI annotations: {base_url}/v1/ingestions/{ingestion_id}/ai_annotation"
         )
         out.print("")
         out.print(
-            "FHIR JSON: add `?include_json=1` to DiagnosticReports/Observations."
+            f"Patient Message: {base_url}/v1/ingestions/{ingestion_id}/patient_message"
         )
         out.print("")
-        _print_ai_annotation_section(
-            ingestion_id=ingestion_id,
-            base_url=base_url,
-            session=session,
-            console_out=out,
-        )
-        _print_patient_message_section(
-            ingestion_id=ingestion_id,
-            base_url=base_url,
-            session=session,
-            console_out=out,
-        )
 
     if isinstance(final_status, str) and final_status.upper().startswith(
         "FAILED"

@@ -22,7 +22,7 @@ def _strip_trailing_slash(url: str) -> str:
 @pytest.fixture(scope="session")
 def e2e_config() -> E2EConfig:
     base_url = _strip_trailing_slash(
-        os.environ.get("E2E_BASE_URL", "http://localhost:8000")
+        os.environ.get("E2E_BASE_URL", "http://localhost:5001")
     )
     return E2EConfig(base_url=base_url)
 
