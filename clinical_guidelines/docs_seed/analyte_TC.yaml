@@ -1,0 +1,54 @@
+test_name: Total Cholesterol
+synonyms:
+  - total cholesterol level
+  - serum cholesterol
+  - cholesterol blood test
+  - TC level
+  - blood cholesterol
+test_code: TC
+panel_code: LIPID
+analyte_type: lipid
+clinical_use: "Total cholesterol represents the sum of all circulating
+  cholesterol fractions, including LDL, HDL, VLDL, and other lipoproteins.
+  It is used as a broad screening marker for cardiovascular risk and
+  dyslipidemia. Total cholesterol alone has limited specificity; it is most
+  useful as part of the full lipid panel and in the context of overall
+  cardiovascular risk calculators such as the Pooled Cohort Equations."
+reference_ranges:
+  adult_generic:
+    low: 0
+    high: 200
+    units: mg/dL
+    note: "Values below 200 mg/dL are considered desirable. 200–239 mg/dL
+      is borderline high; ≥240 mg/dL is considered high per standard
+      cardiovascular risk guidelines."
+interpretation_summary:
+  high: "Elevated total cholesterol may be associated with increased
+    cardiovascular risk, familial hypercholesterolemia, hypothyroidism,
+    nephrotic syndrome, or cholestatic liver disease. Elevated TC should
+    prompt review of LDL, HDL, and triglycerides for more specific
+    characterization."
+  low: "Very low total cholesterol may be seen with malnutrition,
+    hyperthyroidism, severe liver disease, or malabsorption. Levels below
+    120 mg/dL may be associated with increased non-cardiovascular mortality
+    in some populations."
+  critical_high: 300  # mg/dL — may warrant urgent clinical review
+  critical_low: null
+confounders:
+  - "Total cholesterol includes HDL; a high total cholesterol driven by
+    elevated HDL carries a different risk profile than one driven by
+    elevated LDL."
+  - "Acute illness or recent myocardial infarction can transiently lower
+    total cholesterol for up to 6–8 weeks."
+  - "Pregnancy physiologically raises total cholesterol, particularly in
+    the second and third trimesters."
+  - "Dietary fat intake in the 24 hours prior to draw has limited effect
+    on total cholesterol but may affect triglycerides."
+aliases:
+  - TC
+  - total chol
+  - cholesterol
+  - chol
+  - T. chol
+# DISCLAIMER: For demo/development use only. Not intended for clinical
+# decision-making or patient care.

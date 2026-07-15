@@ -1,5 +1,5 @@
 from sqlalchemy.orm import Session
-from sqlalchemy import select
+from sqlalchemy import delete, or_, select
 from uuid import UUID
 from datetime import datetime, timezone
 
@@ -104,3 +104,30 @@ class IngestionRepository:
         ingestion.error_detail = None
         self.session.flush()
         return True
+
+    def delete_by_session_id(self, session_id: UUID) -> int:
+        """Purge every ingestion (and cascaded children) for a session_id.
+
+        Called on session start so a reopened tab doesn't wait for the TTL.
+        """
+        stmt = delete(Ingestion).where(Ingestion.session_id == session_id)
+        result = self.session.execute(stmt)
+        self.session.flush()
+        return result.rowcount
+
+    def delete_expired_sessions(self, now: datetime | None = None) -> int:
+        """Purge SESSION-kind ingestions past their TTL. Also self-heals any
+        orphaned SESSION rows with a NULL expires_at (e.g. legacy cookie-less
+        uploads created before TTLs were always assigned) — those are otherwise
+        unreachable by every purge path. SEED rows are never touched."""
+        now = now or datetime.now(timezone.utc)
+        stmt = delete(Ingestion).where(
+            Ingestion.kind == "SESSION",
+            or_(
+                Ingestion.expires_at.is_(None),
+                Ingestion.expires_at < now,
+            ),
+        )
+        result = self.session.execute(stmt)
+        self.session.flush()
+        return result.rowcount

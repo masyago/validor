@@ -1,0 +1,57 @@
+panel_code: LFT
+panel_name: Liver Function Tests
+panel_type: chemistry
+includes_analytes: [AST, ALT, ALP, TP, ALB, TBIL]
+synonyms:
+  - liver panel
+  - liver function panel
+  - hepatic function panel
+  - hepatic panel
+  - LFTs
+  - liver enzymes
+  - liver blood test
+clinical_use: "The Liver Function Tests panel assesses hepatic synthetic
+  function, cellular integrity, and biliary tract status. It is used to
+  screen for and monitor liver disease, evaluate hepatotoxicity from
+  medications or substances, and assess severity of known hepatic
+  conditions. The panel combines markers of hepatocellular injury (AST,
+  ALT), cholestasis (ALP, bilirubin), and synthetic function (albumin,
+  total protein), which together allow pattern-based interpretation of
+  liver pathology."
+interpretation_summary:
+  overview: "No single analyte is sufficient for characterizing liver
+    disease; results are interpreted as a pattern across the full panel
+    alongside clinical context."
+  common_patterns:
+    hepatocellular_injury: "Disproportionate elevation of AST and ALT
+      relative to ALP suggests hepatocellular damage, as seen in viral
+      hepatitis, drug-induced liver injury, or ischemic hepatitis."
+    cholestatic_pattern: "Disproportionate ALP elevation with mild or
+      normal aminotransferases suggests biliary obstruction, primary
+      biliary cholangitis, or infiltrative liver disease."
+    mixed_pattern: "Concurrent elevation of transaminases and ALP may
+      indicate overlap syndromes, alcoholic hepatitis, or advanced
+      hepatic disease."
+    synthetic_dysfunction: "Low albumin and/or elevated bilirubin in
+      the context of abnormal enzymes suggests impaired hepatic synthetic
+      function and may indicate chronic or advanced liver disease."
+    ast_alt_ratio: "An AST:ALT ratio above 2:1 is associated with
+      alcoholic liver disease; a ratio below 1 is more typical of
+      non-alcoholic fatty liver disease or viral hepatitis."
+confounders:
+  - "Hemolysis can falsely elevate AST and bilirubin."
+  - "Strenuous exercise can transiently raise AST and ALT from muscle
+    origin."
+  - "ALP has non-hepatic isoforms; bone, intestinal, and placental
+    sources must be considered."
+  - "Nutritional status and hydration affect albumin and total protein
+    independently of liver function."
+  - "Many medications and supplements are hepatotoxic and should be
+    reviewed when any LFT abnormality is identified."
+aliases:
+  - liver tests
+  - LFT
+  - hepatic function tests
+  - liver workup
+# DISCLAIMER: For demo/development use only. Not intended for clinical
+# decision-making or patient care.

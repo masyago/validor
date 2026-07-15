@@ -1,0 +1,49 @@
+panel_code: LIPID
+panel_name: Lipid Panel
+panel_type: chemistry
+includes_analytes: [TC, LDL, HDL, TG]
+synonyms:
+  - lipid profile
+  - lipid screen
+  - cholesterol panel
+  - fasting lipid panel
+  - cardiovascular risk panel
+  - lipoprotein panel
+clinical_use: "The Lipid Panel measures circulating lipids and lipoproteins
+  to assess cardiovascular risk and guide decisions around lifestyle
+  modification and lipid-lowering therapy. It is a standard component of
+  routine preventive care and is used to monitor treatment response in
+  patients on statins or other lipid-modifying agents. Fasting status at
+  time of draw affects triglyceride and calculated LDL values."
+interpretation_summary:
+  overview: "Results are interpreted collectively and in the context of
+    overall cardiovascular risk, including age, sex, smoking status, blood
+    pressure, and diabetes. No single analyte is sufficient for risk
+    stratification in isolation."
+  common_patterns:
+    atherogenic_dyslipidemia: "Elevated LDL and triglycerides with low HDL
+      is a common pattern associated with increased cardiovascular risk,
+      particularly in metabolic syndrome and type 2 diabetes."
+    isolated_hypertriglyceridemia: "Markedly elevated triglycerides with
+      otherwise normal lipids may suggest familial hypertriglyceridemia,
+      secondary causes (alcohol, hypothyroidism, uncontrolled diabetes),
+      or risk for pancreatitis at very high levels."
+    low_hdl: "Isolated low HDL, particularly in males, is an independent
+      cardiovascular risk factor and may warrant further risk assessment
+      even when LDL is within range."
+confounders:
+  - "Non-fasting samples significantly elevate triglycerides and reduce
+    calculated LDL reliability; fasting 9–12 hours is standard."
+  - "Acute illness, surgery, or myocardial infarction can transiently
+    lower LDL and total cholesterol for several weeks."
+  - "Pregnancy raises total cholesterol and triglycerides physiologically."
+  - "Hypothyroidism, nephrotic syndrome, and liver disease are common
+    secondary causes of dyslipidemia."
+aliases:
+  - lipids
+  - cholesterol test
+  - fasting lipids
+  - LIPID
+  - lipid blood test
+# DISCLAIMER: For demo/development use only. Not intended for clinical
+# decision-making or patient care.

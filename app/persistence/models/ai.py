@@ -17,39 +17,51 @@ from sqlalchemy import (
     Numeric,
     UniqueConstraint,
     Index,
+    Boolean,
 )
 import uuid
 from typing import Optional
 from sqlalchemy.dialects.postgresql import JSONB, ENUM
 import enum
 from datetime import datetime
+
 from pgvector.sqlalchemy import Vector
 from app.persistence.base import Base
 
-# Replace with CheckConstraint
-# class VectorSourceType(enum.Enum):
-#     DOCUMENT = "DOCUMENT"
-#     OBSERVATION = "OBSERVATION"
-#     DIAGNOSTIC_REPORT = "DIAGNOSTIC_REPORT"
+
+class ChunkType(enum.Enum):
+    IDENTITY = "IDENTITY"
+    CLINICAL_CONTEXT = "CLINICAL_CONTEXT"
+    REF_RANGES = "REF_RANGES"
+    INTERPRETATION = "INTERPRETATION"
+    CONFOUNDERS = "CONFOUNDERS"
 
 
-# vector_source_type_enum = SqlEnum(
-#     VectorSourceType,
-#     name="vector_source_type_enum",
-#     create_type=True,  # Set to False after first migration
-# )
+chunk_type_enum = SqlEnum(
+    ChunkType,
+    name="chunk_type_enum",
+    create_type=True,  # Set to False after first migration
+)
 
 
+# Index note: Default params ok for demo corpus; tune m and ef_construction
+# based on recall benchmarks before scaling beyond 10k rows.
 class VectorStore(Base):
     __tablename__ = "vector_store"
     __table_args__ = (
         UniqueConstraint(
-            "source_type",
             "source_id",
             "chunk_index",
             "embedding_model",
             "pipeline_version",
-            name="unique_vector_source_chunk_model_pipeline",
+            name="uq_vector_chunk_model_pipeline",
+        ),
+        Index(
+            "ix_vector_store_embedding_hnsw",
+            "embedding",
+            postgresql_using="hnsw",
+            postgresql_with={"m": 16, "ef_construction": 64},
+            postgresql_ops={"embedding": "vector_cosine_ops"},
         ),
     )
 
@@ -57,24 +69,37 @@ class VectorStore(Base):
         Uuid, primary_key=True, default=uuid.uuid4
     )
     embedding: Mapped[list[float]] = mapped_column(
-        Vector(768), nullable=False
-    )  # change vector dimension depending on the model
+        Vector(1536), nullable=False
+    )  # model: text-embedding-3-small
 
-    # Update with CheckConstraint
-    source_type: Mapped[VectorSourceType] = mapped_column(
-        vector_source_type_enum, nullable=False
-    )
     source_id: Mapped[uuid.UUID] = mapped_column(Uuid, nullable=False)
     chunk_index: Mapped[int] = mapped_column(
         Integer, nullable=False, default=0
     )
+    chunk_type: Mapped[ChunkType] = mapped_column(
+        chunk_type_enum, nullable=False
+    )
     chunk_text: Mapped[str] = mapped_column(Text, nullable=False)
-    content_hash: Mapped[str] = mapped_column(Text, nullable=False)
+    content_hash: Mapped[str] = mapped_column(
+        String(64), nullable=False, index=True
+    )
 
     embedding_model: Mapped[str] = mapped_column(Text, nullable=False)
     pipeline_version: Mapped[str] = mapped_column(Text, nullable=False)
     created_at: Mapped[datetime] = mapped_column(
-        TIMESTAMP(timezone=True), nullable=False
+        TIMESTAMP(timezone=True), nullable=False, server_default=func.now()
+    )
+    is_current: Mapped[bool] = mapped_column(
+        Boolean, nullable=False, default=True
+    )
+
+    embedding_model: Mapped[str] = mapped_column(Text, nullable=False)
+    pipeline_version: Mapped[str] = mapped_column(Text, nullable=False)
+    created_at: Mapped[datetime] = mapped_column(
+        TIMESTAMP(timezone=True), nullable=False, server_default=func.now()
+    )
+    is_current: Mapped[bool] = mapped_column(
+        Boolean, nullable=False, default=True
     )
 
 
@@ -111,55 +136,43 @@ class Document(Base):
     last_updated_at: Mapped[datetime] = mapped_column(
         TIMESTAMP(timezone=True), nullable=False
     )
-    content_hash: Mapped[str] = mapped_column(Text, nullable=False)
+    content_hash: Mapped[str] = mapped_column(
+        Text, nullable=False, unique=True
+    )
 
 
 # AI Annotation model and supporting classes
 
 
-# Replace with CheckConstraints
-# class AIAnnotationTargetType(enum.Enum):
-#     DIAGNOSTIC_REPORT = "DIAGNOSTIC_REPORT"
-#     OBSERVATION = "OBSERVATION"
+class AIAnnotationType(enum.Enum):
+    ANOMALY_FLAG = "anomaly_flag"
+    POSSIBLE_INTERFERENCE = "possible_interference"
+    FOLLOWUP_SUGGESTION = "followup_suggestion"
 
 
-# ai_annotation_target_type_enum = SqlEnum(
-#     AIAnnotationTargetType,
-#     name="ai_annotation_target_type_enum",
-#     create_type=True,
-# )
+ai_annotation_type_enum = SqlEnum(
+    AIAnnotationType,
+    name="ai_annotation_type_enum",
+    create_type=True,
+)
 
 
-# class AIAnnotationType(enum.Enum):
-#     ANOMALY_FLAG = "anomaly_flag"
-#     POSSIBLE_INTERFERENCE = "possible_interference"
-#     FOLLOWUP_SUGGESTION = "followup_suggestion"
+class AIAnnotationValidationStatus(enum.Enum):
+    PENDING = "PENDING"
+    ACCEPTED = "ACCEPTED"
+    REJECTED = "REJECTED"
 
 
-# ai_annotation_type_enum = SqlEnum(
-#     AIAnnotationType,
-#     name="ai_annotation_type_enum",
-#     create_type=True,
-# )
-
-
-# class AIAnnotationValidationStatus(enum.Enum):
-#     PENDING = "PENDING"
-#     ACCEPTED = "ACCEPTED"
-#     REJECTED = "REJECTED"
-
-
-# ai_annotation_validation_status_enum = SqlEnum(
-#     AIAnnotationValidationStatus,
-#     name="ai_annotation_validation_status_enum",
-#     create_type=True,
-# )
+ai_annotation_validation_status_enum = SqlEnum(
+    AIAnnotationValidationStatus,
+    name="ai_annotation_validation_status_enum",
+    create_type=True,
+)
 
 
 class AiAnnotation(Base):
     __tablename__ = "ai_annotation"
     __table_args__ = (
-        Index("ix_ai_annotation_target_type_id", "target_type", "target_id"),
         Index("ix_ai_annotation_annotation_type", "annotation_type"),
         Index("ix_ai_annotation_validation_status", "validation_status"),
     )
@@ -169,18 +182,12 @@ class AiAnnotation(Base):
         Uuid, primary_key=True, default=uuid.uuid4
     )
     ingestion_id: Mapped[uuid.UUID] = mapped_column(
-        Uuid, ForeignKey("ingestion.ingestion_id"), nullable=False
+        Uuid,
+        ForeignKey("ingestion.ingestion_id", ondelete="CASCADE"),
+        nullable=False,
     )
-
-    # Update with CheckConstraint
-    target_type: Mapped[Optional[AIAnnotationTargetType]] = mapped_column(
-        ai_annotation_target_type_enum, nullable=True
-    )
-    target_id: Mapped[Optional[uuid.UUID]] = mapped_column(Uuid, nullable=True)
 
     # Annotation
-
-    # Update with CheckConstraint
     annotation_type: Mapped[Optional[AIAnnotationType]] = mapped_column(
         ai_annotation_type_enum, nullable=True
     )
@@ -193,13 +200,18 @@ class AiAnnotation(Base):
     temperature: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
     content_schema_version: Mapped[str] = mapped_column(Text, nullable=False)
     input_hash: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    # Job-scoped token minted on the trusted side; the de-identification
+    # boundary that keeps patient_id/PHI out of the AI layer. See
+    # AiGenerationJob and app/ai/ai_orchestration.py.
+    correlation_id: Mapped[Optional[uuid.UUID]] = mapped_column(
+        Uuid, nullable=True
+    )
     created_at: Mapped[Optional[datetime]] = mapped_column(
         TIMESTAMP(timezone=True), nullable=True
     )
 
     # Status
 
-    # Update with CheckConstraint
     validation_status: Mapped[Optional[AIAnnotationValidationStatus]] = (
         mapped_column(ai_annotation_validation_status_enum, nullable=True)
     )

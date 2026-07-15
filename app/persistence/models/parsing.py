@@ -41,9 +41,13 @@ class Panel(Base):
         Uuid, primary_key=True, default=uuid.uuid4
     )
     ingestion_id: Mapped[uuid.UUID] = mapped_column(
-        Uuid, ForeignKey("ingestion.ingestion_id"), nullable=False
+        Uuid,
+        ForeignKey("ingestion.ingestion_id", ondelete="CASCADE"),
+        nullable=False,
     )
-    patient_id: Mapped[str] = mapped_column(Text, nullable=False)
+    patient_id: Mapped[str] = mapped_column(
+        Text, ForeignKey("patient.patient_id"), nullable=False
+    )
     panel_code: Mapped[str] = mapped_column(Text, nullable=False)
     sample_id: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
 
@@ -71,7 +75,9 @@ class Test(Base):
         Uuid, primary_key=True, default=uuid.uuid4
     )
     panel_id: Mapped[uuid.UUID] = mapped_column(
-        Uuid, ForeignKey("panel.panel_id"), nullable=False
+        Uuid,
+        ForeignKey("panel.panel_id", ondelete="CASCADE"),
+        nullable=False,
     )
     row_number: Mapped[int] = mapped_column(Integer, nullable=False)
     test_code: Mapped[str] = mapped_column(Text, nullable=False)

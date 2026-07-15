@@ -13,12 +13,32 @@ from sqlalchemy import select
 from sqlalchemy.exc import MultipleResultsFound, SQLAlchemyError
 
 from app.core.ingestion_status_enums import IngestionStatus
+from app.ai.content_versions.ai_annotation_content_v1_0_0 import (
+    AIAnnotationContent,
+    AnalyteFinding,
+    CONTENT_SCHEMA_VERSION,
+    RejectedAIAnnotationAudit,
+)
+from app.ai.prompt_versions.ai_annotation_prompt_v1_0_0 import (
+    PROMPT_VERSION,
+)
 from app.persistence.models.core import Ingestion, RawData
+from app.persistence.models.ai import (
+    AIAnnotationType,
+    AIAnnotationValidationStatus,
+    AiAnnotation,
+)
 from app.persistence.models.parsing import Panel
+from app.persistence.repositories.observation_repo import ObservationRepository
+from app.ai.ai_orchestration import AIEnrichmentResult, ObservationContext
+from app.persistence.repositories.diagnostic_report_repo import (
+    DiagnosticReportRepository,
+)
 from app.persistence.repositories.panel_repo import PanelRepository
 from app.persistence.repositories.test_repo import (
     TestRepository as LabTestRepository,
 )
+from app.services import ingestion_service as ingestion_service_mod
 from app.services.ingestion_service import IngestionService
 from app.services.validator import RowValidationError
 from app.services.utils import NormalizationError
@@ -703,6 +723,363 @@ class TestIngestionServiceIntegration:
         ).one()
         assert ingestion.status == IngestionStatus.COMPLETED
         assert ingestion.error_detail is None
+
+    def test_process_ingestion_passes_current_and_historical_observations_to_ai_orchestration(
+        self,
+        db_session,
+        ingestion_service,
+        uploader_id,
+        spec_version,
+        instrument_id,
+        run_id,
+        monkeypatch,
+    ):
+        prior_ingestion_id = uuid.uuid4()
+        prior_csv_bytes = _read_fixture_bytes("valid_csv_20260128_004.csv")
+        _seed_ingestion_and_raw_data(
+            db_session,
+            ingestion_id=prior_ingestion_id,
+            csv_bytes=prior_csv_bytes,
+            uploader_id=uploader_id,
+            spec_version=spec_version,
+            instrument_id=instrument_id,
+            run_id=f"{run_id}-prior",
+            source_filename="valid_csv_20260128_004.csv",
+        )
+        ingestion_service.process_ingestion(prior_ingestion_id)
+
+        prior_observations = ObservationRepository(
+            db_session
+        ).get_by_ingestion_id(prior_ingestion_id)
+        assert prior_observations
+
+        ingestion_id = uuid.uuid4()
+        csv_bytes = _read_fixture_bytes("valid_csv_20260128_004.csv")
+        _seed_ingestion_and_raw_data(
+            db_session,
+            ingestion_id=ingestion_id,
+            csv_bytes=csv_bytes,
+            uploader_id=uploader_id,
+            spec_version=spec_version,
+            instrument_id=instrument_id,
+            run_id=run_id,
+            source_filename="valid_csv_20260128_004.csv",
+        )
+
+        captured: dict[str, Any] = {}
+
+        def _capture_ai_request(request):
+            captured["request"] = request
+            return AIEnrichmentResult(
+                guideline_context=[],
+                prompt_messages=[],
+                llm_response_text=None,
+                llm_response_content=None,
+                provider=None,
+                model_id=None,
+                prompt_version="v1.0.0",
+                temperature=None,
+                content_schema_version="v1.0.0",
+                input_hash="",
+                created_at=datetime.now(timezone.utc),
+                rejection_reason=None,
+                failure_reason="stubbed",
+            )
+
+        monkeypatch.setattr(
+            ingestion_service_mod,
+            "orchestrate_ai_enrichment",
+            _capture_ai_request,
+        )
+
+        ingestion_service.process_ingestion(ingestion_id)
+
+        current_observations = ObservationRepository(
+            db_session
+        ).get_by_ingestion_id(ingestion_id)
+        current_diagnostic_reports = DiagnosticReportRepository(
+            db_session
+        ).get_by_ingestion_id(ingestion_id)
+        assert current_observations
+
+        request = captured["request"]
+        assert request.ingestion_id == ingestion_id
+        # De-identification boundary: patient_id must never cross into the AI
+        # layer; a job-scoped correlation_id carries the identity instead.
+        assert not hasattr(request, "patient_id")
+        assert request.correlation_id is not None
+        assert request.panel_codes == [
+            report.panel_code for report in current_diagnostic_reports
+        ]
+        assert request.collected_at == max(
+            obs.effective_at for obs in current_observations
+        )
+        assert request.current_observations == [
+            ObservationContext(
+                code=obs.code,
+                display=obs.display,
+                value_num=obs.value_num,
+                value_text=obs.value_text,
+                unit=obs.unit,
+                ref_low_num=obs.ref_low_num,
+                ref_high_num=obs.ref_high_num,
+                interpretation=obs.flag_system_interpretation,
+                effective_at=obs.effective_at,
+            )
+            for obs in current_observations
+        ]
+        assert request.historical_observations == [
+            ObservationContext(
+                code=obs.code,
+                display=obs.display,
+                value_num=obs.value_num,
+                value_text=obs.value_text,
+                unit=obs.unit,
+                ref_low_num=obs.ref_low_num,
+                ref_high_num=obs.ref_high_num,
+                interpretation=obs.flag_system_interpretation,
+                effective_at=obs.effective_at,
+            )
+            for obs in prior_observations
+        ]
+
+    def test_process_ingestion_persists_validated_ai_annotation(
+        self,
+        db_session,
+        ingestion_service,
+        uploader_id,
+        spec_version,
+        instrument_id,
+        run_id,
+        monkeypatch,
+    ):
+        ingestion_id = uuid.uuid4()
+        csv_bytes = _read_fixture_bytes("valid_csv_20260128_004.csv")
+        _seed_ingestion_and_raw_data(
+            db_session,
+            ingestion_id=ingestion_id,
+            csv_bytes=csv_bytes,
+            uploader_id=uploader_id,
+            spec_version=spec_version,
+            instrument_id=instrument_id,
+            run_id=run_id,
+            source_filename="valid_csv_20260128_004.csv",
+        )
+
+        ai_content = AIAnnotationContent(
+            annotation_type="anomaly_flag",
+            secondary_types=["followup_suggestion"],
+            summary="Lipid abnormalities were detected and reviewed.",
+            analyte_findings=[
+                AnalyteFinding(
+                    analyte_code="TC",
+                    description="Total cholesterol is elevated above the reference range.",
+                    trend_direction="increasing",
+                    confidence=0.86,
+                )
+            ],
+            requires_review=True,
+            review_priority="urgent",
+        )
+
+        def _stub_ai_result(_request):
+            return AIEnrichmentResult(
+                guideline_context=[],
+                prompt_messages=[],
+                llm_response_text=ai_content.model_dump_json(),
+                llm_response_content=ai_content,
+                provider="openai",
+                model_id="gpt-4.1-mini",
+                prompt_version=PROMPT_VERSION,
+                temperature="0",
+                content_schema_version=CONTENT_SCHEMA_VERSION,
+                input_hash="abc123",
+                created_at=datetime(2026, 6, 15, 12, 0, tzinfo=timezone.utc),
+                rejection_reason=None,
+                failure_reason=None,
+            )
+
+        monkeypatch.setattr(
+            ingestion_service_mod,
+            "orchestrate_ai_enrichment",
+            _stub_ai_result,
+        )
+
+        ingestion_service.process_ingestion(ingestion_id)
+
+        annotations = list(
+            db_session.scalars(
+                select(AiAnnotation).where(
+                    AiAnnotation.ingestion_id == ingestion_id
+                )
+            ).all()
+        )
+
+        assert len(annotations) == 1
+        annotation = annotations[0]
+        assert annotation.annotation_type == AIAnnotationType.ANOMALY_FLAG
+        assert annotation.content_json == ai_content.model_dump(mode="json")
+        assert annotation.provider == "openai"
+        assert annotation.model_id == "gpt-4.1-mini"
+        assert annotation.prompt_version == PROMPT_VERSION
+        assert annotation.temperature == "0"
+        assert annotation.content_schema_version == CONTENT_SCHEMA_VERSION
+        assert annotation.input_hash == "abc123"
+        assert (
+            annotation.validation_status
+            == AIAnnotationValidationStatus.ACCEPTED
+        )
+        assert annotation.validated_at == datetime(
+            2026, 6, 15, 12, 0, tzinfo=timezone.utc
+        )
+
+    def test_process_ingestion_persists_rejected_ai_annotation(
+        self,
+        db_session,
+        ingestion_service,
+        uploader_id,
+        spec_version,
+        instrument_id,
+        run_id,
+        monkeypatch,
+    ):
+        ingestion_id = uuid.uuid4()
+        csv_bytes = _read_fixture_bytes("valid_csv_20260128_004.csv")
+        _seed_ingestion_and_raw_data(
+            db_session,
+            ingestion_id=ingestion_id,
+            csv_bytes=csv_bytes,
+            uploader_id=uploader_id,
+            spec_version=spec_version,
+            instrument_id=instrument_id,
+            run_id=run_id,
+            source_filename="valid_csv_20260128_004.csv",
+        )
+
+        def _stub_ai_result(_request):
+            return AIEnrichmentResult(
+                guideline_context=[],
+                prompt_messages=[],
+                llm_response_text='{"summary":"invalid"}',
+                llm_response_content=None,
+                provider="openai",
+                model_id="gpt-4.1-mini",
+                prompt_version=PROMPT_VERSION,
+                temperature="0",
+                content_schema_version=CONTENT_SCHEMA_VERSION,
+                input_hash="rejected123",
+                created_at=datetime(2026, 6, 15, 13, 0, tzinfo=timezone.utc),
+                rejection_reason="validation failed",
+                failure_reason=None,
+            )
+
+        monkeypatch.setattr(
+            ingestion_service_mod,
+            "orchestrate_ai_enrichment",
+            _stub_ai_result,
+        )
+
+        ingestion_service.process_ingestion(ingestion_id)
+
+        annotations = list(
+            db_session.scalars(
+                select(AiAnnotation).where(
+                    AiAnnotation.ingestion_id == ingestion_id
+                )
+            ).all()
+        )
+
+        assert len(annotations) == 1
+        annotation = annotations[0]
+        assert annotation.annotation_type is None
+        assert annotation.content_json == RejectedAIAnnotationAudit(
+            raw_llm_response='{"summary":"invalid"}',
+            rejection_reason="validation failed",
+        ).model_dump(mode="json")
+        assert (
+            annotation.validation_status
+            == AIAnnotationValidationStatus.REJECTED
+        )
+        assert annotation.rejection_reason == "validation failed"
+        assert annotation.validated_at == datetime(
+            2026, 6, 15, 13, 0, tzinfo=timezone.utc
+        )
+
+    def test_process_ingestion_emits_ai_failure_event_when_bedrock_config_missing(
+        self,
+        db_session,
+        ingestion_service,
+        fetch_events,
+        uploader_id,
+        spec_version,
+        instrument_id,
+        run_id,
+        monkeypatch,
+    ):
+        ingestion_id = uuid.uuid4()
+        csv_bytes = _read_fixture_bytes("valid_csv_20260128_004.csv")
+        _seed_ingestion_and_raw_data(
+            db_session,
+            ingestion_id=ingestion_id,
+            csv_bytes=csv_bytes,
+            uploader_id=uploader_id,
+            spec_version=spec_version,
+            instrument_id=instrument_id,
+            run_id=run_id,
+            source_filename="valid_csv_20260128_004.csv",
+        )
+
+        def _stub_ai_result(_request):
+            return AIEnrichmentResult(
+                guideline_context=[],
+                prompt_messages=[],
+                llm_response_text=None,
+                llm_response_content=None,
+                provider=None,
+                model_id=None,
+                prompt_version=PROMPT_VERSION,
+                temperature=None,
+                content_schema_version=CONTENT_SCHEMA_VERSION,
+                input_hash="missing-bedrock-config",
+                created_at=datetime(2026, 6, 15, 14, 0, tzinfo=timezone.utc),
+                rejection_reason=None,
+                failure_reason=(
+                    "BEDROCK_MODEL_ID is not set; AI enrichment cannot invoke a "
+                    "Bedrock model."
+                ),
+            )
+
+        monkeypatch.setattr(
+            ingestion_service_mod,
+            "orchestrate_ai_enrichment",
+            _stub_ai_result,
+        )
+
+        ingestion_service.process_ingestion(ingestion_id)
+
+        annotations = list(
+            db_session.scalars(
+                select(AiAnnotation).where(
+                    AiAnnotation.ingestion_id == ingestion_id
+                )
+            ).all()
+        )
+        assert annotations == []
+
+        events = fetch_events(ingestion_id)
+        types = [e["event_type"] for e in events]
+        assert "AI_ENRICHMENT_STARTED" in types
+        assert "AI_ENRICHMENT_FAILED" in types
+        ai_failed = [
+            e for e in events if e["event_type"] == "AI_ENRICHMENT_FAILED"
+        ][-1]
+        assert ai_failed["message"] == (
+            "AI enrichment configuration is missing or invalid"
+        )
+        assert (ai_failed.get("details") or {}).get("failure_reason") == (
+            "BEDROCK_MODEL_ID is not set; AI enrichment cannot invoke a "
+            "Bedrock model."
+        )
 
     def test_process_ingestion_validation_failure_persists_nothing_and_marks_failed_validation(
         self,

@@ -310,6 +310,94 @@ def test_429_backpressure_when_inflight_limit_reached(
     assert payload["detail"]["retryable"] is True
 
 
+def _second_upload_form_and_file(base_form):
+    """A distinct upload (different run_id) so dedup can't mask a rate-limit 429."""
+    run_id = f"{base_form['run_id']}_second"
+    form = {**base_form, "run_id": run_id}
+    csv = f"instrument_id,run_id\n{base_form['instrument_id']},{run_id}"
+    files = {"file": (f"{run_id}.csv", io.BytesIO(csv.encode("utf-8")), "text/csv")}
+    return form, files
+
+
+def test_demo_rate_limit_blocks_rapid_uploads_from_same_ip(
+    client,
+    valid_form_data,
+    valid_csv_file,
+    monkeypatch,
+):
+    from app.api.routers import ingestion as ingestion_module
+
+    ingestion_module._UPLOAD_HITS.clear()
+    monkeypatch.setenv("CLA_DEMO_MAX_UPLOADS_PER_WINDOW", "1")
+    monkeypatch.setenv("CLA_DEMO_RATE_WINDOW_SECONDS", "5")
+
+    headers = {"X-Forwarded-For": "203.0.113.7"}
+
+    first = client.post(
+        "/ingestions",
+        data=valid_form_data,
+        files=valid_csv_file,
+        headers=headers,
+    )
+    assert first.status_code == 202
+
+    second_form, second_file = _second_upload_form_and_file(valid_form_data)
+    second = client.post(
+        "/ingestions",
+        data=second_form,
+        files=second_file,
+        headers=headers,
+    )
+
+    assert second.status_code == 429
+    assert second.headers.get("Retry-After") is not None
+    detail = second.json()["detail"]
+    assert detail["code"] == "DEMO_RATE_LIMITED"
+    assert detail["retryable"] is True
+    assert detail["limit"] == 1
+
+    # A different IP is unaffected by the first client's usage.
+    third = client.post(
+        "/ingestions",
+        data=_second_upload_form_and_file(valid_form_data)[0],
+        files=_second_upload_form_and_file(valid_form_data)[1],
+        headers={"X-Forwarded-For": "198.51.100.4"},
+    )
+    assert third.status_code == 202
+
+
+def test_demo_rate_limit_disabled_by_default(
+    client,
+    valid_form_data,
+    valid_csv_file,
+    monkeypatch,
+):
+    from app.api.routers import ingestion as ingestion_module
+
+    ingestion_module._UPLOAD_HITS.clear()
+    monkeypatch.delenv("CLA_DEMO_MAX_UPLOADS_PER_WINDOW", raising=False)
+    monkeypatch.delenv("CLA_DEMO_RATE_WINDOW_SECONDS", raising=False)
+
+    headers = {"X-Forwarded-For": "203.0.113.9"}
+
+    first = client.post(
+        "/ingestions",
+        data=valid_form_data,
+        files=valid_csv_file,
+        headers=headers,
+    )
+    assert first.status_code == 202
+
+    second_form, second_file = _second_upload_form_and_file(valid_form_data)
+    second = client.post(
+        "/ingestions",
+        data=second_form,
+        files=second_file,
+        headers=headers,
+    )
+    assert second.status_code == 202
+
+
 def test_race_safe_idempotency_integrity_error_returns_200_duplicate_ok(
     client,
     valid_form_data,
@@ -610,6 +698,55 @@ def _seed_observation(
     return obs
 
 
+def _seed_ai_annotation(
+    db_session,
+    *,
+    ingestion_id: uuid.UUID,
+    ai_annotation_id: uuid.UUID | None = None,
+    annotation_type: str | None = "anomaly_flag",
+    validation_status: str | None = "ACCEPTED",
+    content_json: dict | None = None,
+):
+    from app.persistence.models.ai import (
+        AIAnnotationType,
+        AIAnnotationValidationStatus,
+        AiAnnotation,
+    )
+
+    created_at = datetime.now(timezone.utc)
+    row = AiAnnotation(
+        ai_annotation_id=ai_annotation_id or uuid.uuid4(),
+        ingestion_id=ingestion_id,
+        annotation_type=(
+            AIAnnotationType(annotation_type)
+            if annotation_type is not None
+            else None
+        ),
+        content_json=content_json
+        or {
+            "annotation_type": "anomaly_flag",
+            "summary": "AI review flagged a result for clinician review.",
+        },
+        provider="bedrock",
+        model_id="anthropic.claude-3-5-haiku-20241022-v1:0",
+        prompt_version="v1.0.0",
+        temperature="0",
+        content_schema_version="v1.0.0",
+        input_hash="seeded-hash",
+        created_at=created_at,
+        validation_status=(
+            AIAnnotationValidationStatus(validation_status)
+            if validation_status is not None
+            else None
+        ),
+        validated_at=created_at,
+        rejection_reason=None,
+    )
+    db_session.add(row)
+    db_session.commit()
+    return row
+
+
 def _seed_patient_resources(
     db_session,
     *,
@@ -843,6 +980,55 @@ def test_get_observations_by_ingestion_query_validation_422(
 def test_get_observations_by_ingestion_404_when_ingestion_missing(client):
     missing_id = uuid.uuid4()
     response = client.get(f"/ingestions/{missing_id}/observations")
+    assert response.status_code == 404
+    data = response.json()
+    assert data["detail"]["ingestion_id"] == str(missing_id)
+
+
+def test_get_ai_annotations_by_ingestion_empty_list_when_ingestion_exists(
+    client, db_session
+):
+    ingestion = _seed_ingestion(db_session)
+    response = client.get(
+        f"/ingestions/{ingestion.ingestion_id}/ai_annotation"
+    )
+    assert response.status_code == 200
+    assert response.json() == []
+
+
+def test_get_ai_annotations_by_ingestion_returns_rows(client, db_session):
+    ingestion = _seed_ingestion(db_session)
+    annotation = _seed_ai_annotation(
+        db_session,
+        ingestion_id=ingestion.ingestion_id,
+        ai_annotation_id=uuid.UUID(int=500),
+        content_json={
+            "annotation_type": "anomaly_flag",
+            "summary": "Pattern suggests follow-up review.",
+            "requires_review": True,
+        },
+    )
+
+    response = client.get(
+        f"/ingestions/{ingestion.ingestion_id}/ai_annotation"
+    )
+    assert response.status_code == 200
+    rows = response.json()
+    assert len(rows) == 1
+    assert rows[0]["ai_annotation_id"] == str(annotation.ai_annotation_id)
+    assert rows[0]["ingestion_id"] == str(ingestion.ingestion_id)
+    assert rows[0]["annotation_type"] == "anomaly_flag"
+    assert (
+        rows[0]["content_json"]["summary"]
+        == "Pattern suggests follow-up review."
+    )
+    assert rows[0]["provider"] == "bedrock"
+    assert rows[0]["validation_status"] == "ACCEPTED"
+
+
+def test_get_ai_annotations_by_ingestion_404_when_ingestion_missing(client):
+    missing_id = uuid.uuid4()
+    response = client.get(f"/ingestions/{missing_id}/ai_annotation")
     assert response.status_code == 404
     data = response.json()
     assert data["detail"]["ingestion_id"] == str(missing_id)

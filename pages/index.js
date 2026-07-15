@@ -1,223 +1,53 @@
 import Head from "next/head";
 import { useState, useRef, useEffect } from "react";
-
-const globalCss = `*{box-sizing:border-box;margin:0;padding:0}
-:root{
-  --navy:#050e1a;
-  --navy2:#0a1628;
-  --navy3:#0f2040;
-  --blue1:#0d4fa8;
-  --blue2:#1a6fd4;
-  --blue3:#3a9bff;
-  --blue4:#7ec4ff;
-  --cyan:#00d4ff;
-  --white:#f0f6ff;
-  --muted:#7a99c4;
-  --border:rgba(58,155,255,0.15);
-  --border2:rgba(58,155,255,0.3);
-  --success:#00e87a;
-  --danger:#ff4d6a;
-  --font:'Space Grotesk',sans-serif;
-  --mono:'JetBrains Mono',monospace;
-}
-body{background:var(--navy);color:var(--white);font-family:var(--font);line-height:1.6;overflow-x:hidden}
-
-/* NAV */
-nav{display:flex;align-items:center;justify-content:space-between;padding:20px 48px;border-bottom:1px solid var(--border);position:sticky;top:0;background:rgba(5,14,26,0.92);backdrop-filter:blur(12px);z-index:100}
-.nav-logo{display:flex;align-items:center;gap:10px}
-.nav-logo-icon{width:32px;height:32px;background:linear-gradient(135deg,var(--blue1),var(--blue3));border-radius:8px;display:flex;align-items:center;justify-content:center}
-.nav-logo-icon svg{width:18px;height:18px}
-.nav-logo-text{font-size:18px;font-weight:700;letter-spacing:-0.02em;color:var(--white)}
-.nav-links{display:flex;gap:28px;font-size:14px;color:var(--muted)}
-.nav-links a{color:var(--muted);text-decoration:none;transition:color .2s}
-.nav-links a:hover{color:var(--white)}
-.nav-cta{background:var(--blue3);color:var(--navy);padding:8px 20px;border-radius:6px;font-size:13px;font-weight:600;text-decoration:none;transition:background .2s}
-.nav-cta:hover{background:var(--blue4)}
-
-/* HERO */
-.hero{padding:100px 48px 80px;max-width:1100px;margin:0 auto;position:relative}
-.hero-badge{display:inline-flex;align-items:center;gap:8px;background:rgba(58,155,255,0.1);border:1px solid var(--border2);border-radius:100px;padding:6px 14px;font-size:12px;font-weight:500;color:var(--blue3);margin-bottom:32px;font-family:var(--mono)}
-.hero-badge-dot{width:6px;height:6px;border-radius:50%;background:var(--cyan);animation:pulse 2s infinite}
-@keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.6;transform:scale(0.8)}}
-h1{font-size:clamp(40px,5vw,64px);font-weight:700;letter-spacing:-0.03em;line-height:1.1;margin-bottom:24px}
-h1 em{font-style:normal;background:linear-gradient(90deg,var(--blue3),var(--cyan));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
-.hero-sub{font-size:18px;color:var(--muted);max-width:580px;margin-bottom:48px;font-weight:400;line-height:1.7}
-.hero-actions{display:flex;gap:16px;flex-wrap:wrap}
-.btn-primary{background:var(--blue3);color:var(--navy);padding:14px 28px;border-radius:8px;font-weight:600;font-size:15px;text-decoration:none;transition:all .2s;border:none;cursor:pointer}
-.btn-primary:hover{background:var(--blue4);transform:translateY(-1px)}
-.btn-ghost{background:transparent;color:var(--white);padding:14px 28px;border-radius:8px;font-weight:500;font-size:15px;text-decoration:none;border:1px solid var(--border2);transition:all .2s;cursor:pointer}
-.btn-ghost:hover{border-color:var(--blue3);color:var(--blue3)}
-
-/* STATS STRIP */
-.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:var(--border);border:1px solid var(--border);border-radius:12px;overflow:hidden;max-width:1100px;margin:0 auto 80px;padding:0 48px}
-.stat{background:var(--navy2);padding:28px 32px}
-.stat-num{font-size:28px;font-weight:700;color:var(--blue3);font-family:var(--mono);letter-spacing:-0.02em}
-.stat-label{font-size:13px;color:var(--muted);margin-top:4px}
-
-/* PIPELINE SECTION */
-.section{padding:80px 48px;max-width:1100px;margin:0 auto}
-.section-label{font-size:12px;font-weight:600;color:var(--blue3);letter-spacing:0.1em;text-transform:uppercase;font-family:var(--mono);margin-bottom:12px}
-.section-title{font-size:36px;font-weight:700;letter-spacing:-0.02em;margin-bottom:16px}
-.section-sub{font-size:16px;color:var(--muted);max-width:520px;margin-bottom:56px}
-
-/* PIPELINE DIAGRAM */
-.pipeline{display:flex;align-items:center;gap:0;overflow-x:auto;padding-bottom:8px}
-.pipe-step{flex:1;min-width:140px;position:relative}
-.pipe-box{background:var(--navy2);border:1px solid var(--border);border-radius:10px;padding:20px 16px;text-align:center;transition:all .25s;cursor:pointer}
-.pipe-box:hover{border-color:var(--blue3);background:var(--navy3);transform:translateY(-3px)}
-.pipe-icon{width:36px;height:36px;background:rgba(58,155,255,0.12);border-radius:8px;margin:0 auto 12px;display:flex;align-items:center;justify-content:center;font-size:18px}
-.pipe-name{font-size:13px;font-weight:600;color:var(--white);margin-bottom:4px}
-.pipe-desc{font-size:11px;color:var(--muted)}
-.pipe-arrow{color:var(--blue2);font-size:18px;flex-shrink:0;padding:0 8px;margin-top:-20px}
-.pipe-input{font-family:var(--mono);font-size:11px;color:var(--muted);text-align:center;margin-bottom:8px}
-
-/* FEATURES GRID */
-.features{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:1px;background:var(--border);border:1px solid var(--border);border-radius:16px;overflow:hidden;margin-top:56px}
-.feature{background:var(--navy2);padding:32px;transition:background .2s}
-.feature:hover{background:var(--navy3)}
-.feature-icon{width:40px;height:40px;border-radius:10px;margin-bottom:20px;display:flex;align-items:center;justify-content:center;font-size:20px}
-.feature-icon.blue{background:rgba(58,155,255,0.12)}
-.feature-icon.cyan{background:rgba(0,212,255,0.1)}
-.feature-icon.green{background:rgba(0,232,122,0.1)}
-.feature-title{font-size:16px;font-weight:600;margin-bottom:8px}
-.feature-desc{font-size:14px;color:var(--muted);line-height:1.6}
-
-/* DEMO SECTION */
-.demo-wrap{background:var(--navy2);border:1px solid var(--border);border-radius:16px;overflow:hidden;margin-top:0}
-.demo-tabs{display:flex;border-bottom:1px solid var(--border)}
-.demo-tab{padding:14px 24px;font-size:13px;font-weight:500;cursor:pointer;color:var(--muted);border-bottom:2px solid transparent;margin-bottom:-1px;transition:all .2s;font-family:var(--mono)}
-.demo-tab.active{color:var(--blue3);border-bottom-color:var(--blue3)}
-.demo-tab:first-child{border-right:1px solid var(--border)}
-.demo-body{padding:24px;font-family:var(--mono);font-size:12px;line-height:1.8;color:#a8c4e0}
-.demo-panel{display:none}
-.demo-panel.active{display:block}
-.status-banner{padding:12px 16px;border-radius:6px;margin-bottom:20px;font-weight:600;font-size:13px}
-.status-success{background:rgba(0,232,122,0.08);border:1px solid rgba(0,232,122,0.25);color:var(--success)}
-.status-fail{background:rgba(255,77,106,0.08);border:1px solid rgba(255,77,106,0.25);color:var(--danger)}
-.mono-key{color:#7ec4ff}
-.mono-val{color:#c8e6ff}
-.mono-path{color:var(--cyan)}
-.mono-ok{color:var(--success)}
-.mono-err{color:var(--danger)}
-.mono-skip{color:#888}
-.mono-sep{color:#2a4060}
-.stage{display:flex;align-items:center;gap:12px;margin:4px 0}
-.stage-badge{font-size:10px;padding:2px 8px;border-radius:4px;font-weight:600;min-width:100px;text-align:center;letter-spacing:0.04em}
-.badge-pass{background:rgba(0,232,122,0.1);color:var(--success);border:1px solid rgba(0,232,122,0.2)}
-.badge-fail{background:rgba(255,77,106,0.1);color:var(--danger);border:1px solid rgba(255,77,106,0.2)}
-.badge-skip{background:rgba(120,120,120,0.1);color:#666;border:1px solid rgba(120,120,120,0.15)}
-
-/* DEMO LOADING STATES */
-@keyframes spin{to{transform:rotate(360deg)}}
-.spinner{width:14px;height:14px;border:2px solid var(--border2);border-top-color:var(--blue3);border-radius:50%;animation:spin .8s linear infinite;display:inline-block;vertical-align:middle;margin-right:6px}
-@keyframes stagePulse{0%,100%{opacity:1}50%{opacity:0.4}}
-.stage-active{animation:stagePulse 1s ease-in-out infinite}
-.demo-run-btn{margin:12px 0 24px 24px;display:block;width:50%}
-
-/* TRUST / AUDITABILITY */
-.audit-grid{display:grid;grid-template-columns:1fr;gap:24px;margin-top:0;max-width:800px}
-.audit-card{background:var(--navy2);border:1px solid var(--border);border-radius:12px;padding:24px}
-.audit-title{font-size:13px;font-weight:600;color:var(--muted);margin-bottom:16px;font-family:var(--mono);letter-spacing:0.06em}
-.event-row{display:flex;align-items:center;gap:12px;padding:8px 0;border-bottom:1px solid rgba(58,155,255,0.07);font-size:12px;font-family:var(--mono)}
-.event-row:last-child{border:none}
-.event-ts{color:#3a5a80;min-width:100px;flex-shrink:0}
-.event-stage{min-width:160px;padding:2px 8px;border-radius:4px;text-align:center;font-size:10px;font-weight:600;flex-shrink:0;white-space:nowrap}
-.es-parse{background:rgba(0,212,255,0.08);color:var(--cyan)}
-.es-valid{background:rgba(0,232,122,0.08);color:var(--success)}
-.es-norm{background:rgba(58,155,255,0.1);color:var(--blue3)}
-.es-fhir{background:rgba(126,196,255,0.1);color:var(--blue4)}
-.event-msg{color:var(--muted)}
-
-/* FOOTER SECTION */
-.cta-band{background:linear-gradient(135deg,var(--navy2),var(--navy3));border:1px solid var(--border);border-radius:20px;padding:64px;text-align:center;margin:80px 48px}
-.cta-band h2{font-size:36px;font-weight:700;letter-spacing:-0.02em;margin-bottom:16px}
-.cta-band p{font-size:16px;color:var(--muted);max-width:440px;margin:0 auto 40px}
-
-footer{border-top:1px solid var(--border);padding:32px 48px;display:grid;grid-template-columns:1fr 1fr;gap:24px;font-size:13px;color:var(--muted)}
-.footer-logo{font-weight:700;font-size:15px;color:var(--white);grid-column:1/-1;text-align:left;margin-bottom:16px}
-footer > span:nth-child(3){text-align:right}
-
-/* Result Grid */
-.result-grid{display:grid;grid-template-columns:1fr 1fr;gap:24px}
-
-/* Grid BG */
-body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(var(--border) 1px,transparent 1px),linear-gradient(90deg,var(--border) 1px,transparent 1px);background-size:60px 60px;opacity:0.5;pointer-events:none;z-index:0}
-body>*{position:relative;z-index:1}
-
-/* Mobile Responsive (max-width: 640px) */
-@media (max-width:640px){
-  nav{flex-wrap:wrap;padding:12px 16px;gap:20px}
-  .nav-logo{order:1}
-  .nav-cta{order:2}
-  .nav-links{order:3;width:100%;justify-content:center;gap:16px}
-
-  .stats{display:none}
-
-  .section{padding:32px 16px}
-
-  .pipeline{flex-direction:column;align-items:stretch;overflow-x:unset;gap:2px}
-  .pipe-arrow{transform:rotate(90deg);text-align:center;margin-top:0;margin-bottom:-4px;padding:0;font-size:16px}
-  .pipe-step{width:100%}
-  .pipe-box{width:100%;box-sizing:border-box}
-
-  .audit-grid{max-width:100%;padding-right:8px}
-  .event-row{align-items:flex-start;flex-wrap:wrap}
-  .event-msg{flex:1;min-width:150px}
-
-  footer{gap:16px;align-items:center}
-  .footer-logo{grid-column:1;grid-row:1;margin-bottom:0;font-size:13px}
-  footer > span:nth-child(2){grid-column:1/-1;grid-row:2;text-align:center}
-  footer > span:nth-child(3){grid-column:2;grid-row:1;text-align:right}
-
-  .result-grid{grid-template-columns:1fr}
-}`;
-
-const STAGE_MAP = [
-  { label: "PARSE", ok: "PARSE_SUCCEEDED", fail: "PARSE_FAILED" },
-  { label: "VALIDATE", ok: "VALIDATION_SUCCEEDED", fail: "VALIDATION_FAILED" },
-  { label: "NORMALIZE", ok: "NORMALIZATION_SUCCEEDED", fail: "NORMALIZATION_FAILED" },
-  { label: "PERSIST", ok: "FHIR_JSON_GENERATION_SUCCEEDED", fail: "FHIR_JSON_GENERATION_FAILED" },
-];
-
-function deriveStageSummary(events) {
-  const types = new Set((events || []).map((e) => e.event_type));
-  let hitFail = false;
-  return STAGE_MAP.map(({ label, ok, fail }) => {
-    if (hitFail) return { label, state: "skip" };
-    if (types.has(fail)) {
-      hitFail = true;
-      return { label, state: "fail" };
-    }
-    if (types.has(ok)) return { label, state: "pass" };
-    return { label, state: "skip" };
-  });
-}
+import { fmtObsValue, fmtDate } from "../src/lib/format";
+import { patientMessageToText, buildEmailTemplate } from "../src/lib/patientMessage";
+import { globalCss } from "../src/styles/globalCss";
+import SiteNav from "../src/components/SiteNav";
+import Hero from "../src/components/Hero";
+import PipelineDiagram from "../src/components/PipelineDiagram";
+import SiteFooter from "../src/components/SiteFooter";
+import ContactModal from "../src/components/ContactModal";
+import DemoPanel from "../src/components/demo/DemoPanel";
 
 export default function Home() {
-  const [activeTab, setActiveTab] = useState("valid");
+  const [contactOpen, setContactOpen] = useState(false);
+  const [contactMessage, setContactMessage] = useState("");
+  const [contactStatus, setContactStatus] = useState("idle"); // idle | sending | sent | error
+  const [contactHoneypot, setContactHoneypot] = useState("");
   const [demoPhase, setDemoPhase] = useState("idle");
   const [loadingStage, setLoadingStage] = useState(0);
   const [demoResult, setDemoResult] = useState(null);
   const [demoError, setDemoError] = useState(null);
   const [showReports, setShowReports] = useState(false);
   const [showObservations, setShowObservations] = useState(false);
+  const [showAudit, setShowAudit] = useState(false);
   const [showErrorDetails, setShowErrorDetails] = useState(false);
+  const [aiTab, setAiTab] = useState("annotation");
+  const [openFindings, setOpenFindings] = useState({});
+  const [history, setHistory] = useState({});
+  const [showOther, setShowOther] = useState(false);
+  const [emailBody, setEmailBody] = useState("");
+  const [copied, setCopied] = useState(false);
+  const [sentNotice, setSentNotice] = useState(false);
+  const [patientMessage, setPatientMessage] = useState(null);
+  const [rejecting, setRejecting] = useState(false);
+  const [rejectReason, setRejectReason] = useState("");
+  const [aiReady, setAiReady] = useState(false);
+  const [persistReady, setPersistReady] = useState(false);
+  const [copiedIngestionId, setCopiedIngestionId] = useState(false);
   const pollRef = useRef(null);
+  const textareaRef = useRef(null);
+  const aiReadyCheckedRef = useRef(false);
+  const persistReadyCheckedRef = useRef(false);
 
   useEffect(() => () => clearInterval(pollRef.current), []);
 
-  function handleTabChange(tab) {
-    if (tab === activeTab) return;
-    clearInterval(pollRef.current);
-    setActiveTab(tab);
-    setDemoPhase("idle");
-    setDemoResult(null);
-    setDemoError(null);
-    setLoadingStage(0);
-    setShowReports(false);
-    setShowObservations(false);
-    setShowErrorDetails(false);
-  }
+  // Establish/reuse the session cookie on load and purge any ingestion left
+  // over under it (covers a reopened tab without waiting for the TTL sweep).
+  useEffect(() => {
+    fetch("/v1/session/start", { method: "POST", credentials: "include" }).catch(() => {});
+  }, []);
 
   async function runDemo() {
     clearInterval(pollRef.current);
@@ -225,10 +55,19 @@ export default function Home() {
     setDemoResult(null);
     setDemoError(null);
     setLoadingStage(0);
+    setAiReady(false);
+    aiReadyCheckedRef.current = false;
+    setPersistReady(false);
+    persistReadyCheckedRef.current = false;
 
-    const csvPath = activeTab === "valid" ? "/demo-csv/valid_01.csv" : "/demo-csv/invalid_missing_fields.csv";
-    const instrumentId = activeTab === "valid" ? "demo-instrument-01" : "demo-instrument-02";
-    const fileName = activeTab === "valid" ? "valid_01.csv" : "invalid_missing_fields.csv";
+    // Purge any ingestion left under this session from a prior run before
+    // re-uploading, so a second run in the same tab doesn't stack a duplicate
+    // "latest visit" in the patient's history.
+    await fetch("/v1/session/start", { method: "POST", credentials: "include" }).catch(() => {});
+
+    const csvPath = "/demo-csv/visit4_latest.csv";
+    const instrumentId = "demo-instrument-01";
+    const fileName = "visit4_latest.csv";
 
     const csvBlob = await fetch(csvPath)
       .then((r) => r.blob())
@@ -247,7 +86,7 @@ export default function Home() {
     form.append("run_id", "demo-run-" + Date.now());
     form.append("uploader_received_at", new Date().toISOString());
 
-    const postRes = await fetch("/v1/ingestions", { method: "POST", body: form }).catch(() => null);
+    const postRes = await fetch("/v1/ingestions", { method: "POST", body: form, credentials: "include" }).catch(() => null);
     const postData = postRes ? await postRes.json().catch(() => null) : null;
     const ingestionId = postData?.ingestion_id;
     if (!ingestionId) {
@@ -257,6 +96,82 @@ export default function Home() {
     }
     setLoadingStage(1);
 
+    // Reveal persisted resources + ingestion_id as soon as the PERSIST stage
+    // finishes, without waiting for the AI stages that follow it.
+    async function checkPersistReadyEarly() {
+      if (persistReadyCheckedRef.current) return;
+      const evRes = await fetch(`/v1/ingestions/${ingestionId}/processing-events`).catch(() => null);
+      const events = evRes ? await evRes.json().catch(() => null) : null;
+      if (!Array.isArray(events)) return;
+      const types = new Set(events.map((e) => e.event_type));
+      const succeeded = types.has("FHIR_JSON_GENERATION_SUCCEEDED");
+      const failed = types.has("FHIR_JSON_GENERATION_FAILED");
+      if (!succeeded && !failed) return;
+      persistReadyCheckedRef.current = true;
+      if (!succeeded) return;
+
+      const [rpRes, obRes] = await Promise.allSettled([
+        fetch(`/v1/ingestions/${ingestionId}/diagnostic-reports?include_json=1`).then((r) => r.json()),
+        fetch(`/v1/ingestions/${ingestionId}/observations?include_json=1&limit=200`).then((r) => r.json()),
+      ]);
+      const observations = obRes.status === "fulfilled" && Array.isArray(obRes.value) ? obRes.value : [];
+      const reports = rpRes.status === "fulfilled" && Array.isArray(rpRes.value) ? rpRes.value : [];
+      setDemoResult((prev) => ({
+        ...(prev || {}),
+        ingestionId,
+        reports,
+        observations,
+        events,
+      }));
+      setPersistReady(true);
+    }
+
+    // Reveal the AI annotation tab as soon as its own stage finishes, without
+    // waiting for message-draft (which runs after it and can take longer) —
+    // detected via the processing-event log rather than overall ingestion
+    // status, since that only goes terminal once both AI stages are done.
+    async function checkAiReadyEarly() {
+      if (aiReadyCheckedRef.current) return;
+      const evRes = await fetch(`/v1/ingestions/${ingestionId}/processing-events`).catch(() => null);
+      const events = evRes ? await evRes.json().catch(() => null) : null;
+      if (!Array.isArray(events)) return;
+      const types = new Set(events.map((e) => e.event_type));
+      const succeeded = types.has("AI_ENRICHMENT_SUCCEEDED");
+      const failed = types.has("AI_ENRICHMENT_FAILED");
+      if (!succeeded && !failed) return;
+      aiReadyCheckedRef.current = true;
+
+      let reports = [];
+      let observations = [];
+      let aiAnnotation = null;
+      if (succeeded) {
+        const [rpRes, obRes, aiRes] = await Promise.allSettled([
+          fetch(`/v1/ingestions/${ingestionId}/diagnostic-reports?include_json=1`).then((r) => r.json()),
+          fetch(`/v1/ingestions/${ingestionId}/observations?include_json=1&limit=200`).then((r) => r.json()),
+          fetch(`/v1/ingestions/${ingestionId}/ai_annotation`).then((r) => (r.ok ? r.json() : [])),
+        ]);
+        observations = obRes.status === "fulfilled" && Array.isArray(obRes.value) ? obRes.value : [];
+        reports = rpRes.status === "fulfilled" && Array.isArray(rpRes.value) ? rpRes.value : [];
+        const aiRows = aiRes.status === "fulfilled" && Array.isArray(aiRes.value) ? aiRes.value : [];
+        aiAnnotation =
+          aiRows.find((a) => a && a.validation_status === "ACCEPTED" && a.content_json) ||
+          aiRows.find((a) => a && a.content_json) ||
+          null;
+      }
+      setDemoResult({
+        ingestionId,
+        status: undefined,
+        errorDetail: undefined,
+        events,
+        reports,
+        observations,
+        aiAnnotation,
+        patientMessage: null,
+        patientId: observations.find((o) => o && o.patient_id)?.patient_id || null,
+      });
+      setAiReady(true);
+    }
+
     const TERMINAL = new Set(["COMPLETED", "FAILED VALIDATION", "FAILED"]);
     let finalStatus = null;
     await new Promise((resolve) => {
@@ -265,7 +180,11 @@ export default function Home() {
         if (!res) return;
         const body = await res.json().catch(() => null);
         if (!body) return;
-        if (body.status === "PROCESSING") setLoadingStage((s) => Math.min(s + 1, 3));
+        if (body.status === "PROCESSING") {
+          setLoadingStage((s) => Math.min(s + 1, 5));
+          checkPersistReadyEarly();
+          checkAiReadyEarly();
+        }
         if (TERMINAL.has(body.status)) {
           finalStatus = body;
           clearInterval(pollRef.current);
@@ -273,24 +192,219 @@ export default function Home() {
         }
       }, 1000);
     });
-    setLoadingStage(4);
+    setLoadingStage(6);
 
-    const [evRes, rpRes, obRes] = await Promise.allSettled([
+    const [evRes, rpRes, obRes, aiRes, pmRes] = await Promise.allSettled([
       fetch(`/v1/ingestions/${ingestionId}/processing-events`).then((r) => r.json()),
       fetch(`/v1/ingestions/${ingestionId}/diagnostic-reports?include_json=1`).then((r) => r.json()),
-      fetch(`/v1/ingestions/${ingestionId}/observations?include_json=1`).then((r) => r.json()),
+      fetch(`/v1/ingestions/${ingestionId}/observations?include_json=1&limit=200`).then((r) => r.json()),
+      fetch(`/v1/ingestions/${ingestionId}/ai_annotation`).then((r) => (r.ok ? r.json() : [])),
+      fetch(`/v1/ingestions/${ingestionId}/patient_message`).then((r) => (r.ok ? r.json() : null)),
     ]);
 
-    setDemoResult({
+    const observations = obRes.status === "fulfilled" && Array.isArray(obRes.value) ? obRes.value : [];
+    const reports = rpRes.status === "fulfilled" && Array.isArray(rpRes.value) ? rpRes.value : [];
+    const aiRows = aiRes.status === "fulfilled" && Array.isArray(aiRes.value) ? aiRes.value : [];
+    // Prefer an ACCEPTED annotation; fall back to any annotation with content.
+    const aiAnnotation =
+      aiRows.find((a) => a && a.validation_status === "ACCEPTED" && a.content_json) ||
+      aiRows.find((a) => a && a.content_json) ||
+      null;
+    const patientMessage = pmRes.status === "fulfilled" ? pmRes.value : null;
+    const patientId = observations.find((o) => o && o.patient_id)?.patient_id || null;
+
+    const resultObj = {
       ingestionId,
       status: finalStatus?.status,
       errorDetail: finalStatus?.error_detail,
       events: evRes.status === "fulfilled" ? evRes.value : [],
-      reports: rpRes.status === "fulfilled" ? rpRes.value : [],
-      observations: obRes.status === "fulfilled" ? obRes.value : [],
-    });
+      reports,
+      observations,
+      aiAnnotation,
+      patientMessage,
+      patientId,
+    };
+
+    setDemoResult(resultObj);
+    setPatientMessage(patientMessage);
+    // Prefer the clinician-reviewable draft the backend actually produced;
+    // fall back to a local template when no LLM-backed draft exists.
+    setEmailBody(
+      patientMessage ? patientMessageToText(patientMessage, resultObj) : buildEmailTemplate(resultObj)
+    );
+    // Fallback in case the early per-tick check never caught the AI stage
+    // (e.g. it finished between polls) — make sure the tab still reveals.
+    if (resultObj.status === "COMPLETED") setAiReady(true);
     setDemoPhase("done");
   }
+
+  async function toggleHistory(code) {
+    const cur = history[code];
+    if (cur && cur.rows != null) {
+      setHistory((p) => ({ ...p, [code]: { ...cur, shown: !cur.shown } }));
+      return;
+    }
+    const pid = demoResult?.patientId;
+    if (!pid) {
+      setHistory((p) => ({ ...p, [code]: { loading: false, shown: true, rows: [] } }));
+      return;
+    }
+    setHistory((p) => ({ ...p, [code]: { loading: true, shown: true } }));
+    try {
+      const res = await fetch(`/v1/patients/${pid}/observations?limit=200&offset=0`);
+      const all = await res.json();
+      // Include the current result (it's in the patient's observations) so the
+      // table matches the trend chart, which plots it too. Dedup by
+      // observation_id to stay robust against any transient duplicate rows.
+      const currentIds = new Set((demoResult?.observations || []).map((o) => o.observation_id));
+      const seen = new Set();
+      const rows = (Array.isArray(all) ? all : [])
+        .filter((o) => o.code === code)
+        .filter((o) => {
+          if (seen.has(o.observation_id)) return false;
+          seen.add(o.observation_id);
+          return true;
+        })
+        .sort((a, b) => (a.effective_at < b.effective_at ? 1 : -1))
+        .map((o) => ({
+          ...o,
+          date: fmtDate(o.effective_at),
+          result: fmtObsValue(o),
+          isCurrent: currentIds.has(o.observation_id),
+        }));
+      setHistory((p) => ({ ...p, [code]: { loading: false, shown: true, rows } }));
+    } catch (e) {
+      setHistory((p) => ({ ...p, [code]: { loading: false, shown: true, error: "Could not load history." } }));
+    }
+  }
+
+  function resetDraft() {
+    setEmailBody(
+      patientMessage ? patientMessageToText(patientMessage, demoResult) : buildEmailTemplate(demoResult)
+    );
+  }
+
+  async function sendDraft() {
+    // Demo-send. When a real backend draft exists, drive the clinician gate for
+    // real: approve (with any edits) then send. Otherwise it's a local no-op.
+    const pm = patientMessage;
+    if (pm && pm.patient_message_id) {
+      try {
+        const id = pm.patient_message_id;
+        if (pm.review_status !== "APPROVED" && pm.review_status !== "SENT") {
+          const editedText = emailBody;
+          await fetch(`/v1/patient_messages/${id}/approve`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              approved_by: "demo-clinician",
+              // Preserve the structured draft; record the reviewed text too.
+              final_content_json: {
+                ...(pm.draft_content_json || {}),
+                reviewed_text: editedText,
+              },
+            }),
+          });
+        }
+        const sendRes = await fetch(`/v1/patient_messages/${id}/send`, { method: "POST" });
+        if (sendRes.ok) {
+          const updated = await sendRes.json();
+          setPatientMessage(updated);
+        }
+      } catch (e) {
+        // fall through to the demo notice regardless
+      }
+    }
+    setSentNotice(true);
+    setTimeout(() => setSentNotice(false), 4000);
+  }
+
+  async function rejectDraft() {
+    // Clinician rejects the draft with a reason. Drives the human gate:
+    // review_status -> REJECTED (the message is no longer active).
+    const pm = patientMessage;
+    if (!rejectReason.trim()) return;
+    if (pm && pm.patient_message_id) {
+      try {
+        const res = await fetch(`/v1/patient_messages/${pm.patient_message_id}/reject`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            reviewed_by: "demo-clinician",
+            note: rejectReason.trim(),
+          }),
+        });
+        if (res.ok) {
+          const updated = await res.json();
+          setPatientMessage(updated);
+        }
+      } catch (e) {
+        // Demo UI — swallow and close the panel regardless.
+      }
+    }
+    setRejecting(false);
+    setRejectReason("");
+  }
+
+  async function sendContact() {
+    if (!contactMessage.trim()) return;
+    setContactStatus("sending");
+    try {
+      const res = await fetch("/api/contact", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ message: contactMessage, honeypot: contactHoneypot }),
+      });
+      if (!res.ok) throw new Error("send failed");
+      setContactStatus("sent");
+      setTimeout(() => {
+        setContactOpen(false);
+        setContactStatus("idle");
+        setContactMessage("");
+        setContactHoneypot("");
+      }, 1500);
+    } catch {
+      setContactStatus("error");
+    }
+  }
+
+  async function copyDraft() {
+    try {
+      await navigator.clipboard.writeText(emailBody);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1800);
+    } catch {
+      // Clipboard API unavailable (e.g. non-secure context) — no-op.
+    }
+  }
+
+  // Props threaded through DemoPanel to the AI-augmentation section.
+  const aiAugProps = {
+    demoResult,
+    demoPhase,
+    aiTab,
+    setAiTab,
+    patientMessage,
+    openFindings,
+    setOpenFindings,
+    history,
+    toggleHistory,
+    showOther,
+    setShowOther,
+    textareaRef,
+    emailBody,
+    setEmailBody,
+    copied,
+    sentNotice,
+    rejecting,
+    setRejecting,
+    rejectReason,
+    setRejectReason,
+    resetDraft,
+    copyDraft,
+    sendDraft,
+    rejectDraft,
+  };
 
   return (
     <>
@@ -298,660 +412,48 @@ export default function Home() {
         <title>Validor</title>
         <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
         <link rel="shortcut icon" href="/favicon.svg" />
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link
-          href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap"
-          rel="stylesheet"
-        />
       </Head>
       <style dangerouslySetInnerHTML={{ __html: globalCss }} />
 
-      <nav>
-        <a href="#" onClick={(e) => { e.preventDefault(); window.scrollTo({ top: 0, behavior: 'smooth' }); }} className="nav-logo" style={{ textDecoration: 'none', cursor: 'pointer' }}>
-          <div className="nav-logo-icon">
-            <svg viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path
-                d="M9 2L15 5.5V12.5L9 16L3 12.5V5.5L9 2Z"
-                stroke="white"
-                strokeWidth="1.5"
-                strokeLinejoin="round"
-              />
-              <path d="M9 7L11.5 8.5V11.5L9 13L6.5 11.5V8.5L9 7Z" fill="white" />
-            </svg>
-          </div>
-          <span className="nav-logo-text">Validor</span>
-        </a>
-        <div className="nav-links">
-          <a href="#pipeline">Pipeline</a>
-          <a href="#features">Features</a>
-          <a href="#demo">Demo</a>
-          <a href="https://github.com/masyago/validor" target="_blank" rel="noopener noreferrer">Docs</a>
-        </div>
-        <a href="#demo" className="nav-cta">
-          Try Demo →
-        </a>
-      </nav>
+      <SiteNav />
 
-      <div className="hero">
-        <div className="hero-badge">
-          <span className="hero-badge-dot" />
-          FHIR-Compliant · Lab Data Infrastructure
-        </div>
-        <h1>
-          Lab data
-          <br />
-          you can <em>trust.</em>
-        </h1>
-        <p className="hero-sub">
-          Validor ingests lab analyzer output, validates against business rules, normalizes to FHIR,
-          and persists with full provenance — deterministically, atomically, every time.
-        </p>
-        <div className="hero-actions">
-          <a href="#demo" className="btn-primary">
-            See it in action
-          </a>
-          <a href="#pipeline" className="btn-ghost">
-            Explore the pipeline
-          </a>
-        </div>
-      </div>
+      <Hero />
 
-      <div className="stats">
-        <div className="stat">
-          <div className="stat-num">4</div>
-          <div className="stat-label">Pipeline stages</div>
-        </div>
-        <div className="stat">
-          <div className="stat-num">SHA-256</div>
-          <div className="stat-label">Content deduplication</div>
-        </div>
-        <div className="stat">
-          <div className="stat-num">100%</div>
-          <div className="stat-label">Deterministic output</div>
-        </div>
-        <div className="stat">
-          <div className="stat-num">FHIR R4</div>
-          <div className="stat-label">Compliance standard</div>
-        </div>
-      </div>
+      <DemoPanel
+        runDemo={runDemo}
+        demoPhase={demoPhase}
+        loadingStage={loadingStage}
+        demoResult={demoResult}
+        aiReady={aiReady}
+        persistReady={persistReady}
+        showReports={showReports}
+        setShowReports={setShowReports}
+        showObservations={showObservations}
+        setShowObservations={setShowObservations}
+        showAudit={showAudit}
+        setShowAudit={setShowAudit}
+        showErrorDetails={showErrorDetails}
+        setShowErrorDetails={setShowErrorDetails}
+        copiedIngestionId={copiedIngestionId}
+        setCopiedIngestionId={setCopiedIngestionId}
+        aiAugProps={aiAugProps}
+      />
 
-      <div className="section" id="pipeline">
-        <div className="section-label">Data Flow</div>
-        <div className="section-title">From raw CSV to FHIR resources</div>
-        <div className="section-sub">
-          Every file travels a deterministic path — parsed, validated, normalized, and persisted. No
-          partial writes, no surprises.
-        </div>
+      <PipelineDiagram />
 
-        <div className="pipeline">
-          <div className="pipe-step">
-            <div className="pipe-input">CSV file</div>
-            <div className="pipe-box">
-              <div className="pipe-icon">📄</div>
-              <div className="pipe-name">Parser</div>
-              <div className="pipe-desc">Panel + Test relations</div>
-            </div>
-          </div>
-          <div className="pipe-arrow">→</div>
-          <div className="pipe-step">
-            <div className="pipe-input">&nbsp;</div>
-            <div className="pipe-box">
-              <div className="pipe-icon">🛡</div>
-              <div className="pipe-name">Validator</div>
-              <div className="pipe-desc">Business rule enforcement</div>
-            </div>
-          </div>
-          <div className="pipe-arrow">→</div>
-          <div className="pipe-step">
-            <div className="pipe-input">&nbsp;</div>
-            <div className="pipe-box">
-              <div className="pipe-icon">⚙️</div>
-              <div className="pipe-name">Normalizer</div>
-              <div className="pipe-desc">FHIR transformation</div>
-            </div>
-          </div>
-          <div className="pipe-arrow">→</div>
-          <div className="pipe-step">
-            <div className="pipe-input">&nbsp;</div>
-            <div className="pipe-box">
-              <div className="pipe-icon">🗄</div>
-              <div className="pipe-name">Persistence</div>
-              <div className="pipe-desc">DiagnosticReport + Observation</div>
-            </div>
-          </div>
-          <div className="pipe-arrow">→</div>
-          <div className="pipe-step">
-            <div className="pipe-input">&nbsp;</div>
-            <div className="pipe-box">
-              <div className="pipe-icon">📋</div>
-              <div className="pipe-name">Events</div>
-              <div className="pipe-desc">Full provenance log</div>
-            </div>
-          </div>
-        </div>
+      <SiteFooter onContact={() => setContactOpen(true)} />
 
-      </div>
-
-      <div className="section" id="features">
-        <div className="section-label">Key Properties</div>
-        <div className="section-title">Built-in guarantees</div>
-        <div className="section-sub">
-          Six core properties that make Validor reliable for healthcare data workflows.
-        </div>
-
-        <div className="features">
-          <div className="feature">
-            <div className="feature-icon blue">🔒</div>
-            <div className="feature-title">Idempotency</div>
-            <div className="feature-desc">
-              Ingestion uniqueness enforced by{" "}
-              <code
-                style={{
-                  color: "var(--blue3)",
-                  fontFamily: "var(--mono)",
-                  fontSize: 12,
-                }}
-              >
-                (instrument_id, run_id)
-              </code>{" "}
-              constraint. Resubmit the same file — nothing changes.
-            </div>
-          </div>
-          <div className="feature">
-            <div className="feature-icon cyan">🔍</div>
-            <div className="feature-title">Deduplication</div>
-            <div className="feature-desc">
-              SHA-256 content hash detects exact duplicates. Mismatched hashes for the same key are
-              rejected before touching the database.
-            </div>
-          </div>
-          <div className="feature">
-            <div className="feature-icon green">⚛</div>
-            <div className="feature-title">Atomicity</div>
-            <div className="feature-desc">
-              Validation or normalization failures produce no partial writes. Raw data is always
-              persisted; derived resources only on full success.
-            </div>
-          </div>
-          <div className="feature">
-            <div className="feature-icon blue">📐</div>
-            <div className="feature-title">Determinism</div>
-            <div className="feature-desc">
-              Same input always produces same output. All transformations are reproducible — no hidden
-              state, no runtime variance.
-            </div>
-          </div>
-          <div className="feature">
-            <div className="feature-icon cyan">🕐</div>
-            <div className="feature-title">Auditability</div>
-            <div className="feature-desc">
-              Every processing step recorded as a timestamped event with status. Full provenance chain
-              from raw upload to persisted FHIR resource.
-            </div>
-          </div>
-          <div className="feature">
-            <div className="feature-icon green">📊</div>
-            <div className="feature-title">FHIR R4 Output</div>
-            <div className="feature-desc">
-              Lab results persisted as{" "}
-              <code
-                style={{
-                  color: "var(--blue3)",
-                  fontFamily: "var(--mono)",
-                  fontSize: 12,
-                }}
-              >
-                DiagnosticReport
-              </code>{" "}
-              and{" "}
-              <code
-                style={{
-                  color: "var(--blue3)",
-                  fontFamily: "var(--mono)",
-                  fontSize: 12,
-                }}
-              >
-                Observation
-              </code>{" "}
-              resources, ready for downstream healthcare systems.
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div className="section" id="demo">
-        <div className="section-label">Live Demo</div>
-        <div className="section-title">See Validor in action</div>
-        <div className="section-sub">
-          Two scenarios: a valid file completing the full pipeline, and an invalid file caught at
-          validation.
-        </div>
-
-        <div className="demo-wrap">
-          <div className="demo-tabs">
-            <div
-              className={`demo-tab${activeTab === "valid" ? " active" : ""}`}
-              onClick={() => handleTabChange("valid")}
-            >
-              ✓ Valid CSV
-            </div>
-            <div
-              className={`demo-tab${activeTab === "invalid" ? " active" : ""}`}
-              onClick={() => handleTabChange("invalid")}
-            >
-              ✗ Invalid CSV
-            </div>
-          </div>
-          <button
-            className="btn-primary demo-run-btn"
-            onClick={runDemo}
-            disabled={demoPhase === "loading"}
-            style={{ opacity: demoPhase === "loading" ? 0.6 : 1, cursor: demoPhase === "loading" ? "not-allowed" : "pointer", marginTop: 12 }}
-          >
-            {demoPhase === "loading" ? "Running…" : "Run Demo →"}
-          </button>
-          <div className="demo-body">
-            {demoPhase === "idle" && (
-              <div style={{ padding: 24, color: "var(--muted)", fontSize: 13, fontFamily: "var(--mono)" }}>
-                <p>Select a scenario above, then click <strong style={{ color: "var(--white)" }}>Run Demo</strong> to call the live API.</p>
-              </div>
-            )}
-
-            {demoPhase === "loading" && (
-              <div style={{ padding: 24 }}>
-                <div style={{ color: "var(--muted)", fontSize: 12, marginBottom: 16, fontFamily: "var(--mono)" }}>
-                  <span className="spinner" /> Processing through pipeline...
-                </div>
-                {["Parse", "Validate", "Normalize", "Persist"].map((name, i) => (
-                  <div className="stage" key={name}>
-                    <span
-                      className={`stage-badge ${
-                        i < loadingStage ? "badge-pass" : i === loadingStage ? "badge-pass stage-active" : "badge-skip"
-                      }`}
-                    >
-                      {name.toUpperCase()}
-                    </span>
-                    <span
-                      className={i < loadingStage ? "mono-ok" : i === loadingStage ? "mono-val stage-active" : "mono-skip"}
-                    >
-                      {i < loadingStage ? "✓ completed" : i === loadingStage ? "● running…" : "· waiting"}
-                    </span>
-                  </div>
-                ))}
-              </div>
-            )}
-
-            {demoPhase === "done" && demoResult && (
-              <>
-                <div
-                  className={`status-banner ${
-                    demoResult.status === "COMPLETED" ? "status-success" : "status-fail"
-                  }`}
-                >
-                  {demoResult.status === "COMPLETED" ? "✓" : "✗"} FINAL STATUS: {demoResult.status}
-                </div>
-                <div className="result-grid">
-                  <div>
-                    <div
-                      style={{
-                        color: "var(--muted)",
-                        fontSize: 11,
-                        marginBottom: 12,
-                        letterSpacing: "0.06em",
-                      }}
-                    >
-                      PIPELINE STAGES
-                    </div>
-                    {deriveStageSummary(demoResult.events).map(({ label, state }) => (
-                      <div className="stage" key={label}>
-                        <span
-                          className={`stage-badge ${
-                            state === "pass" ? "badge-pass" : state === "fail" ? "badge-fail" : "badge-skip"
-                          }`}
-                        >
-                          {label}
-                        </span>
-                        <span
-                          className={state === "pass" ? "mono-ok" : state === "fail" ? "mono-err" : "mono-skip"}
-                        >
-                          {state === "pass" ? "✓ completed" : state === "fail" ? "✗ failed" : "↷ skipped"}
-                        </span>
-                      </div>
-                    ))}
-                  </div>
-                  <div>
-                    {demoResult.status === "COMPLETED" ? (
-                      <>
-                        <div
-                          style={{
-                            color: "var(--muted)",
-                            fontSize: 11,
-                            marginBottom: 12,
-                            letterSpacing: "0.06em",
-                          }}
-                        >
-                          PERSISTED RESOURCES
-                        </div>
-                        <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 16 }}>
-                          <button
-                            onClick={() => setShowReports(!showReports)}
-                            style={{
-                              background: showReports ? "rgba(0,212,255,0.15)" : "rgba(0,212,255,0.08)",
-                              border: "1px solid rgba(0,212,255,0.2)",
-                              color: "var(--cyan)",
-                              padding: "4px 12px",
-                              borderRadius: 4,
-                              fontSize: 11,
-                              fontWeight: 600,
-                              cursor: "pointer",
-                              transition: "background 0.2s",
-                            }}
-                          >
-                            DiagnosticReports ×{demoResult.reports.length}
-                          </button>
-                          <button
-                            onClick={() => setShowObservations(!showObservations)}
-                            style={{
-                              background: showObservations ? "rgba(0,212,255,0.15)" : "rgba(0,212,255,0.08)",
-                              border: "1px solid rgba(0,212,255,0.2)",
-                              color: "var(--cyan)",
-                              padding: "4px 12px",
-                              borderRadius: 4,
-                              fontSize: 11,
-                              fontWeight: 600,
-                              cursor: "pointer",
-                              transition: "background 0.2s",
-                            }}
-                          >
-                            Observations ×{demoResult.observations.length}
-                          </button>
-                        </div>
-                        {showReports && (
-                          <div style={{ marginBottom: 16, maxHeight: 300, overflowY: "auto" }}>
-                            <pre
-                              style={{
-                                background: "rgba(58,155,255,0.05)",
-                                border: "1px solid var(--border)",
-                                borderRadius: 6,
-                                padding: 12,
-                                fontSize: 10,
-                                color: "var(--cyan)",
-                                margin: 0,
-                              }}
-                            >
-                              {JSON.stringify(demoResult.reports, null, 2)}
-                            </pre>
-                          </div>
-                        )}
-                        {showObservations && (
-                          <div style={{ marginBottom: 16, maxHeight: 300, overflowY: "auto" }}>
-                            <pre
-                              style={{
-                                background: "rgba(58,155,255,0.05)",
-                                border: "1px solid var(--border)",
-                                borderRadius: 6,
-                                padding: 12,
-                                fontSize: 10,
-                                color: "var(--cyan)",
-                                margin: 0,
-                              }}
-                            >
-                              {JSON.stringify(demoResult.observations.slice(0, 3), null, 2)}
-                              {demoResult.observations.length > 3 && (
-                                <div style={{ marginTop: 8, color: "var(--muted)" }}>
-                                  ... and {demoResult.observations.length - 3} more
-                                </div>
-                              )}
-                            </pre>
-                          </div>
-                        )}
-                        <div
-                          style={{
-                            marginTop: 8,
-                            color: "var(--muted)",
-                            fontSize: 11,
-                            marginBottom: 16,
-                          }}
-                        >
-                          ingestion_id: <span style={{ color: "var(--blue3)" }}>{demoResult.ingestionId}</span>
-                        </div>
-                        <a href="#provenance" style={{ display: "inline-block", textDecoration: "none" }}>
-                          <button
-                            style={{
-                              background: "rgba(58,155,255,0.1)",
-                              border: "1px solid rgba(58,155,255,0.3)",
-                              color: "var(--blue3)",
-                              padding: "8px 12px",
-                              borderRadius: 6,
-                              fontSize: 12,
-                              fontWeight: 600,
-                              cursor: "pointer",
-                              transition: "background 0.2s",
-                            }}
-                          >
-                            See audit logs →
-                          </button>
-                        </a>
-                      </>
-                    ) : (
-                      <>
-                        <button
-                          onClick={() => setShowErrorDetails(!showErrorDetails)}
-                          style={{
-                            background: "rgba(255,77,106,0.1)",
-                            border: "1px solid rgba(255,77,106,0.3)",
-                            color: "var(--danger)",
-                            padding: "8px 12px",
-                            borderRadius: 6,
-                            fontSize: 13,
-                            fontWeight: 600,
-                            cursor: "pointer",
-                            transition: "background 0.2s",
-                            marginBottom: 8,
-                            display: "block",
-                          }}
-                        >
-                          {showErrorDetails ? "Hide error details ▼" : "See error details →"}
-                        </button>
-                        {showErrorDetails && (
-                          <div
-                            style={{
-                              padding: 12,
-                              background: "rgba(255,77,106,0.06)",
-                              border: "1px solid rgba(255,77,106,0.2)",
-                              borderRadius: 6,
-                              maxHeight: 400,
-                              overflowY: "auto",
-                            }}
-                          >
-                            <div
-                              style={{
-                                color: "var(--danger)",
-                                fontSize: 11,
-                                fontWeight: 600,
-                                marginBottom: 8,
-                                borderBottom: "1px solid rgba(255,77,106,0.3)",
-                                paddingBottom: 8,
-                              }}
-                            >
-                              ERRORS
-                            </div>
-                            {demoResult.errorDetail?.validation_errors ? (
-                              <div>
-                                {demoResult.errorDetail.validation_errors.map((err, idx) => (
-                                  <div key={idx} style={{ marginBottom: 10 }}>
-                                    <div>
-                                      <span className="mono-key">row    </span>
-                                      <span className="mono-err">{err.row_number}</span>
-                                    </div>
-                                    <div>
-                                      <span className="mono-key">field  </span>
-                                      <span className="mono-val">{err.field}</span>
-                                    </div>
-                                    <div>
-                                      <span className="mono-key">reason </span>
-                                      <span className="mono-val">{err.message}</span>
-                                    </div>
-                                  </div>
-                                ))}
-                              </div>
-                            ) : (
-                              <div>
-                                <span className="mono-val">{demoResult.errorDetail?.message || "No error details available"}</span>
-                              </div>
-                            )}
-                          </div>
-                        )}
-                        <a href="#provenance" style={{ display: "inline-block", textDecoration: "none", marginTop: showErrorDetails ? 8 : 0 }}>
-                          <button
-                            style={{
-                              background: "rgba(58,155,255,0.1)",
-                              border: "1px solid rgba(58,155,255,0.3)",
-                              color: "var(--blue3)",
-                              padding: "8px 12px",
-                              borderRadius: 6,
-                              fontSize: 13,
-                              fontWeight: 600,
-                              cursor: "pointer",
-                              transition: "background 0.2s",
-                            }}
-                          >
-                            See audit logs →
-                          </button>
-                        </a>
-                      </>
-                    )}
-                  </div>
-                </div>
-              </>
-            )}
-          </div>
-        </div>
-      </div>
-
-      <div className="section" id="provenance">
-        <div className="section-label">Provenance</div>
-        <div className="section-title">Full audit trail, by design</div>
-        <div className="section-sub">
-          Every ingestion emits a timestamped event log. Every step. Every outcome. Built-in, not
-          bolted-on.
-        </div>
-
-        <div className="audit-grid">
-          {demoPhase === "done" && demoResult?.events ? (
-            <div className="audit-card">
-              <div className="audit-title">PROCESSING EVENTS — {activeTab === "valid" ? "Valid CSV" : "Invalid CSV"}</div>
-              {demoResult.events.map((evt) => {
-                const timestampStr = evt.occurred_at || evt.timestamp || evt.created_at || "";
-                const date = new Date(timestampStr);
-                const ts = !isNaN(date.getTime())
-                  ? `${date.toLocaleTimeString("en-US", { hour12: false })}.${String(date.getMilliseconds()).padStart(3, "0")}`
-                  : "N/A";
-                const isSuccess = evt.event_type.endsWith("_SUCCEEDED");
-                const isFailed = evt.event_type.endsWith("_FAILED");
-                let stageClass = "es-parse";
-                if (evt.event_type.includes("VALIDATION")) stageClass = "es-valid";
-                else if (evt.event_type.includes("NORMALIZATION")) stageClass = "es-norm";
-                else if (evt.event_type.includes("FHIR")) stageClass = "es-fhir";
-
-                return (
-                  <div key={evt.event_id} className="event-row">
-                    <span className="event-ts">{ts}</span>
-                    <span
-                      className={`event-stage ${!isFailed ? stageClass : ""}`}
-                      style={
-                        isFailed
-                          ? {
-                              background: "rgba(255,77,106,0.08)",
-                              color: "var(--danger)",
-                            }
-                          : {}
-                      }
-                    >
-                      {evt.event_type.replace(/_SUCCEEDED|_FAILED/g, "").replace(/_/g, " ")}
-                    </span>
-                    <span className="event-msg" style={isFailed ? { color: "var(--danger)" } : {}}>
-                      {evt.message}
-                    </span>
-                  </div>
-                );
-              })}
-            </div>
-          ) : (
-            <>
-              <div className="audit-card">
-                <div className="audit-title">PROCESSING EVENTS — Valid CSV</div>
-                <div className="event-row">
-                  <span className="event-ts">09:14:00.012</span>
-                  <span className="event-stage es-parse">PARSE</span>
-                  <span className="event-msg">file parsed → 1 panel, 12 tests</span>
-                </div>
-                <div className="event-row">
-                  <span className="event-ts">09:14:00.098</span>
-                  <span className="event-stage es-valid">VALIDATION</span>
-                  <span className="event-msg">all rules passed</span>
-                </div>
-                <div className="event-row">
-                  <span className="event-ts">09:14:00.134</span>
-                  <span className="event-stage es-norm">NORMALIZE</span>
-                  <span className="event-msg">FHIR mapping applied</span>
-                </div>
-                <div className="event-row">
-                  <span className="event-ts">09:14:00.201</span>
-                  <span className="event-stage es-fhir">PERSIST</span>
-                  <span className="event-msg">DiagnosticReport + 12 Observations written</span>
-                </div>
-              </div>
-              <div className="audit-card">
-                <div className="audit-title">PROCESSING EVENTS — Invalid CSV</div>
-                <div className="event-row">
-                  <span className="event-ts">09:21:04.011</span>
-                  <span className="event-stage es-parse">PARSE</span>
-                  <span className="event-msg">file parsed → 1 panel, 11 tests</span>
-                </div>
-                <div className="event-row">
-                  <span className="event-ts">09:21:04.089</span>
-                  <span
-                    className="event-stage"
-                    style={{
-                      background: "rgba(255,77,106,0.08)",
-                      color: "var(--danger)",
-                    }}
-                  >
-                    VALIDATION
-                  </span>
-                  <span className="event-msg" style={{ color: "var(--danger)" }}>
-                    failed: missing 'unit' on row 3
-                  </span>
-                </div>
-              </div>
-            </>
-          )}
-        </div>
-      </div>
-
-      <div className="cta-band">
-        <h2>
-          Built for reliability.
-          <br />
-          Designed for healthcare.
-        </h2>
-        <p>Explore the full pipeline, read the source, or connect to the live API.</p>
-        <div style={{ display: "flex", gap: 16, justifyContent: "center", flexWrap: "wrap" }}>
-          <a href="#demo" className="btn-primary">
-            Open Live Demo →
-          </a>
-          <a href="https://github.com/masyago/validor" target="_blank" rel="noopener noreferrer" className="btn-ghost">
-            View on GitHub
-          </a>
-        </div>
-      </div>
-
-      <footer>
-        <span className="footer-logo">Validor</span>
-        <span>FHIR R4 · PostgreSQL · REST API</span>
-        <span>Built with purpose.</span>
-      </footer>
+      <ContactModal
+        open={contactOpen}
+        message={contactMessage}
+        setMessage={setContactMessage}
+        status={contactStatus}
+        honeypot={contactHoneypot}
+        setHoneypot={setContactHoneypot}
+        onClose={() => setContactOpen(false)}
+        onCancel={() => { setContactOpen(false); setContactMessage(""); setContactHoneypot(""); setContactStatus("idle"); }}
+        onSend={sendContact}
+      />
     </>
   );
 }

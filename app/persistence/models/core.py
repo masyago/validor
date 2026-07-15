@@ -37,6 +37,11 @@ class Ingestion(Base):
             "ingestion_idempotency_disposition IS NULL OR ingestion_idempotency_disposition IN ('CREATED', 'DUPLICATE_IDENTICAL', 'CONFLICT')",
             name="check_ingestion_idempotency_disposition",
         ),
+        CheckConstraint(
+            "kind IN ('SEED', 'SESSION')",
+            name="check_ingestion_kind",
+        ),
+        Index("ix_ingestion_session_id", "session_id"),
     )
 
     ingestion_id: Mapped[uuid.UUID] = mapped_column(
@@ -64,13 +69,27 @@ class Ingestion(Base):
         Text, nullable=True
     )
 
+    # Session lifecycle: 'SEED' rows are permanent, created only by the seed
+    # script (session_id/expires_at NULL). 'SESSION' rows are created when a
+    # visitor runs the live demo, scoped to a browser session_id, and expire
+    # after a TTL so a future purge job can safely delete them.
+    kind: Mapped[str] = mapped_column(
+        Text, nullable=False, default="SESSION"
+    )
+    session_id: Mapped[Optional[uuid.UUID]] = mapped_column(
+        Uuid, nullable=True
+    )
+    expires_at: Mapped[Optional[datetime]] = mapped_column(
+        TIMESTAMP(timezone=True), nullable=True
+    )
+
 
 class RawData(Base):
     __tablename__ = "raw_data"
 
     ingestion_id: Mapped[uuid.UUID] = mapped_column(
         Uuid,
-        ForeignKey("ingestion.ingestion_id"),
+        ForeignKey("ingestion.ingestion_id", ondelete="CASCADE"),
         primary_key=True,
         default=uuid.uuid4,  # Generate UUID in Python
     )  # FK to ingestion table

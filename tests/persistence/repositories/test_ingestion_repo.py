@@ -83,3 +83,48 @@ def test_requeue_processing_returns_false_when_missing(db_session):
     repo = IngestionRepository(db_session)
     ok = repo.requeue_processing(uuid.uuid4())
     assert ok is False
+
+
+def _add_session_ingestion(
+    db_session, *, kind: str, expires_at, session_id=None
+) -> uuid.UUID:
+    ingestion_id = uuid.uuid4()
+    ingestion = _make_ingestion(
+        ingestion_id=ingestion_id, status=IngestionStatus.COMPLETED
+    )
+    ingestion.kind = kind
+    ingestion.session_id = session_id
+    ingestion.expires_at = expires_at
+    db_session.add(ingestion)
+    db_session.flush()
+    return ingestion_id
+
+
+def test_delete_expired_sessions_purges_expired_and_orphaned_but_keeps_seed(
+    db_session,
+):
+    now = datetime(2026, 3, 1, 12, 0, tzinfo=timezone.utc)
+    past = datetime(2026, 3, 1, 11, 0, tzinfo=timezone.utc)
+    future = datetime(2026, 3, 1, 13, 0, tzinfo=timezone.utc)
+
+    expired = _add_session_ingestion(
+        db_session, kind="SESSION", expires_at=past, session_id=uuid.uuid4()
+    )
+    # Cookie-less legacy orphan: SESSION with no expiry — must self-heal.
+    orphan = _add_session_ingestion(
+        db_session, kind="SESSION", expires_at=None
+    )
+    active = _add_session_ingestion(
+        db_session, kind="SESSION", expires_at=future, session_id=uuid.uuid4()
+    )
+    seed = _add_session_ingestion(db_session, kind="SEED", expires_at=None)
+
+    repo = IngestionRepository(db_session)
+    deleted = repo.delete_expired_sessions(now=now)
+
+    assert deleted == 2
+    db_session.expire_all()
+    assert repo.get_by_ingestion_id(expired) is None
+    assert repo.get_by_ingestion_id(orphan) is None
+    assert repo.get_by_ingestion_id(active) is not None
+    assert repo.get_by_ingestion_id(seed) is not None

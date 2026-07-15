@@ -1,5 +1,5 @@
 from sqlalchemy.orm import Session
-from sqlalchemy import select, update, desc, asc, bindparam
+from sqlalchemy import select, update, desc, asc, bindparam, func
 from uuid import UUID
 from sqlalchemy.dialects.postgresql import insert
 from typing import Any, cast
@@ -216,4 +216,66 @@ class ObservationRepository:
                 asc(Observation.observation_id),
             )
         )
+        return list(self.session.scalars(stmt).all())
+
+    def get_latest_by_patient_id(
+        self,
+        patient_id: PatientId,
+        *,
+        exclude_ingestion_id: UUID | None = None,
+        limit: int | None = 10,
+        codes: list[str] | None = None,
+        per_code_limit: int | None = None,
+    ) -> list[Observation]:
+        stmt = select(Observation).where(Observation.patient_id == patient_id)
+
+        if exclude_ingestion_id is not None:
+            stmt = stmt.where(Observation.ingestion_id != exclude_ingestion_id)
+
+        if codes is not None:
+            if not codes:
+                return []
+            stmt = stmt.where(Observation.code.in_(codes))
+
+        if per_code_limit is not None:
+            ranked_stmt = select(
+                Observation.observation_id.label("observation_id"),
+                func.row_number()
+                .over(
+                    partition_by=Observation.code,
+                    order_by=(
+                        desc(Observation.effective_at),
+                        asc(Observation.observation_id),
+                    ),
+                )
+                .label("row_number"),
+            ).where(Observation.patient_id == patient_id)
+
+            if exclude_ingestion_id is not None:
+                ranked_stmt = ranked_stmt.where(
+                    Observation.ingestion_id != exclude_ingestion_id
+                )
+
+            if codes is not None:
+                ranked_stmt = ranked_stmt.where(Observation.code.in_(codes))
+
+            ranked_subquery = ranked_stmt.subquery()
+            stmt = (
+                select(Observation)
+                .join(
+                    ranked_subquery,
+                    Observation.observation_id
+                    == ranked_subquery.c.observation_id,
+                )
+                .where(ranked_subquery.c.row_number <= per_code_limit)
+            )
+
+        stmt = stmt.order_by(
+            desc(Observation.effective_at),
+            asc(Observation.observation_id),
+        )
+
+        if limit is not None:
+            stmt = stmt.limit(limit)
+
         return list(self.session.scalars(stmt).all())

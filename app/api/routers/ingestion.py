@@ -8,6 +8,7 @@ from fastapi import (
     status,
     Header,
     HTTPException,
+    Request,
     Response,
     Query,
 )
@@ -26,17 +27,23 @@ from app.schemas.ingestion import (
     ReadDiagnosticReportsOkResponse,
     ReadObservationsOkResponse,
     ReadProcessingEventOkResponse,
+    ReadAiAnnotationOkResponse,
+    ReadPatientMessageOkResponse,
+    ApprovePatientMessageRequest,
+    ReviewPatientMessageRequest,
 )
 
 from app.schemas.identifiers import PatientId
 
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 import os
+import time
 from uuid import UUID, uuid4
 from app.core.ingestion_status_enums import IngestionStatus
+from app.core.session_config import SESSION_COOKIE_NAME, SESSION_TTL_MINUTES
 import hashlib
 import io
-from typing import Union, Any, Literal, cast
+from typing import Union, Any, Literal, Optional, cast
 
 from sqlalchemy.orm import Session
 from sqlalchemy import select, func
@@ -53,6 +60,19 @@ from app.persistence.repositories.diagnostic_report_repo import (
     DiagnosticReportRepository,
 )
 from app.persistence.repositories.observation_repo import ObservationRepository
+from app.persistence.repositories.ai_annotation_repo import (
+    AiAnnotationRepository,
+)
+from app.persistence.repositories.patient_message_repo import (
+    PatientMessageRepository,
+)
+from app.persistence.repositories.patient_repo import PatientRepository
+from app.services.patient_message_service import (
+    PatientMessageService,
+    PatientMessageNotFoundError,
+    InvalidTransitionError,
+)
+from app.persistence.models.patient_message import PatientMessage
 
 from app.services.ingestion_service import IngestionService
 from app.persistence.repositories.processing_event_repo import (
@@ -108,6 +128,89 @@ def _int_env(name: str) -> int | None:
         return int(raw)
     except ValueError:
         return None
+
+
+# Per-IP upload rate limit state. In-memory, per-process: correct only for a
+# single API worker (the demo runs one). With multiple workers/replicas each keeps
+# its own window, so the effective limit multiplies — swap this for Redis if the
+# API is ever scaled out (same caveat noted in pages/api/contact.js and the
+# CLAUDE.md roadmap). Keys are client IPs; values are monotonic hit timestamps.
+_UPLOAD_HITS: dict[str, list[float]] = {}
+
+
+def _resolve_client_ip(request: Request) -> str:
+    """Best-effort client IP for rate limiting.
+
+    Mirrors getClientIp in pages/api/contact.js: prefer the first hop of
+    X-Forwarded-For (the demo reaches FastAPI through the Next.js rewrite proxy),
+    else the direct peer, else "unknown".
+
+    Note: X-Forwarded-For is spoofable while the API port is publicly exposed, so a
+    determined attacker can rotate keys. This is an accepted limitation of a basic
+    demo cost guard; real hardening means not publishing the API port and/or a
+    trusted-proxy allowlist.
+    """
+
+    forwarded = request.headers.get("x-forwarded-for")
+    if forwarded:
+        first = forwarded.split(",")[0].strip()
+        if first:
+            return first
+    if request.client is not None and request.client.host:
+        return request.client.host
+    return "unknown"
+
+
+def _enforce_upload_rate_limit_or_429(request: Request) -> None:
+    """Per-IP cost guard: cap how fast one client can trigger uploads.
+
+    Each accepted upload spends Bedrock budget (AI enrichment + patient-message
+    drafting), so a public, unauthenticated endpoint is a cost-runaway target.
+
+    Enable by setting BOTH `CLA_DEMO_MAX_UPLOADS_PER_WINDOW` and
+    `CLA_DEMO_RATE_WINDOW_SECONDS` to positive integers. When either is unset/<=0
+    this is disabled — the same opt-in convention as `_enforce_inflight_limit_or_429`,
+    so unit/e2e tests and the batch CLI demo are unaffected unless the env is set.
+    """
+
+    max_uploads = _int_env("CLA_DEMO_MAX_UPLOADS_PER_WINDOW")
+    window_seconds = _int_env("CLA_DEMO_RATE_WINDOW_SECONDS")
+    if (
+        max_uploads is None
+        or max_uploads <= 0
+        or window_seconds is None
+        or window_seconds <= 0
+    ):
+        return
+
+    key = _resolve_client_ip(request)
+    now = time.monotonic()
+    cutoff = now - window_seconds
+
+    hits = [ts for ts in _UPLOAD_HITS.get(key, []) if ts > cutoff]
+
+    if len(hits) >= max_uploads:
+        # Oldest in-window hit determines when the client may retry.
+        retry_after_s = max(1, int(hits[0] + window_seconds - now) + 1)
+        # Keep the pruned list so the window keeps sliding on repeated attempts.
+        _UPLOAD_HITS[key] = hits
+        raise HTTPException(
+            status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+            headers={"Retry-After": str(retry_after_s)},
+            detail={
+                "code": "DEMO_RATE_LIMITED",
+                "retryable": True,
+                "message": (
+                    "Too many uploads from your address; please slow down and "
+                    "retry shortly."
+                ),
+                "limit": int(max_uploads),
+                "window_seconds": int(window_seconds),
+            },
+        )
+
+    hits.append(now)
+    _UPLOAD_HITS[key] = hits
 
 
 def _enforce_inflight_limit_or_429(db: Session) -> None:
@@ -184,6 +287,7 @@ def _enforce_inflight_limit_or_429(db: Session) -> None:
     ],
 )
 async def create_ingestion(
+    request: Request,
     background_tasks: BackgroundTasks,
     response: Response,
     file: Annotated[UploadFile, File()],
@@ -211,6 +315,13 @@ async def create_ingestion(
 
 
     """
+    # Per-IP cost guard: reject abusive clients before any work (hashing, DB
+    # lookups, or enqueuing the Bedrock-spending background task). Placed before the
+    # dedup check on purpose — a client re-running the demo faster than the window
+    # is exactly what we want to throttle. This is distinct from the inflight check
+    # below, which guards queue saturation rather than per-client abuse/cost.
+    _enforce_upload_rate_limit_or_429(request)
+
     # Calculate file hash
     # `read()` here returns the content as bytes
     file_content = await file.read()
@@ -272,6 +383,23 @@ async def create_ingestion(
     new_ingestion_id = uuid4()
     new_ingestion_api_received_at = datetime.now(timezone.utc)
 
+    # Browser-driven uploads carry a session cookie (see /v1/session/start);
+    # cookie-less callers (CLI demo, or a browser that didn't send the cookie)
+    # have none and get session_id=NULL — but every SESSION ingestion still
+    # gets a TTL so the periodic purge can reclaim it. Otherwise a cookie-less
+    # upload would persist forever and pollute a patient's history. Only SEED
+    # rows (created by the seed script, not this endpoint) are permanent.
+    raw_session_id = request.cookies.get(SESSION_COOKIE_NAME)
+    session_id: Optional[UUID] = None
+    if raw_session_id:
+        try:
+            session_id = UUID(raw_session_id)
+        except ValueError:
+            session_id = None
+    expires_at: datetime = new_ingestion_api_received_at + timedelta(
+        minutes=SESSION_TTL_MINUTES
+    )
+
     new_ingestion_record = Ingestion(
         ingestion_id=new_ingestion_id,
         instrument_id=metadata.instrument_id,
@@ -284,6 +412,9 @@ async def create_ingestion(
         server_sha256=server_sha256_new,
         status=IngestionStatus.RECEIVED,
         source_filename=file.filename,
+        kind="SESSION",
+        session_id=session_id,
+        expires_at=expires_at,
     )
     new_raw_data_record = RawData(
         ingestion_id=new_ingestion_id,
@@ -642,6 +773,243 @@ def read_processing_events_for_ingestion_id(
             )
         )
     return out
+
+
+@router.get(
+    "/ingestions/{ingestion_id}/ai_annotation",
+    response_model=list[ReadAiAnnotationOkResponse],
+    response_model_exclude_unset=True,
+    responses={
+        status.HTTP_404_NOT_FOUND: {
+            "model": PathResourceNotFoundResponse,
+            "description": "Item not found",
+        },
+    },
+)
+def read_ai_annotations_for_ingestion_id(
+    ingestion_id: UUID,
+    db: Session = Depends(get_session),
+) -> list[ReadAiAnnotationOkResponse]:
+    ai_repo = AiAnnotationRepository(db)
+    ai_rows = ai_repo.get_by_ingestion_id(ingestion_id)
+
+    if not ai_rows:
+        ingestion_repo = IngestionRepository(db)
+        ingestion_row = ingestion_repo.get_by_ingestion_id(ingestion_id)
+        if ingestion_row is None:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=PathResourceNotFoundResponse(
+                    ingestion_id=ingestion_id,
+                    detail="Item not found",
+                ).model_dump(mode="json", exclude_none=True),
+            )
+
+    out: list[ReadAiAnnotationOkResponse] = []
+    for row in ai_rows:
+        out.append(
+            ReadAiAnnotationOkResponse(
+                ai_annotation_id=row.ai_annotation_id,
+                ingestion_id=row.ingestion_id,
+                annotation_type=(
+                    row.annotation_type.value
+                    if row.annotation_type is not None
+                    else None
+                ),
+                content_json=row.content_json,
+                provider=row.provider,
+                model_id=row.model_id,
+                prompt_version=row.prompt_version,
+                temperature=row.temperature,
+                content_schema_version=row.content_schema_version,
+                input_hash=row.input_hash,
+                created_at=row.created_at,
+                validation_status=(
+                    row.validation_status.value
+                    if row.validation_status is not None
+                    else None
+                ),
+                validated_at=row.validated_at,
+                rejection_reason=row.rejection_reason,
+            )
+        )
+    return out
+
+
+def _patient_message_response(
+    db: Session, message: PatientMessage
+) -> ReadPatientMessageOkResponse:
+    """Assemble the read model, applying synthetic PHI (name/email) only here,
+    at render time — never from draft_content_json."""
+    patient = PatientRepository(db).get(message.patient_id)
+    return ReadPatientMessageOkResponse(
+        patient_message_id=message.patient_message_id,
+        ingestion_id=message.ingestion_id,
+        patient_id=message.patient_id,
+        patient_given_name=patient.given_name if patient else None,
+        patient_family_name=patient.family_name if patient else None,
+        patient_email=patient.email if patient else None,
+        draft_content_json=message.draft_content_json,
+        final_content_json=message.final_content_json,
+        content_schema_version=message.content_schema_version,
+        correlation_id=message.correlation_id,
+        generation_event_id=message.generation_event_id,
+        provider=message.provider,
+        model_id=message.model_id,
+        prompt_version=message.prompt_version,
+        temperature=message.temperature,
+        input_hash=message.input_hash,
+        retrieved_refs_json=message.retrieved_refs_json,
+        created_at=message.created_at,
+        validation_status=message.validation_status.value,
+        validated_at=message.validated_at,
+        validation_error=message.validation_error,
+        review_status=message.review_status.value,
+        reviewed_by=message.reviewed_by,
+        approved_by=message.approved_by,
+        reviewed_at=message.reviewed_at,
+        approved_at=message.approved_at,
+        sent_at=message.sent_at,
+        review_note=message.review_note,
+        superseded_by=message.superseded_by,
+    )
+
+
+@router.get(
+    "/ingestions/{ingestion_id}/patient_message",
+    response_model=ReadPatientMessageOkResponse,
+    response_model_exclude_unset=True,
+    responses={
+        status.HTTP_404_NOT_FOUND: {
+            "model": PathResourceNotFoundResponse,
+            "description": "Item not found",
+        },
+    },
+)
+def read_patient_message_for_ingestion_id(
+    ingestion_id: UUID,
+    db: Session = Depends(get_session),
+) -> ReadPatientMessageOkResponse:
+    message = PatientMessageRepository(db).get_active_by_ingestion_id(
+        ingestion_id
+    )
+    if message is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=PathResourceNotFoundResponse(
+                ingestion_id=ingestion_id,
+                detail="Item not found",
+            ).model_dump(mode="json", exclude_none=True),
+        )
+    return _patient_message_response(db, message)
+
+
+def _patient_message_or_404(
+    service: PatientMessageService, patient_message_id: UUID
+) -> PatientMessage:
+    try:
+        return service.get(patient_message_id)
+    except PatientMessageNotFoundError:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Patient message not found",
+        )
+
+
+@router.post(
+    "/patient_messages/{patient_message_id}/approve",
+    response_model=ReadPatientMessageOkResponse,
+    response_model_exclude_unset=True,
+)
+def approve_patient_message(
+    patient_message_id: UUID,
+    body: ApprovePatientMessageRequest,
+    db: Session = Depends(get_session),
+) -> ReadPatientMessageOkResponse:
+    service = PatientMessageService(db)
+    _patient_message_or_404(service, patient_message_id)
+    try:
+        message = service.approve(
+            patient_message_id,
+            approved_by=body.approved_by,
+            final_content_json=body.final_content_json,
+        )
+    except InvalidTransitionError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT, detail=str(exc)
+        )
+    return _patient_message_response(db, message)
+
+
+@router.post(
+    "/patient_messages/{patient_message_id}/request_changes",
+    response_model=ReadPatientMessageOkResponse,
+    response_model_exclude_unset=True,
+)
+def request_changes_patient_message(
+    patient_message_id: UUID,
+    body: ReviewPatientMessageRequest,
+    db: Session = Depends(get_session),
+) -> ReadPatientMessageOkResponse:
+    service = PatientMessageService(db)
+    _patient_message_or_404(service, patient_message_id)
+    try:
+        message = service.request_changes(
+            patient_message_id,
+            reviewed_by=body.reviewed_by,
+            note=body.note or "",
+        )
+    except InvalidTransitionError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT, detail=str(exc)
+        )
+    return _patient_message_response(db, message)
+
+
+@router.post(
+    "/patient_messages/{patient_message_id}/reject",
+    response_model=ReadPatientMessageOkResponse,
+    response_model_exclude_unset=True,
+)
+def reject_patient_message(
+    patient_message_id: UUID,
+    body: ReviewPatientMessageRequest,
+    db: Session = Depends(get_session),
+) -> ReadPatientMessageOkResponse:
+    service = PatientMessageService(db)
+    _patient_message_or_404(service, patient_message_id)
+    try:
+        message = service.reject(
+            patient_message_id,
+            reviewed_by=body.reviewed_by,
+            note=body.note,
+        )
+    except InvalidTransitionError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT, detail=str(exc)
+        )
+    return _patient_message_response(db, message)
+
+
+@router.post(
+    "/patient_messages/{patient_message_id}/send",
+    response_model=ReadPatientMessageOkResponse,
+    response_model_exclude_unset=True,
+)
+def send_patient_message(
+    patient_message_id: UUID,
+    db: Session = Depends(get_session),
+) -> ReadPatientMessageOkResponse:
+    """Demo-send: flips APPROVED -> SENT. No external delivery."""
+    service = PatientMessageService(db)
+    _patient_message_or_404(service, patient_message_id)
+    try:
+        message = service.send(patient_message_id)
+    except InvalidTransitionError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT, detail=str(exc)
+        )
+    return _patient_message_response(db, message)
 
 
 # `GET /v1/patients/{patient_id}/diagnostic-reports?include_json=1&limit=...&offset=...`

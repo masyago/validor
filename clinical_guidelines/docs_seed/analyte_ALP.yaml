@@ -1,0 +1,55 @@
+test_name: Alkaline Phosphatase
+synonyms:
+  - ALP
+  - serum ALP
+  - alkaline phosphatase level
+  - alk phos
+  - AP
+test_code: ALP
+panel_code: LFT
+analyte_type: enzyme
+clinical_use: "Alkaline phosphatase is an enzyme present in multiple tissues
+  including the liver (biliary epithelium), bone, intestine, and kidney.
+  In the hepatic context, ALP is a marker of cholestasis and biliary tract
+  disease. It is used alongside GGT and bilirubin to evaluate biliary
+  obstruction, infiltrative liver disease, and primary biliary cholangitis.
+  Because of its non-hepatic isoforms, isolated ALP elevation requires
+  fractionation or GGT correlation to confirm hepatic origin."
+reference_ranges:
+  adult_generic:
+    low: 44
+    high: 147
+    units: U/L
+    note: "Reference range varies by laboratory method and age. ALP is
+      physiologically elevated in growing adolescents and during pregnancy
+      due to bone and placental isoforms respectively."
+interpretation_summary:
+  high: "Elevated ALP may be associated with biliary obstruction,
+    primary biliary cholangitis, hepatic infiltration (malignancy,
+    granulomas), or bone disease (Paget's disease, bone metastases,
+    osteomalacia). Disproportionate ALP elevation relative to
+    aminotransferases suggests a cholestatic rather than hepatocellular
+    pattern. Concurrent GGT elevation supports a hepatic source."
+  low: "Low ALP is uncommon and generally not clinically significant.
+    It may be seen with hypothyroidism, pernicious anemia, zinc deficiency,
+    or hypophosphatasia, a rare inherited disorder of ALP deficiency."
+  critical_high: 1000  # U/L — may warrant urgent clinical review
+  critical_low: null
+confounders:
+  - "Bone isoform elevates ALP in states of high bone turnover including
+    fractures, Paget's disease, and bone metastases, independent of liver
+    pathology."
+  - "Placental ALP is a normal source of elevation during the third
+    trimester of pregnancy."
+  - "GGT should be measured concurrently to confirm hepatic origin of
+    an isolated ALP elevation."
+  - "Certain blood types (B and O) have intestinal ALP isoforms that
+    can rise after a fatty meal."
+aliases:
+  - ALP
+  - alk phos
+  - alkaline phosphatase
+  - AP
+  - ALKP
+# DISCLAIMER: For demo/development use only. Not intended for clinical
+# decision-making or patient care.

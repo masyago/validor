@@ -25,10 +25,12 @@ node_modules/
 # Testing
 .pytest_cache/
 .coverage
+.ruff_cache/
 
 # Environment variables and secrets
 .env
 db/password.txt
+.env.test
 
 # Internal docs
 PROJECT_CONTEXT.md
@@ -42,3 +44,8 @@ copilot_outputs/
 
 # Internal docs
 dev_only/
+
+# Generated embedding fixtures (regenerate via scripts/build_fixtures.py)
+fixtures/
+
+CLAUDE.md
