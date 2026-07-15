@@ -270,6 +270,17 @@ def _parse_args() -> argparse.Namespace:
     )
     return parser.parse_args()
 
+def _read_api_port_from_dotenv() -> str | None:
+    env_file = Path(".env")
+    if not env_file.exists():
+        return None
+    for line in env_file.read_text().splitlines():
+        line = line.strip()
+        if line.startswith("API_PORT="):
+            return line.split("=", 1)[1].strip()
+    return None
+
+
 
 def _read_api_port_from_dotenv() -> str | None:
     env_file = Path(".env")
