@@ -45,9 +45,6 @@ copilot_outputs/
 # Internal docs
 dev_only/
 
-# Secrets, API keys
-.env
-
 # Generated embedding fixtures (regenerate via scripts/build_fixtures.py)
 fixtures/
 
