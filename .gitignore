@@ -30,6 +30,7 @@ node_modules/
 # Environment variables and secrets
 .env
 db/password.txt
+.env.test
 
 # Internal docs
 PROJECT_CONTEXT.md
@@ -48,4 +49,4 @@ dev_only/
 .env
 
 # Generated embedding fixtures (regenerate via scripts/build_fixtures.py)
-fixtures/
+fixtures/CLAUDE.md

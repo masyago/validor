@@ -1,0 +1,5612 @@
+{
+  "patient": [
+    {
+      "patient_id": "PAT-aa8241bf-2503-41ff-bc29-ada2690f14b6",
+      "given_name": "Jane",
+      "family_name": "Doe",
+      "email": "jane.doe@validor.demo",
+      "is_synthetic": true,
+      "created_at": "2026-07-10T21:18:08.317944+00:00"
+    }
+  ],
+  "ingestion": [
+    {
+      "ingestion_id": "4f196e13-262d-4958-9016-6fa7cc75ea81",
+      "instrument_id": "CANONICAL_CHEM_ANALYZER_V1",
+      "run_id": "20250714_009",
+      "uploader_id": "seed_historic_loader",
+      "spec_version": "analyzer_csv_v1",
+      "uploader_received_at": "2025-07-14T14:22:41.318452+00:00",
+      "api_received_at": "2025-07-14T14:22:41.318452+00:00",
+      "submitted_sha256": null,
+      "server_sha256": "3ae0f53c4ad922b0f9864188b001bcfdfe878229e1ff0df228f052f7d0fae696",
+      "status": "COMPLETED",
+      "error_code": null,
+      "error_detail": null,
+      "source_filename": "visit1_historic.csv",
+      "ingestion_idempotency_disposition": null,
+      "kind": "SEED",
+      "session_id": null,
+      "expires_at": null
+    },
+    {
+      "ingestion_id": "ccda0fbd-2e84-4c41-a834-cfd0f10c3a29",
+      "instrument_id": "CANONICAL_CHEM_ANALYZER_V1",
+      "run_id": "20250908_031",
+      "uploader_id": "seed_historic_loader",
+      "spec_version": "analyzer_csv_v1",
+      "uploader_received_at": "2025-09-08T09:47:03.884210+00:00",
+      "api_received_at": "2025-09-08T09:47:03.884210+00:00",
+      "submitted_sha256": null,
+      "server_sha256": "e9200ad06196e6416390fcbb5f503535cf3cc9167bef21fe7f3674b3310fdd38",
+      "status": "COMPLETED",
+      "error_code": null,
+      "error_detail": null,
+      "source_filename": "visit2_historic.csv",
+      "ingestion_idempotency_disposition": null,
+      "kind": "SEED",
+      "session_id": null,
+      "expires_at": null
+    },
+    {
+      "ingestion_id": "2eef1669-e15a-40db-9e09-36cd6511c44c",
+      "instrument_id": "CANONICAL_CHEM_ANALYZER_V1",
+      "run_id": "20260115_018",
+      "uploader_id": "seed_historic_loader",
+      "spec_version": "analyzer_csv_v1",
+      "uploader_received_at": "2026-01-15T16:05:57.229981+00:00",
+      "api_received_at": "2026-01-15T16:05:57.229981+00:00",
+      "submitted_sha256": null,
+      "server_sha256": "6175ae095a870e052f1da983dd4c2a81e25f9d0b03873e64b82f979a085c2bb6",
+      "status": "COMPLETED",
+      "error_code": null,
+      "error_detail": null,
+      "source_filename": "visit3_historic.csv",
+      "ingestion_idempotency_disposition": null,
+      "kind": "SEED",
+      "session_id": null,
+      "expires_at": null
+    }
+  ],
+  "panel": [
+    {
+      "panel_id": "5741b4e2-390f-42df-915d-3610c2dbadb2",
+      "ingestion_id": "4f196e13-262d-4958-9016-6fa7cc75ea81",
+      "patient_id": "PAT-aa8241bf-2503-41ff-bc29-ada2690f14b6",
+      "panel_code": "BMP",
+      "sample_id": "SAM-249b9ac2-fa35-40d4-9d2c-6a4315dc0047",
+      "collection_timestamp": "2025-07-14T14:22:41.318452+00:00"
+    },
+    {
+      "panel_id": "a18d24cf-be16-4d4b-aafd-cbac60deb45c",
+      "ingestion_id": "4f196e13-262d-4958-9016-6fa7cc75ea81",
+      "patient_id": "PAT-aa8241bf-2503-41ff-bc29-ada2690f14b6",
+      "panel_code": "LIPID",
+      "sample_id": "SAM-249b9ac2-fa35-40d4-9d2c-6a4315dc0047",
+      "collection_timestamp": "2025-07-14T14:22:41.318452+00:00"
+    },
+    {
+      "panel_id": "02b35724-85e5-4525-9b04-c4116e6903a3",
+      "ingestion_id": "4f196e13-262d-4958-9016-6fa7cc75ea81",
+      "patient_id": "PAT-aa8241bf-2503-41ff-bc29-ada2690f14b6",
+      "panel_code": "LFT",
+      "sample_id": "SAM-249b9ac2-fa35-40d4-9d2c-6a4315dc0047",
+      "collection_timestamp": "2025-07-14T14:22:41.318452+00:00"
+    },
+    {
+      "panel_id": "96e660ce-adb1-4e2c-8bc1-73aa07e5eabd",
+      "ingestion_id": "ccda0fbd-2e84-4c41-a834-cfd0f10c3a29",
+      "patient_id": "PAT-aa8241bf-2503-41ff-bc29-ada2690f14b6",
+      "panel_code": "BMP",
+      "sample_id": "SAM-aa31b425-2bf7-44a3-bdde-d6e3232d148d",
+      "collection_timestamp": "2025-09-08T09:47:03.884210+00:00"
+    },
+    {
+      "panel_id": "3f282bfa-945f-483e-949a-1fc13198103a",
+      "ingestion_id": "ccda0fbd-2e84-4c41-a834-cfd0f10c3a29",
+      "patient_id": "PAT-aa8241bf-2503-41ff-bc29-ada2690f14b6",
+      "panel_code": "LIPID",
+      "sample_id": "SAM-aa31b425-2bf7-44a3-bdde-d6e3232d148d",
+      "collection_timestamp": "2025-09-08T09:47:03.884210+00:00"
+    },
+    {
+      "panel_id": "8c9cb9b6-ad1c-4c09-9c66-454c07d22bd6",
+      "ingestion_id": "ccda0fbd-2e84-4c41-a834-cfd0f10c3a29",
+      "patient_id": "PAT-aa8241bf-2503-41ff-bc29-ada2690f14b6",
+      "panel_code": "LFT",
+      "sample_id": "SAM-aa31b425-2bf7-44a3-bdde-d6e3232d148d",
+      "collection_timestamp": "2025-09-08T09:47:03.884210+00:00"
+    },
+    {
+      "panel_id": "3fcc4384-d5bb-4df9-af10-46595fd80c41",
+      "ingestion_id": "2eef1669-e15a-40db-9e09-36cd6511c44c",
+      "patient_id": "PAT-aa8241bf-2503-41ff-bc29-ada2690f14b6",
+      "panel_code": "BMP",
+      "sample_id": "SAM-912b86da-0f07-4dbb-8920-1bad6310a0a4",
+      "collection_timestamp": "2026-01-15T16:05:57.229981+00:00"
+    },
+    {
+      "panel_id": "00250468-7c27-4157-8d4c-96812899d535",
+      "ingestion_id": "2eef1669-e15a-40db-9e09-36cd6511c44c",
+      "patient_id": "PAT-aa8241bf-2503-41ff-bc29-ada2690f14b6",
+      "panel_code": "LIPID",
+      "sample_id": "SAM-912b86da-0f07-4dbb-8920-1bad6310a0a4",
+      "collection_timestamp": "2026-01-15T16:05:57.229981+00:00"
+    },
+    {
+      "panel_id": "859db6f8-5430-40d7-b736-5ea2ae7ded92",
+      "ingestion_id": "2eef1669-e15a-40db-9e09-36cd6511c44c",
+      "patient_id": "PAT-aa8241bf-2503-41ff-bc29-ada2690f14b6",
+      "panel_code": "LFT",
+      "sample_id": "SAM-912b86da-0f07-4dbb-8920-1bad6310a0a4",
+      "collection_timestamp": "2026-01-15T16:05:57.229981+00:00"
+    }
+  ],
+  "test": [
+    {
+      "test_id": "609833e9-437c-4565-b9ec-0b40218afea3",
+      "panel_id": "5741b4e2-390f-42df-915d-3610c2dbadb2",
+      "row_number": 1,
+      "test_code": "Na",
+      "test_name": "Sodium",
+      "analyte_type": "electrolyte",
+      "result_raw": "139.4",
+      "units_raw": "mEq/L",
+      "result_value_num": "139.4",
+      "result_comparator": null,
+      "ref_low_raw": "135",
+      "ref_high_raw": "145",
+      "flag": null
+    },
+    {
+      "test_id": "bff3f620-6d0f-4aa0-98cd-694b0950217c",
+      "panel_id": "5741b4e2-390f-42df-915d-3610c2dbadb2",
+      "row_number": 2,
+      "test_code": "K",
+      "test_name": "Potassium",
+      "analyte_type": "electrolyte",
+      "result_raw": "4.1",
+      "units_raw": "mEq/L",
+      "result_value_num": "4.1",
+      "result_comparator": null,
+      "ref_low_raw": "3.5",
+      "ref_high_raw": "5.1",
+      "flag": null
+    },
+    {
+      "test_id": "84c4a55e-9b3a-4a4f-ac15-4baf62d53fa8",
+      "panel_id": "5741b4e2-390f-42df-915d-3610c2dbadb2",
+      "row_number": 3,
+      "test_code": "Cl",
+      "test_name": "Chloride",
+      "analyte_type": "electrolyte",
+      "result_raw": "101.2",
+      "units_raw": "mEq/L",
+      "result_value_num": "101.2",
+      "result_comparator": null,
+      "ref_low_raw": "98",
+      "ref_high_raw": "107",
+      "flag": null
+    },
+    {
+      "test_id": "d9a698fe-57a1-43f9-89d5-f099c89e9603",
+      "panel_id": "5741b4e2-390f-42df-915d-3610c2dbadb2",
+      "row_number": 4,
+      "test_code": "HCO3",
+      "test_name": "Bicarbonate",
+      "analyte_type": "electrolyte",
+      "result_raw": "25.6",
+      "units_raw": "mEq/L",
+      "result_value_num": "25.6",
+      "result_comparator": null,
+      "ref_low_raw": "22",
+      "ref_high_raw": "29",
+      "flag": null
+    },
+    {
+      "test_id": "edbcec16-eaef-4699-85f3-3749d23a1d06",
+      "panel_id": "5741b4e2-390f-42df-915d-3610c2dbadb2",
+      "row_number": 5,
+      "test_code": "BUN",
+      "test_name": "Blood Urea Nitrogen",
+      "analyte_type": "metabolic waste",
+      "result_raw": "14.3",
+      "units_raw": "mg/dL",
+      "result_value_num": "14.3",
+      "result_comparator": null,
+      "ref_low_raw": "7",
+      "ref_high_raw": "20",
+      "flag": null
+    },
+    {
+      "test_id": "25fe994e-7bed-40b2-b3ff-b72f54d05899",
+      "panel_id": "5741b4e2-390f-42df-915d-3610c2dbadb2",
+      "row_number": 6,
+      "test_code": "Cr",
+      "test_name": "Creatinine",
+      "analyte_type": "metabolic waste",
+      "result_raw": "0.85",
+      "units_raw": "mg/dL",
+      "result_value_num": "0.85",
+      "result_comparator": null,
+      "ref_low_raw": "0.6",
+      "ref_high_raw": "1.3",
+      "flag": null
+    },
+    {
+      "test_id": "4cbaf30b-22a8-4dcd-927a-7da8075cc4d4",
+      "panel_id": "5741b4e2-390f-42df-915d-3610c2dbadb2",
+      "row_number": 7,
+      "test_code": "GLU",
+      "test_name": "Glucose",
+      "analyte_type": "carbohydrate",
+      "result_raw": "92.4",
+      "units_raw": "mg/dL",
+      "result_value_num": "92.4",
+      "result_comparator": null,
+      "ref_low_raw": "70",
+      "ref_high_raw": "99",
+      "flag": null
+    },
+    {
+      "test_id": "232f1140-6f3c-4743-8a1e-62d2b5a0ae73",
+      "panel_id": "5741b4e2-390f-42df-915d-3610c2dbadb2",
+      "row_number": 8,
+      "test_code": "Ca",
+      "test_name": "Calcium",
+      "analyte_type": "electrolyte",
+      "result_raw": "9.3",
+      "units_raw": "mg/dL",
+      "result_value_num": "9.3",
+      "result_comparator": null,
+      "ref_low_raw": "8.6",
+      "ref_high_raw": "10.2",
+      "flag": null
+    },
+    {
+      "test_id": "25ef0d0e-315d-48b0-9ab7-335e870d7a3f",
+      "panel_id": "a18d24cf-be16-4d4b-aafd-cbac60deb45c",
+      "row_number": 9,
+      "test_code": "TC",
+      "test_name": "Total Cholesterol",
+      "analyte_type": "lipid",
+      "result_raw": "235.8",
+      "units_raw": "mg/dL",
+      "result_value_num": "235.8",
+      "result_comparator": null,
+      "ref_low_raw": "0",
+      "ref_high_raw": "200",
+      "flag": "H"
+    },
+    {
+      "test_id": "4f8bcc29-c3a2-4fe9-81aa-906867416087",
+      "panel_id": "a18d24cf-be16-4d4b-aafd-cbac60deb45c",
+      "row_number": 10,
+      "test_code": "LDL",
+      "test_name": "Low-Density Lipoprotein",
+      "analyte_type": "lipoprotein",
+      "result_raw": "155.3",
+      "units_raw": "mg/dL",
+      "result_value_num": "155.3",
+      "result_comparator": null,
+      "ref_low_raw": "0",
+      "ref_high_raw": "100",
+      "flag": "H"
+    },
+    {
+      "test_id": "5009ead8-5984-4c8a-b4a2-f39bb62668e6",
+      "panel_id": "a18d24cf-be16-4d4b-aafd-cbac60deb45c",
+      "row_number": 11,
+      "test_code": "HDL",
+      "test_name": "High-Density Lipoprotein",
+      "analyte_type": "lipoprotein",
+      "result_raw": "42.1",
+      "units_raw": "mg/dL",
+      "result_value_num": "42.1",
+      "result_comparator": null,
+      "ref_low_raw": "40",
+      "ref_high_raw": "100",
+      "flag": null
+    },
+    {
+      "test_id": "7d6e2c39-a802-48b8-8401-9eb886ca1be4",
+      "panel_id": "a18d24cf-be16-4d4b-aafd-cbac60deb45c",
+      "row_number": 12,
+      "test_code": "TG",
+      "test_name": "Triglycerides",
+      "analyte_type": "lipid",
+      "result_raw": "140.6",
+      "units_raw": "mg/dL",
+      "result_value_num": "140.6",
+      "result_comparator": null,
+      "ref_low_raw": "0",
+      "ref_high_raw": "150",
+      "flag": null
+    },
+    {
+      "test_id": "7551f91f-73b3-4534-8d6b-da20ab9e3588",
+      "panel_id": "02b35724-85e5-4525-9b04-c4116e6903a3",
+      "row_number": 13,
+      "test_code": "AST",
+      "test_name": "Aspartate Aminotransferase",
+      "analyte_type": "enzyme",
+      "result_raw": "24.5",
+      "units_raw": "U/L",
+      "result_value_num": "24.5",
+      "result_comparator": null,
+      "ref_low_raw": "10",
+      "ref_high_raw": "40",
+      "flag": null
+    },
+    {
+      "test_id": "c4c291ed-30fe-4a5b-9e8e-30d2464001de",
+      "panel_id": "02b35724-85e5-4525-9b04-c4116e6903a3",
+      "row_number": 14,
+      "test_code": "ALT",
+      "test_name": "Alanine Aminotransferase",
+      "analyte_type": "enzyme",
+      "result_raw": "32.1",
+      "units_raw": "U/L",
+      "result_value_num": "32.1",
+      "result_comparator": null,
+      "ref_low_raw": "7",
+      "ref_high_raw": "56",
+      "flag": null
+    },
+    {
+      "test_id": "6b54aa73-2ee7-4f1c-a89b-9b7461fbc5c6",
+      "panel_id": "02b35724-85e5-4525-9b04-c4116e6903a3",
+      "row_number": 15,
+      "test_code": "ALP",
+      "test_name": "Alkaline Phosphatase",
+      "analyte_type": "enzyme",
+      "result_raw": "78.4",
+      "units_raw": "U/L",
+      "result_value_num": "78.4",
+      "result_comparator": null,
+      "ref_low_raw": "44",
+      "ref_high_raw": "147",
+      "flag": null
+    },
+    {
+      "test_id": "7fbe9943-18ad-4f95-a656-35c7706b9b6a",
+      "panel_id": "02b35724-85e5-4525-9b04-c4116e6903a3",
+      "row_number": 16,
+      "test_code": "TP",
+      "test_name": "Total Protein",
+      "analyte_type": "protein",
+      "result_raw": "7.2",
+      "units_raw": "g/dL",
+      "result_value_num": "7.2",
+      "result_comparator": null,
+      "ref_low_raw": "6.0",
+      "ref_high_raw": "8.3",
+      "flag": null
+    },
+    {
+      "test_id": "80b264ad-97ca-43d6-b126-f6fce12d9752",
+      "panel_id": "02b35724-85e5-4525-9b04-c4116e6903a3",
+      "row_number": 17,
+      "test_code": "ALB",
+      "test_name": "Albumin",
+      "analyte_type": "protein",
+      "result_raw": "4.2",
+      "units_raw": "g/dL",
+      "result_value_num": "4.2",
+      "result_comparator": null,
+      "ref_low_raw": "3.5",
+      "ref_high_raw": "5.0",
+      "flag": null
+    },
+    {
+      "test_id": "48210c2f-cb44-414a-8c74-a92927b0d1f0",
+      "panel_id": "02b35724-85e5-4525-9b04-c4116e6903a3",
+      "row_number": 18,
+      "test_code": "TBIL",
+      "test_name": "Total Bilirubin",
+      "analyte_type": "bile pigment",
+      "result_raw": "0.6",
+      "units_raw": "mg/dL",
+      "result_value_num": "0.6",
+      "result_comparator": null,
+      "ref_low_raw": "0.1",
+      "ref_high_raw": "1.2",
+      "flag": null
+    },
+    {
+      "test_id": "33ce8481-226c-4d4c-96ba-e5046eee7a04",
+      "panel_id": "96e660ce-adb1-4e2c-8bc1-73aa07e5eabd",
+      "row_number": 1,
+      "test_code": "Na",
+      "test_name": "Sodium",
+      "analyte_type": "electrolyte",
+      "result_raw": "140.1",
+      "units_raw": "mEq/L",
+      "result_value_num": "140.1",
+      "result_comparator": null,
+      "ref_low_raw": "135",
+      "ref_high_raw": "145",
+      "flag": null
+    },
+    {
+      "test_id": "a36fdd82-33f8-4bbd-825f-55f956ba1f37",
+      "panel_id": "96e660ce-adb1-4e2c-8bc1-73aa07e5eabd",
+      "row_number": 2,
+      "test_code": "K",
+      "test_name": "Potassium",
+      "analyte_type": "electrolyte",
+      "result_raw": "4.3",
+      "units_raw": "mEq/L",
+      "result_value_num": "4.3",
+      "result_comparator": null,
+      "ref_low_raw": "3.5",
+      "ref_high_raw": "5.1",
+      "flag": null
+    },
+    {
+      "test_id": "29f84f97-d3fb-416f-9d50-286ae25edf1a",
+      "panel_id": "96e660ce-adb1-4e2c-8bc1-73aa07e5eabd",
+      "row_number": 3,
+      "test_code": "Cl",
+      "test_name": "Chloride",
+      "analyte_type": "electrolyte",
+      "result_raw": "102.5",
+      "units_raw": "mEq/L",
+      "result_value_num": "102.5",
+      "result_comparator": null,
+      "ref_low_raw": "98",
+      "ref_high_raw": "107",
+      "flag": null
+    },
+    {
+      "test_id": "f3adbf96-0d02-4add-9d7a-5d0978c00783",
+      "panel_id": "96e660ce-adb1-4e2c-8bc1-73aa07e5eabd",
+      "row_number": 4,
+      "test_code": "HCO3",
+      "test_name": "Bicarbonate",
+      "analyte_type": "electrolyte",
+      "result_raw": "26.1",
+      "units_raw": "mEq/L",
+      "result_value_num": "26.1",
+      "result_comparator": null,
+      "ref_low_raw": "22",
+      "ref_high_raw": "29",
+      "flag": null
+    },
+    {
+      "test_id": "dbba2f9f-acdd-41fd-814b-49b85f011070",
+      "panel_id": "96e660ce-adb1-4e2c-8bc1-73aa07e5eabd",
+      "row_number": 5,
+      "test_code": "BUN",
+      "test_name": "Blood Urea Nitrogen",
+      "analyte_type": "metabolic waste",
+      "result_raw": "13.7",
+      "units_raw": "mg/dL",
+      "result_value_num": "13.7",
+      "result_comparator": null,
+      "ref_low_raw": "7",
+      "ref_high_raw": "20",
+      "flag": null
+    },
+    {
+      "test_id": "ee9c6914-f931-46f9-b4f1-bcea54e4ab53",
+      "panel_id": "96e660ce-adb1-4e2c-8bc1-73aa07e5eabd",
+      "row_number": 6,
+      "test_code": "Cr",
+      "test_name": "Creatinine",
+      "analyte_type": "metabolic waste",
+      "result_raw": "0.88",
+      "units_raw": "mg/dL",
+      "result_value_num": "0.88",
+      "result_comparator": null,
+      "ref_low_raw": "0.6",
+      "ref_high_raw": "1.3",
+      "flag": null
+    },
+    {
+      "test_id": "60dd2363-51c9-4c0c-8da7-cebfe00f5a82",
+      "panel_id": "96e660ce-adb1-4e2c-8bc1-73aa07e5eabd",
+      "row_number": 7,
+      "test_code": "GLU",
+      "test_name": "Glucose",
+      "analyte_type": "carbohydrate",
+      "result_raw": "98.1",
+      "units_raw": "mg/dL",
+      "result_value_num": "98.1",
+      "result_comparator": null,
+      "ref_low_raw": "70",
+      "ref_high_raw": "99",
+      "flag": null
+    },
+    {
+      "test_id": "57f635d0-5e19-4e53-801d-945df7160b96",
+      "panel_id": "96e660ce-adb1-4e2c-8bc1-73aa07e5eabd",
+      "row_number": 8,
+      "test_code": "Ca",
+      "test_name": "Calcium",
+      "analyte_type": "electrolyte",
+      "result_raw": "9.4",
+      "units_raw": "mg/dL",
+      "result_value_num": "9.4",
+      "result_comparator": null,
+      "ref_low_raw": "8.6",
+      "ref_high_raw": "10.2",
+      "flag": null
+    },
+    {
+      "test_id": "13e82cf3-60db-4d63-b20c-3f113972e754",
+      "panel_id": "3f282bfa-945f-483e-949a-1fc13198103a",
+      "row_number": 9,
+      "test_code": "TC",
+      "test_name": "Total Cholesterol",
+      "analyte_type": "lipid",
+      "result_raw": "195.4",
+      "units_raw": "mg/dL",
+      "result_value_num": "195.4",
+      "result_comparator": null,
+      "ref_low_raw": "0",
+      "ref_high_raw": "200",
+      "flag": null
+    },
+    {
+      "test_id": "215d6872-15c5-4f76-86b4-933ecc1795d0",
+      "panel_id": "3f282bfa-945f-483e-949a-1fc13198103a",
+      "row_number": 10,
+      "test_code": "LDL",
+      "test_name": "Low-Density Lipoprotein",
+      "analyte_type": "lipoprotein",
+      "result_raw": "108.7",
+      "units_raw": "mg/dL",
+      "result_value_num": "108.7",
+      "result_comparator": null,
+      "ref_low_raw": "0",
+      "ref_high_raw": "100",
+      "flag": "H"
+    },
+    {
+      "test_id": "ae380329-bc2b-424b-ba73-f0458e28a411",
+      "panel_id": "3f282bfa-945f-483e-949a-1fc13198103a",
+      "row_number": 11,
+      "test_code": "HDL",
+      "test_name": "High-Density Lipoprotein",
+      "analyte_type": "lipoprotein",
+      "result_raw": "44.0",
+      "units_raw": "mg/dL",
+      "result_value_num": "44",
+      "result_comparator": null,
+      "ref_low_raw": "40",
+      "ref_high_raw": "100",
+      "flag": null
+    },
+    {
+      "test_id": "f448fdfd-a4dc-4b6a-a4bd-41255cbbbe2f",
+      "panel_id": "3f282bfa-945f-483e-949a-1fc13198103a",
+      "row_number": 12,
+      "test_code": "TG",
+      "test_name": "Triglycerides",
+      "analyte_type": "lipid",
+      "result_raw": "135.2",
+      "units_raw": "mg/dL",
+      "result_value_num": "135.2",
+      "result_comparator": null,
+      "ref_low_raw": "0",
+      "ref_high_raw": "150",
+      "flag": null
+    },
+    {
+      "test_id": "1e8077cc-6506-4b9b-a732-c998c4850bea",
+      "panel_id": "8c9cb9b6-ad1c-4c09-9c66-454c07d22bd6",
+      "row_number": 13,
+      "test_code": "AST",
+      "test_name": "Aspartate Aminotransferase",
+      "analyte_type": "enzyme",
+      "result_raw": "26.8",
+      "units_raw": "U/L",
+      "result_value_num": "26.8",
+      "result_comparator": null,
+      "ref_low_raw": "10",
+      "ref_high_raw": "40",
+      "flag": null
+    },
+    {
+      "test_id": "bb795263-9133-4a4b-a98b-dc78aa334a9c",
+      "panel_id": "8c9cb9b6-ad1c-4c09-9c66-454c07d22bd6",
+      "row_number": 14,
+      "test_code": "ALT",
+      "test_name": "Alanine Aminotransferase",
+      "analyte_type": "enzyme",
+      "result_raw": "61.4",
+      "units_raw": "U/L",
+      "result_value_num": "61.4",
+      "result_comparator": null,
+      "ref_low_raw": "7",
+      "ref_high_raw": "56",
+      "flag": "H"
+    },
+    {
+      "test_id": "f4107d3d-66d5-4b8d-9d45-f060cf5996cd",
+      "panel_id": "8c9cb9b6-ad1c-4c09-9c66-454c07d22bd6",
+      "row_number": 15,
+      "test_code": "ALP",
+      "test_name": "Alkaline Phosphatase",
+      "analyte_type": "enzyme",
+      "result_raw": "82.0",
+      "units_raw": "U/L",
+      "result_value_num": "82",
+      "result_comparator": null,
+      "ref_low_raw": "44",
+      "ref_high_raw": "147",
+      "flag": null
+    },
+    {
+      "test_id": "d324b5e6-be0e-4183-a18a-7aea4f52706e",
+      "panel_id": "8c9cb9b6-ad1c-4c09-9c66-454c07d22bd6",
+      "row_number": 16,
+      "test_code": "TP",
+      "test_name": "Total Protein",
+      "analyte_type": "protein",
+      "result_raw": "7.1",
+      "units_raw": "g/dL",
+      "result_value_num": "7.1",
+      "result_comparator": null,
+      "ref_low_raw": "6.0",
+      "ref_high_raw": "8.3",
+      "flag": null
+    },
+    {
+      "test_id": "5a489a89-8841-4b52-8c72-aa581ad5b977",
+      "panel_id": "8c9cb9b6-ad1c-4c09-9c66-454c07d22bd6",
+      "row_number": 17,
+      "test_code": "ALB",
+      "test_name": "Albumin",
+      "analyte_type": "protein",
+      "result_raw": "4.1",
+      "units_raw": "g/dL",
+      "result_value_num": "4.1",
+      "result_comparator": null,
+      "ref_low_raw": "3.5",
+      "ref_high_raw": "5.0",
+      "flag": null
+    },
+    {
+      "test_id": "9e6f0efe-2c28-47ce-bbd9-aa03847790c4",
+      "panel_id": "8c9cb9b6-ad1c-4c09-9c66-454c07d22bd6",
+      "row_number": 18,
+      "test_code": "TBIL",
+      "test_name": "Total Bilirubin",
+      "analyte_type": "bile pigment",
+      "result_raw": "0.7",
+      "units_raw": "mg/dL",
+      "result_value_num": "0.7",
+      "result_comparator": null,
+      "ref_low_raw": "0.1",
+      "ref_high_raw": "1.2",
+      "flag": null
+    },
+    {
+      "test_id": "87f49af2-b9d4-432f-9650-464f2dfa354a",
+      "panel_id": "3fcc4384-d5bb-4df9-af10-46595fd80c41",
+      "row_number": 1,
+      "test_code": "Na",
+      "test_name": "Sodium",
+      "analyte_type": "electrolyte",
+      "result_raw": "138.7",
+      "units_raw": "mEq/L",
+      "result_value_num": "138.7",
+      "result_comparator": null,
+      "ref_low_raw": "135",
+      "ref_high_raw": "145",
+      "flag": null
+    },
+    {
+      "test_id": "2d645c72-e5dd-42f5-a7e7-43bbaa8b48f7",
+      "panel_id": "3fcc4384-d5bb-4df9-af10-46595fd80c41",
+      "row_number": 2,
+      "test_code": "K",
+      "test_name": "Potassium",
+      "analyte_type": "electrolyte",
+      "result_raw": "4.0",
+      "units_raw": "mEq/L",
+      "result_value_num": "4",
+      "result_comparator": null,
+      "ref_low_raw": "3.5",
+      "ref_high_raw": "5.1",
+      "flag": null
+    },
+    {
+      "test_id": "cac97e51-0217-45bc-9aa4-7188adc72be3",
+      "panel_id": "3fcc4384-d5bb-4df9-af10-46595fd80c41",
+      "row_number": 3,
+      "test_code": "Cl",
+      "test_name": "Chloride",
+      "analyte_type": "electrolyte",
+      "result_raw": "100.8",
+      "units_raw": "mEq/L",
+      "result_value_num": "100.8",
+      "result_comparator": null,
+      "ref_low_raw": "98",
+      "ref_high_raw": "107",
+      "flag": null
+    },
+    {
+      "test_id": "430e493b-78e9-4048-a515-33fd7485ff5d",
+      "panel_id": "3fcc4384-d5bb-4df9-af10-46595fd80c41",
+      "row_number": 4,
+      "test_code": "HCO3",
+      "test_name": "Bicarbonate",
+      "analyte_type": "electrolyte",
+      "result_raw": "24.9",
+      "units_raw": "mEq/L",
+      "result_value_num": "24.9",
+      "result_comparator": null,
+      "ref_low_raw": "22",
+      "ref_high_raw": "29",
+      "flag": null
+    },
+    {
+      "test_id": "85f85b96-7e2f-48e9-97e0-e76f2b691483",
+      "panel_id": "3fcc4384-d5bb-4df9-af10-46595fd80c41",
+      "row_number": 5,
+      "test_code": "BUN",
+      "test_name": "Blood Urea Nitrogen",
+      "analyte_type": "metabolic waste",
+      "result_raw": "15.1",
+      "units_raw": "mg/dL",
+      "result_value_num": "15.1",
+      "result_comparator": null,
+      "ref_low_raw": "7",
+      "ref_high_raw": "20",
+      "flag": null
+    },
+    {
+      "test_id": "d6efcaa5-a4b6-4154-bec8-fd6dab5048b6",
+      "panel_id": "3fcc4384-d5bb-4df9-af10-46595fd80c41",
+      "row_number": 6,
+      "test_code": "Cr",
+      "test_name": "Creatinine",
+      "analyte_type": "metabolic waste",
+      "result_raw": "0.91",
+      "units_raw": "mg/dL",
+      "result_value_num": "0.91",
+      "result_comparator": null,
+      "ref_low_raw": "0.6",
+      "ref_high_raw": "1.3",
+      "flag": null
+    },
+    {
+      "test_id": "56bf9d94-ecf8-4343-9b15-dbc3d4794865",
+      "panel_id": "3fcc4384-d5bb-4df9-af10-46595fd80c41",
+      "row_number": 7,
+      "test_code": "GLU",
+      "test_name": "Glucose",
+      "analyte_type": "carbohydrate",
+      "result_raw": "104.6",
+      "units_raw": "mg/dL",
+      "result_value_num": "104.6",
+      "result_comparator": null,
+      "ref_low_raw": "70",
+      "ref_high_raw": "99",
+      "flag": "H"
+    },
+    {
+      "test_id": "c0053d1a-a9b6-4e64-b7a5-3cd87f0b663d",
+      "panel_id": "3fcc4384-d5bb-4df9-af10-46595fd80c41",
+      "row_number": 8,
+      "test_code": "Ca",
+      "test_name": "Calcium",
+      "analyte_type": "electrolyte",
+      "result_raw": "9.5",
+      "units_raw": "mg/dL",
+      "result_value_num": "9.5",
+      "result_comparator": null,
+      "ref_low_raw": "8.6",
+      "ref_high_raw": "10.2",
+      "flag": null
+    },
+    {
+      "test_id": "f4bb1ea2-fa93-4218-b1a1-2129af524c6f",
+      "panel_id": "00250468-7c27-4157-8d4c-96812899d535",
+      "row_number": 9,
+      "test_code": "TC",
+      "test_name": "Total Cholesterol",
+      "analyte_type": "lipid",
+      "result_raw": "178.3",
+      "units_raw": "mg/dL",
+      "result_value_num": "178.3",
+      "result_comparator": null,
+      "ref_low_raw": "0",
+      "ref_high_raw": "200",
+      "flag": null
+    },
+    {
+      "test_id": "980b7858-d706-4005-a0bf-17158903abe2",
+      "panel_id": "00250468-7c27-4157-8d4c-96812899d535",
+      "row_number": 10,
+      "test_code": "LDL",
+      "test_name": "Low-Density Lipoprotein",
+      "analyte_type": "lipoprotein",
+      "result_raw": "92.4",
+      "units_raw": "mg/dL",
+      "result_value_num": "92.4",
+      "result_comparator": null,
+      "ref_low_raw": "0",
+      "ref_high_raw": "100",
+      "flag": null
+    },
+    {
+      "test_id": "79e4a37c-3c13-4ddb-9e62-460c32b82102",
+      "panel_id": "00250468-7c27-4157-8d4c-96812899d535",
+      "row_number": 11,
+      "test_code": "HDL",
+      "test_name": "High-Density Lipoprotein",
+      "analyte_type": "lipoprotein",
+      "result_raw": "46.3",
+      "units_raw": "mg/dL",
+      "result_value_num": "46.3",
+      "result_comparator": null,
+      "ref_low_raw": "40",
+      "ref_high_raw": "100",
+      "flag": null
+    },
+    {
+      "test_id": "756fe7fc-e12d-47ed-84bb-2b92c5e40bc2",
+      "panel_id": "00250468-7c27-4157-8d4c-96812899d535",
+      "row_number": 12,
+      "test_code": "TG",
+      "test_name": "Triglycerides",
+      "analyte_type": "lipid",
+      "result_raw": "120.9",
+      "units_raw": "mg/dL",
+      "result_value_num": "120.9",
+      "result_comparator": null,
+      "ref_low_raw": "0",
+      "ref_high_raw": "150",
+      "flag": null
+    },
+    {
+      "test_id": "b66415c3-7411-4e16-a9b8-b856b0e1209c",
+      "panel_id": "859db6f8-5430-40d7-b736-5ea2ae7ded92",
+      "row_number": 13,
+      "test_code": "AST",
+      "test_name": "Aspartate Aminotransferase",
+      "analyte_type": "enzyme",
+      "result_raw": "22.3",
+      "units_raw": "U/L",
+      "result_value_num": "22.3",
+      "result_comparator": null,
+      "ref_low_raw": "10",
+      "ref_high_raw": "40",
+      "flag": null
+    },
+    {
+      "test_id": "720d0f03-b0ed-4e00-9918-0ae89d6a0ab3",
+      "panel_id": "859db6f8-5430-40d7-b736-5ea2ae7ded92",
+      "row_number": 14,
+      "test_code": "ALT",
+      "test_name": "Alanine Aminotransferase",
+      "analyte_type": "enzyme",
+      "result_raw": "40.2",
+      "units_raw": "U/L",
+      "result_value_num": "40.2",
+      "result_comparator": null,
+      "ref_low_raw": "7",
+      "ref_high_raw": "56",
+      "flag": null
+    },
+    {
+      "test_id": "c86410ff-cf2f-498f-be6d-db1fb33f6ed1",
+      "panel_id": "859db6f8-5430-40d7-b736-5ea2ae7ded92",
+      "row_number": 15,
+      "test_code": "ALP",
+      "test_name": "Alkaline Phosphatase",
+      "analyte_type": "enzyme",
+      "result_raw": "75.6",
+      "units_raw": "U/L",
+      "result_value_num": "75.6",
+      "result_comparator": null,
+      "ref_low_raw": "44",
+      "ref_high_raw": "147",
+      "flag": null
+    },
+    {
+      "test_id": "59711cce-dab2-4228-aeaf-f8d0100075c3",
+      "panel_id": "859db6f8-5430-40d7-b736-5ea2ae7ded92",
+      "row_number": 16,
+      "test_code": "TP",
+      "test_name": "Total Protein",
+      "analyte_type": "protein",
+      "result_raw": "7.3",
+      "units_raw": "g/dL",
+      "result_value_num": "7.3",
+      "result_comparator": null,
+      "ref_low_raw": "6.0",
+      "ref_high_raw": "8.3",
+      "flag": null
+    },
+    {
+      "test_id": "c9906eea-ad02-4689-80a1-97e34da858e3",
+      "panel_id": "859db6f8-5430-40d7-b736-5ea2ae7ded92",
+      "row_number": 17,
+      "test_code": "ALB",
+      "test_name": "Albumin",
+      "analyte_type": "protein",
+      "result_raw": "4.3",
+      "units_raw": "g/dL",
+      "result_value_num": "4.3",
+      "result_comparator": null,
+      "ref_low_raw": "3.5",
+      "ref_high_raw": "5.0",
+      "flag": null
+    },
+    {
+      "test_id": "f03c897f-f137-43b4-a62c-b89275efee5b",
+      "panel_id": "859db6f8-5430-40d7-b736-5ea2ae7ded92",
+      "row_number": 18,
+      "test_code": "TBIL",
+      "test_name": "Total Bilirubin",
+      "analyte_type": "bile pigment",
+      "result_raw": "0.55",
+      "units_raw": "mg/dL",
+      "result_value_num": "0.55",
+      "result_comparator": null,
+      "ref_low_raw": "0.1",
+      "ref_high_raw": "1.2",
+      "flag": null
+    }
+  ],
+  "diagnostic_report": [
+    {
+      "diagnostic_report_id": "965d6007-83ac-4a18-aa8e-696095d085b7",
+      "ingestion_id": "4f196e13-262d-4958-9016-6fa7cc75ea81",
+      "panel_id": "5741b4e2-390f-42df-915d-3610c2dbadb2",
+      "patient_id": "PAT-aa8241bf-2503-41ff-bc29-ada2690f14b6",
+      "panel_code": "BMP",
+      "effective_at": "2025-07-14T14:22:41.318452+00:00",
+      "normalized_at": "2026-07-10T21:18:08.335952+00:00",
+      "resource_json": {
+        "id": "965d6007-83ac-4a18-aa8e-696095d085b7",
+        "code": {
+          "text": "BMP",
+          "coding": [
+            {
+              "code": "BMP",
+              "system": "https://example.org/fhir/codeable-concept/panel-code",
+              "display": "BMP"
+            }
+          ]
+        },
+        "meta": {
+          "lastUpdated": "2026-07-10T21:18:08+00:00"
+        },
+        "result": [
+          {
+            "reference": "Observation/e6d0346e-5bb9-4622-9826-bfa8271f0494"
+          },
+          {
+            "reference": "Observation/ee0eca4d-dff3-47b2-8a2e-713d989f9586"
+          },
+          {
+            "reference": "Observation/faa29469-a6fd-4f38-add5-33ae2daf5512"
+          },
+          {
+            "reference": "Observation/c38eb767-c4be-474a-8ee0-192ff2b79ca3"
+          },
+          {
+            "reference": "Observation/b1799c6c-f5e2-49d1-aa8d-1fa15021442d"
+          },
+          {
+            "reference": "Observation/79606a44-9a9e-44ca-a35d-3da19919c852"
+          },
+          {
+            "reference": "Observation/9deb2f86-3f37-4ecb-b557-dc51be6363f3"
+          },
+          {
+            "reference": "Observation/67bf9cc6-e594-4b49-8370-8ca609fad728"
+          }
+        ],
+        "status": "final",
+        "subject": {
+          "reference": "Patient/PAT-aa8241bf-2503-41ff-bc29-ada2690f14b6"
+        },
+        "resourceType": "DiagnosticReport",
+        "effectiveDateTime": "2025-07-14T14:22:41+00:00"
+      },
+      "status": "FINAL"
+    },
+    {
+      "diagnostic_report_id": "09a741b1-2508-4654-8f1b-d7dc2eedd30e",
+      "ingestion_id": "4f196e13-262d-4958-9016-6fa7cc75ea81",
+      "panel_id": "a18d24cf-be16-4d4b-aafd-cbac60deb45c",
+      "patient_id": "PAT-aa8241bf-2503-41ff-bc29-ada2690f14b6",
+      "panel_code": "LIPID",
+      "effective_at": "2025-07-14T14:22:41.318452+00:00",
+      "normalized_at": "2026-07-10T21:18:08.335952+00:00",
+      "resource_json": {
+        "id": "09a741b1-2508-4654-8f1b-d7dc2eedd30e",
+        "code": {
+          "text": "LIPID",
+          "coding": [
+            {
+              "code": "LIPID",
+              "system": "https://example.org/fhir/codeable-concept/panel-code",
+              "display": "LIPID"
+            }
+          ]
+        },
+        "meta": {
+          "lastUpdated": "2026-07-10T21:18:08+00:00"
+        },
+        "result": [
+          {
+            "reference": "Observation/ee3ab055-5e43-4816-bcbd-cdb01c714a81"
+          },
+          {
+            "reference": "Observation/18987b85-4d05-4949-b452-33123d16b967"
+          },
+          {
+            "reference": "Observation/3b02cddf-10a7-42e8-9300-21b1d7a07f6f"
+          },
+          {
+            "reference": "Observation/7da5797f-0021-46a7-9a26-e0d5345a8d31"
+          }
+        ],
+        "status": "final",
+        "subject": {
+          "reference": "Patient/PAT-aa8241bf-2503-41ff-bc29-ada2690f14b6"
+        },
+        "resourceType": "DiagnosticReport",
+        "effectiveDateTime": "2025-07-14T14:22:41+00:00"
+      },
+      "status": "FINAL"
+    },
+    {
+      "diagnostic_report_id": "40b35d8c-7560-435a-9026-719f9d603ad3",
+      "ingestion_id": "4f196e13-262d-4958-9016-6fa7cc75ea81",
+      "panel_id": "02b35724-85e5-4525-9b04-c4116e6903a3",
+      "patient_id": "PAT-aa8241bf-2503-41ff-bc29-ada2690f14b6",
+      "panel_code": "LFT",
+      "effective_at": "2025-07-14T14:22:41.318452+00:00",
+      "normalized_at": "2026-07-10T21:18:08.335952+00:00",
+      "resource_json": {
+        "id": "40b35d8c-7560-435a-9026-719f9d603ad3",
+        "code": {
+          "text": "LFT",
+          "coding": [
+            {
+              "code": "LFT",
+              "system": "https://example.org/fhir/codeable-concept/panel-code",
+              "display": "LFT"
+            }
+          ]
+        },
+        "meta": {
+          "lastUpdated": "2026-07-10T21:18:08+00:00"
+        },
+        "result": [
+          {
+            "reference": "Observation/ed41f13f-2efc-48bc-9ba2-71dbef2e071d"
+          },
+          {
+            "reference": "Observation/695380fc-7199-4c46-8f79-43114fb5c277"
+          },
+          {
+            "reference": "Observation/a2856d60-8d27-4673-b288-31555b3867e2"
+          },
+          {
+            "reference": "Observation/7407b749-520a-4c5b-8863-8ee234d4571f"
+          },
+          {
+            "reference": "Observation/fe32ee5c-47f0-4b96-97fe-0920cd865054"
+          },
+          {
+            "reference": "Observation/5aeba992-6926-489d-ac29-6266e225db29"
+          }
+        ],
+        "status": "final",
+        "subject": {
+          "reference": "Patient/PAT-aa8241bf-2503-41ff-bc29-ada2690f14b6"
+        },
+        "resourceType": "DiagnosticReport",
+        "effectiveDateTime": "2025-07-14T14:22:41+00:00"
+      },
+      "status": "FINAL"
+    },
+    {
+      "diagnostic_report_id": "24f08f05-02c8-4589-860b-4b247f23c88e",
+      "ingestion_id": "ccda0fbd-2e84-4c41-a834-cfd0f10c3a29",
+      "panel_id": "96e660ce-adb1-4e2c-8bc1-73aa07e5eabd",
+      "patient_id": "PAT-aa8241bf-2503-41ff-bc29-ada2690f14b6",
+      "panel_code": "BMP",
+      "effective_at": "2025-09-08T09:47:03.884210+00:00",
+      "normalized_at": "2026-07-10T21:18:08.463779+00:00",
+      "resource_json": {
+        "id": "24f08f05-02c8-4589-860b-4b247f23c88e",
+        "code": {
+          "text": "BMP",
+          "coding": [
+            {
+              "code": "BMP",
+              "system": "https://example.org/fhir/codeable-concept/panel-code",
+              "display": "BMP"
+            }
+          ]
+        },
+        "meta": {
+          "lastUpdated": "2026-07-10T21:18:08+00:00"
+        },
+        "result": [
+          {
+            "reference": "Observation/09020725-dd91-4afe-a83d-36122823f175"
+          },
+          {
+            "reference": "Observation/792e6c31-387b-4d55-8c04-eee0dd745c1b"
+          },
+          {
+            "reference": "Observation/83e3d4a1-8f25-4a35-a8f6-c562ae6182ae"
+          },
+          {
+            "reference": "Observation/cbda0b9c-d578-4a1f-833a-70790d00dbd9"
+          },
+          {
+            "reference": "Observation/a46cce22-0387-4458-b67f-43fb7603ffc0"
+          },
+          {
+            "reference": "Observation/e6aee9ef-045e-4f7e-aefd-1e37d6519a8a"
+          },
+          {
+            "reference": "Observation/296b756e-45cb-481d-802e-62cc090e8972"
+          },
+          {
+            "reference": "Observation/692ef3eb-2b30-4092-a103-2903a35bc912"
+          }
+        ],
+        "status": "final",
+        "subject": {
+          "reference": "Patient/PAT-aa8241bf-2503-41ff-bc29-ada2690f14b6"
+        },
+        "resourceType": "DiagnosticReport",
+        "effectiveDateTime": "2025-09-08T09:47:03+00:00"
+      },
+      "status": "FINAL"
+    },
+    {
+      "diagnostic_report_id": "df27dbfc-c69c-4475-b9cc-d942ed70a71e",
+      "ingestion_id": "ccda0fbd-2e84-4c41-a834-cfd0f10c3a29",
+      "panel_id": "3f282bfa-945f-483e-949a-1fc13198103a",
+      "patient_id": "PAT-aa8241bf-2503-41ff-bc29-ada2690f14b6",
+      "panel_code": "LIPID",
+      "effective_at": "2025-09-08T09:47:03.884210+00:00",
+      "normalized_at": "2026-07-10T21:18:08.463779+00:00",
+      "resource_json": {
+        "id": "df27dbfc-c69c-4475-b9cc-d942ed70a71e",
+        "code": {
+          "text": "LIPID",
+          "coding": [
+            {
+              "code": "LIPID",
+              "system": "https://example.org/fhir/codeable-concept/panel-code",
+              "display": "LIPID"
+            }
+          ]
+        },
+        "meta": {
+          "lastUpdated": "2026-07-10T21:18:08+00:00"
+        },
+        "result": [
+          {
+            "reference": "Observation/f325b8f8-3809-4095-9672-0c3ec7c1e310"
+          },
+          {
+            "reference": "Observation/e12307e2-a496-4b34-ab7e-12725a906606"
+          },
+          {
+            "reference": "Observation/a3650350-76e7-4df8-8f61-6050921654ab"
+          },
+          {
+            "reference": "Observation/37f4e92b-7627-4d89-9767-8fb39b8836d2"
+          }
+        ],
+        "status": "final",
+        "subject": {
+          "reference": "Patient/PAT-aa8241bf-2503-41ff-bc29-ada2690f14b6"
+        },
+        "resourceType": "DiagnosticReport",
+        "effectiveDateTime": "2025-09-08T09:47:03+00:00"
+      },
+      "status": "FINAL"
+    },
+    {
+      "diagnostic_report_id": "16a95bf6-c958-43ac-b52f-0be2ab6c27e2",
+      "ingestion_id": "ccda0fbd-2e84-4c41-a834-cfd0f10c3a29",
+      "panel_id": "8c9cb9b6-ad1c-4c09-9c66-454c07d22bd6",
+      "patient_id": "PAT-aa8241bf-2503-41ff-bc29-ada2690f14b6",
+      "panel_code": "LFT",
+      "effective_at": "2025-09-08T09:47:03.884210+00:00",
+      "normalized_at": "2026-07-10T21:18:08.463779+00:00",
+      "resource_json": {
+        "id": "16a95bf6-c958-43ac-b52f-0be2ab6c27e2",
+        "code": {
+          "text": "LFT",
+          "coding": [
+            {
+              "code": "LFT",
+              "system": "https://example.org/fhir/codeable-concept/panel-code",
+              "display": "LFT"
+            }
+          ]
+        },
+        "meta": {
+          "lastUpdated": "2026-07-10T21:18:08+00:00"
+        },
+        "result": [
+          {
+            "reference": "Observation/d2d22595-1929-4879-90d2-eee8bd8389ee"
+          },
+          {
+            "reference": "Observation/2c2e53ff-3600-4a64-b3ec-221323bc4789"
+          },
+          {
+            "reference": "Observation/2fd777ed-d2bc-4233-9030-c2eb35e127ac"
+          },
+          {
+            "reference": "Observation/20109372-93b7-4804-9bef-8037faea5045"
+          },
+          {
+            "reference": "Observation/a30e43a1-fe2b-4c42-9ad4-4cb3b4ecaec6"
+          },
+          {
+            "reference": "Observation/a0e4c25b-b487-475e-a865-ab6b629499cd"
+          }
+        ],
+        "status": "final",
+        "subject": {
+          "reference": "Patient/PAT-aa8241bf-2503-41ff-bc29-ada2690f14b6"
+        },
+        "resourceType": "DiagnosticReport",
+        "effectiveDateTime": "2025-09-08T09:47:03+00:00"
+      },
+      "status": "FINAL"
+    },
+    {
+      "diagnostic_report_id": "6b09258f-b4ee-4ef8-b399-a1c4572de8b2",
+      "ingestion_id": "2eef1669-e15a-40db-9e09-36cd6511c44c",
+      "panel_id": "00250468-7c27-4157-8d4c-96812899d535",
+      "patient_id": "PAT-aa8241bf-2503-41ff-bc29-ada2690f14b6",
+      "panel_code": "LIPID",
+      "effective_at": "2026-01-15T16:05:57.229981+00:00",
+      "normalized_at": "2026-07-10T21:18:08.504242+00:00",
+      "resource_json": {
+        "id": "6b09258f-b4ee-4ef8-b399-a1c4572de8b2",
+        "code": {
+          "text": "LIPID",
+          "coding": [
+            {
+              "code": "LIPID",
+              "system": "https://example.org/fhir/codeable-concept/panel-code",
+              "display": "LIPID"
+            }
+          ]
+        },
+        "meta": {
+          "lastUpdated": "2026-07-10T21:18:08+00:00"
+        },
+        "result": [
+          {
+            "reference": "Observation/c3027813-ead4-418b-b6d6-860c8f36f752"
+          },
+          {
+            "reference": "Observation/7c8dc5e7-1887-4bc7-9a3e-1e7eba31d76d"
+          },
+          {
+            "reference": "Observation/fdeea675-d51e-4b45-a5a3-8a47cabe3e33"
+          },
+          {
+            "reference": "Observation/d2da876b-f808-4728-b953-c91f7ec42840"
+          }
+        ],
+        "status": "final",
+        "subject": {
+          "reference": "Patient/PAT-aa8241bf-2503-41ff-bc29-ada2690f14b6"
+        },
+        "resourceType": "DiagnosticReport",
+        "effectiveDateTime": "2026-01-15T16:05:57+00:00"
+      },
+      "status": "FINAL"
+    },
+    {
+      "diagnostic_report_id": "ea3b2753-c521-43e4-875f-55efaa6664e7",
+      "ingestion_id": "2eef1669-e15a-40db-9e09-36cd6511c44c",
+      "panel_id": "3fcc4384-d5bb-4df9-af10-46595fd80c41",
+      "patient_id": "PAT-aa8241bf-2503-41ff-bc29-ada2690f14b6",
+      "panel_code": "BMP",
+      "effective_at": "2026-01-15T16:05:57.229981+00:00",
+      "normalized_at": "2026-07-10T21:18:08.504242+00:00",
+      "resource_json": {
+        "id": "ea3b2753-c521-43e4-875f-55efaa6664e7",
+        "code": {
+          "text": "BMP",
+          "coding": [
+            {
+              "code": "BMP",
+              "system": "https://example.org/fhir/codeable-concept/panel-code",
+              "display": "BMP"
+            }
+          ]
+        },
+        "meta": {
+          "lastUpdated": "2026-07-10T21:18:08+00:00"
+        },
+        "result": [
+          {
+            "reference": "Observation/ca3c1ac6-d814-46a1-b343-133096484a58"
+          },
+          {
+            "reference": "Observation/b672c6a0-e6c3-4b81-8069-a7f810f5a38f"
+          },
+          {
+            "reference": "Observation/84c9d43a-a9cd-4c04-804e-6df53cd4b232"
+          },
+          {
+            "reference": "Observation/79e1dec1-5cf5-4c72-bb26-ff1374e0e44c"
+          },
+          {
+            "reference": "Observation/586e8318-6a70-4bf1-805a-7fc7a58ce2c4"
+          },
+          {
+            "reference": "Observation/045a40de-e242-4dc9-86d9-5764a81e3fbb"
+          },
+          {
+            "reference": "Observation/502dd443-7703-430e-ab45-9ff18d695b16"
+          },
+          {
+            "reference": "Observation/e0e58bca-0013-4c1f-906d-d4d3e1ccbd60"
+          }
+        ],
+        "status": "final",
+        "subject": {
+          "reference": "Patient/PAT-aa8241bf-2503-41ff-bc29-ada2690f14b6"
+        },
+        "resourceType": "DiagnosticReport",
+        "effectiveDateTime": "2026-01-15T16:05:57+00:00"
+      },
+      "status": "FINAL"
+    },
+    {
+      "diagnostic_report_id": "41a3f033-4c35-48e5-aecd-7e490fe191ce",
+      "ingestion_id": "2eef1669-e15a-40db-9e09-36cd6511c44c",
+      "panel_id": "859db6f8-5430-40d7-b736-5ea2ae7ded92",
+      "patient_id": "PAT-aa8241bf-2503-41ff-bc29-ada2690f14b6",
+      "panel_code": "LFT",
+      "effective_at": "2026-01-15T16:05:57.229981+00:00",
+      "normalized_at": "2026-07-10T21:18:08.504242+00:00",
+      "resource_json": {
+        "id": "41a3f033-4c35-48e5-aecd-7e490fe191ce",
+        "code": {
+          "text": "LFT",
+          "coding": [
+            {
+              "code": "LFT",
+              "system": "https://example.org/fhir/codeable-concept/panel-code",
+              "display": "LFT"
+            }
+          ]
+        },
+        "meta": {
+          "lastUpdated": "2026-07-10T21:18:08+00:00"
+        },
+        "result": [
+          {
+            "reference": "Observation/c1087826-ba04-4fd9-b924-7f653fa363f0"
+          },
+          {
+            "reference": "Observation/8b2a354c-3b2c-4b87-97b0-81c1a4f043c0"
+          },
+          {
+            "reference": "Observation/d8f9e6aa-00e5-46c6-9ad0-6fda2425664c"
+          },
+          {
+            "reference": "Observation/4018b2ce-3833-4b5a-93aa-4c7f4de7e617"
+          },
+          {
+            "reference": "Observation/467091c7-ad02-4182-80e4-7485dbff0392"
+          },
+          {
+            "reference": "Observation/abd85032-26e6-4056-ab1f-b3d0992a021b"
+          }
+        ],
+        "status": "final",
+        "subject": {
+          "reference": "Patient/PAT-aa8241bf-2503-41ff-bc29-ada2690f14b6"
+        },
+        "resourceType": "DiagnosticReport",
+        "effectiveDateTime": "2026-01-15T16:05:57+00:00"
+      },
+      "status": "FINAL"
+    }
+  ],
+  "observation": [
+    {
+      "observation_id": "e6d0346e-5bb9-4622-9826-bfa8271f0494",
+      "test_id": "232f1140-6f3c-4743-8a1e-62d2b5a0ae73",
+      "diagnostic_report_id": "965d6007-83ac-4a18-aa8e-696095d085b7",
+      "ingestion_id": "4f196e13-262d-4958-9016-6fa7cc75ea81",
+      "patient_id": "PAT-aa8241bf-2503-41ff-bc29-ada2690f14b6",
+      "code": "Ca",
+      "display": "Calcium",
+      "effective_at": "2025-07-14T14:22:41.318452+00:00",
+      "normalized_at": "2026-07-10T21:18:08.335952+00:00",
+      "value_num": "9.3",
+      "value_text": null,
+      "comparator": null,
+      "unit": "mg/dL",
+      "ref_low_num": "8.6",
+      "ref_high_num": "10.2",
+      "flag_analyzer_interpretation": null,
+      "flag_system_interpretation": "NORMAL",
+      "discrepancy": null,
+      "status": "FINAL",
+      "resource_json": {
+        "id": "e6d0346e-5bb9-4622-9826-bfa8271f0494",
+        "code": {
+          "text": "Calcium",
+          "coding": [
+            {
+              "code": "Ca",
+              "system": "https://example.org/fhir/code-system/canonical-analyte",
+              "display": "Calcium"
+            }
+          ]
+        },
+        "meta": {
+          "lastUpdated": "2026-07-10T21:18:08+00:00"
+        },
+        "status": "final",
+        "subject": {
+          "reference": "Patient/PAT-aa8241bf-2503-41ff-bc29-ada2690f14b6"
+        },
+        "resourceType": "Observation",
+        "valueQuantity": {
+          "code": "mg/dL",
+          "unit": "mg/dL",
+          "value": 9.3,
+          "system": "http://unitsofmeasure.org"
+        },
+        "interpretation": [
+          {
+            "text": "NORMAL",
+            "coding": [
+              {
+                "code": "NORMAL",
+                "system": "https://example.org/fhir/flag-system/lab-flag",
+                "display": "NORMAL"
+              }
+            ]
+          }
+        ],
+        "referenceRange": [
+          {
+            "low": {
+              "code": "mg/dL",
+              "unit": "mg/dL",
+              "value": 8.6,
+              "system": "http://unitsofmeasure.org"
+            },
+            "high": {
+              "code": "mg/dL",
+              "unit": "mg/dL",
+              "value": 10.2,
+              "system": "http://unitsofmeasure.org"
+            }
+          }
+        ],
+        "effectiveDateTime": "2025-07-14T14:22:41+00:00"
+      }
+    },
+    {
+      "observation_id": "ee0eca4d-dff3-47b2-8a2e-713d989f9586",
+      "test_id": "25fe994e-7bed-40b2-b3ff-b72f54d05899",
+      "diagnostic_report_id": "965d6007-83ac-4a18-aa8e-696095d085b7",
+      "ingestion_id": "4f196e13-262d-4958-9016-6fa7cc75ea81",
+      "patient_id": "PAT-aa8241bf-2503-41ff-bc29-ada2690f14b6",
+      "code": "Cr",
+      "display": "Creatinine",
+      "effective_at": "2025-07-14T14:22:41.318452+00:00",
+      "normalized_at": "2026-07-10T21:18:08.335952+00:00",
+      "value_num": "0.85",
+      "value_text": null,
+      "comparator": null,
+      "unit": "mg/dL",
+      "ref_low_num": "0.6",
+      "ref_high_num": "1.3",
+      "flag_analyzer_interpretation": null,
+      "flag_system_interpretation": "NORMAL",
+      "discrepancy": null,
+      "status": "FINAL",
+      "resource_json": {
+        "id": "ee0eca4d-dff3-47b2-8a2e-713d989f9586",
+        "code": {
+          "text": "Creatinine",
+          "coding": [
+            {
+              "code": "Cr",
+              "system": "https://example.org/fhir/code-system/canonical-analyte",
+              "display": "Creatinine"
+            }
+          ]
+        },
+        "meta": {
+          "lastUpdated": "2026-07-10T21:18:08+00:00"
+        },
+        "status": "final",
+        "subject": {
+          "reference": "Patient/PAT-aa8241bf-2503-41ff-bc29-ada2690f14b6"
+        },
+        "resourceType": "Observation",
+        "valueQuantity": {
+          "code": "mg/dL",
+          "unit": "mg/dL",
+          "value": 0.85,
+          "system": "http://unitsofmeasure.org"
+        },
+        "interpretation": [
+          {
+            "text": "NORMAL",
+            "coding": [
+              {
+                "code": "NORMAL",
+                "system": "https://example.org/fhir/flag-system/lab-flag",
+                "display": "NORMAL"
+              }
+            ]
+          }
+        ],
+        "referenceRange": [
+          {
+            "low": {
+              "code": "mg/dL",
+              "unit": "mg/dL",
+              "value": 0.6,
+              "system": "http://unitsofmeasure.org"
+            },
+            "high": {
+              "code": "mg/dL",
+              "unit": "mg/dL",
+              "value": 1.3,
+              "system": "http://unitsofmeasure.org"
+            }
+          }
+        ],
+        "effectiveDateTime": "2025-07-14T14:22:41+00:00"
+      }
+    },
+    {
+      "observation_id": "faa29469-a6fd-4f38-add5-33ae2daf5512",
+      "test_id": "4cbaf30b-22a8-4dcd-927a-7da8075cc4d4",
+      "diagnostic_report_id": "965d6007-83ac-4a18-aa8e-696095d085b7",
+      "ingestion_id": "4f196e13-262d-4958-9016-6fa7cc75ea81",
+      "patient_id": "PAT-aa8241bf-2503-41ff-bc29-ada2690f14b6",
+      "code": "GLU",
+      "display": "Glucose",
+      "effective_at": "2025-07-14T14:22:41.318452+00:00",
+      "normalized_at": "2026-07-10T21:18:08.335952+00:00",
+      "value_num": "92.4",
+      "value_text": null,
+      "comparator": null,
+      "unit": "mg/dL",
+      "ref_low_num": "70",
+      "ref_high_num": "99",
+      "flag_analyzer_interpretation": null,
+      "flag_system_interpretation": "NORMAL",
+      "discrepancy": null,
+      "status": "FINAL",
+      "resource_json": {
+        "id": "faa29469-a6fd-4f38-add5-33ae2daf5512",
+        "code": {
+          "text": "Glucose",
+          "coding": [
+            {
+              "code": "GLU",
+              "system": "https://example.org/fhir/code-system/canonical-analyte",
+              "display": "Glucose"
+            }
+          ]
+        },
+        "meta": {
+          "lastUpdated": "2026-07-10T21:18:08+00:00"
+        },
+        "status": "final",
+        "subject": {
+          "reference": "Patient/PAT-aa8241bf-2503-41ff-bc29-ada2690f14b6"
+        },
+        "resourceType": "Observation",
+        "valueQuantity": {
+          "code": "mg/dL",
+          "unit": "mg/dL",
+          "value": 92.4,
+          "system": "http://unitsofmeasure.org"
+        },
+        "interpretation": [
+          {
+            "text": "NORMAL",
+            "coding": [
+              {
+                "code": "NORMAL",
+                "system": "https://example.org/fhir/flag-system/lab-flag",
+                "display": "NORMAL"
+              }
+            ]
+          }
+        ],
+        "referenceRange": [
+          {
+            "low": {
+              "code": "mg/dL",
+              "unit": "mg/dL",
+              "value": 70.0,
+              "system": "http://unitsofmeasure.org"
+            },
+            "high": {
+              "code": "mg/dL",
+              "unit": "mg/dL",
+              "value": 99.0,
+              "system": "http://unitsofmeasure.org"
+            }
+          }
+        ],
+        "effectiveDateTime": "2025-07-14T14:22:41+00:00"
+      }
+    },
+    {
+      "observation_id": "c38eb767-c4be-474a-8ee0-192ff2b79ca3",
+      "test_id": "609833e9-437c-4565-b9ec-0b40218afea3",
+      "diagnostic_report_id": "965d6007-83ac-4a18-aa8e-696095d085b7",
+      "ingestion_id": "4f196e13-262d-4958-9016-6fa7cc75ea81",
+      "patient_id": "PAT-aa8241bf-2503-41ff-bc29-ada2690f14b6",
+      "code": "Na",
+      "display": "Sodium",
+      "effective_at": "2025-07-14T14:22:41.318452+00:00",
+      "normalized_at": "2026-07-10T21:18:08.335952+00:00",
+      "value_num": "139.4",
+      "value_text": null,
+      "comparator": null,
+      "unit": "mEq/L",
+      "ref_low_num": "135",
+      "ref_high_num": "145",
+      "flag_analyzer_interpretation": null,
+      "flag_system_interpretation": "NORMAL",
+      "discrepancy": null,
+      "status": "FINAL",
+      "resource_json": {
+        "id": "c38eb767-c4be-474a-8ee0-192ff2b79ca3",
+        "code": {
+          "text": "Sodium",
+          "coding": [
+            {
+              "code": "Na",
+              "system": "https://example.org/fhir/code-system/canonical-analyte",
+              "display": "Sodium"
+            }
+          ]
+        },
+        "meta": {
+          "lastUpdated": "2026-07-10T21:18:08+00:00"
+        },
+        "status": "final",
+        "subject": {
+          "reference": "Patient/PAT-aa8241bf-2503-41ff-bc29-ada2690f14b6"
+        },
+        "resourceType": "Observation",
+        "valueQuantity": {
+          "code": "mEq/L",
+          "unit": "mEq/L",
+          "value": 139.4,
+          "system": "http://unitsofmeasure.org"
+        },
+        "interpretation": [
+          {
+            "text": "NORMAL",
+            "coding": [
+              {
+                "code": "NORMAL",
+                "system": "https://example.org/fhir/flag-system/lab-flag",
+                "display": "NORMAL"
+              }
+            ]
+          }
+        ],
+        "referenceRange": [
+          {
+            "low": {
+              "code": "mEq/L",
+              "unit": "mEq/L",
+              "value": 135.0,
+              "system": "http://unitsofmeasure.org"
+            },
+            "high": {
+              "code": "mEq/L",
+              "unit": "mEq/L",
+              "value": 145.0,
+              "system": "http://unitsofmeasure.org"
+            }
+          }
+        ],
+        "effectiveDateTime": "2025-07-14T14:22:41+00:00"
+      }
+    },
+    {
+      "observation_id": "b1799c6c-f5e2-49d1-aa8d-1fa15021442d",
+      "test_id": "84c4a55e-9b3a-4a4f-ac15-4baf62d53fa8",
+      "diagnostic_report_id": "965d6007-83ac-4a18-aa8e-696095d085b7",
+      "ingestion_id": "4f196e13-262d-4958-9016-6fa7cc75ea81",
+      "patient_id": "PAT-aa8241bf-2503-41ff-bc29-ada2690f14b6",
+      "code": "Cl",
+      "display": "Chloride",
+      "effective_at": "2025-07-14T14:22:41.318452+00:00",
+      "normalized_at": "2026-07-10T21:18:08.335952+00:00",
+      "value_num": "101.2",
+      "value_text": null,
+      "comparator": null,
+      "unit": "mEq/L",
+      "ref_low_num": "98",
+      "ref_high_num": "107",
+      "flag_analyzer_interpretation": null,
+      "flag_system_interpretation": "NORMAL",
+      "discrepancy": null,
+      "status": "FINAL",
+      "resource_json": {
+        "id": "b1799c6c-f5e2-49d1-aa8d-1fa15021442d",
+        "code": {
+          "text": "Chloride",
+          "coding": [
+            {
+              "code": "Cl",
+              "system": "https://example.org/fhir/code-system/canonical-analyte",
+              "display": "Chloride"
+            }
+          ]
+        },
+        "meta": {
+          "lastUpdated": "2026-07-10T21:18:08+00:00"
+        },
+        "status": "final",
+        "subject": {
+          "reference": "Patient/PAT-aa8241bf-2503-41ff-bc29-ada2690f14b6"
+        },
+        "resourceType": "Observation",
+        "valueQuantity": {
+          "code": "mEq/L",
+          "unit": "mEq/L",
+          "value": 101.2,
+          "system": "http://unitsofmeasure.org"
+        },
+        "interpretation": [
+          {
+            "text": "NORMAL",
+            "coding": [
+              {
+                "code": "NORMAL",
+                "system": "https://example.org/fhir/flag-system/lab-flag",
+                "display": "NORMAL"
+              }
+            ]
+          }
+        ],
+        "referenceRange": [
+          {
+            "low": {
+              "code": "mEq/L",
+              "unit": "mEq/L",
+              "value": 98.0,
+              "system": "http://unitsofmeasure.org"
+            },
+            "high": {
+              "code": "mEq/L",
+              "unit": "mEq/L",
+              "value": 107.0,
+              "system": "http://unitsofmeasure.org"
+            }
+          }
+        ],
+        "effectiveDateTime": "2025-07-14T14:22:41+00:00"
+      }
+    },
+    {
+      "observation_id": "79606a44-9a9e-44ca-a35d-3da19919c852",
+      "test_id": "bff3f620-6d0f-4aa0-98cd-694b0950217c",
+      "diagnostic_report_id": "965d6007-83ac-4a18-aa8e-696095d085b7",
+      "ingestion_id": "4f196e13-262d-4958-9016-6fa7cc75ea81",
+      "patient_id": "PAT-aa8241bf-2503-41ff-bc29-ada2690f14b6",
+      "code": "K",
+      "display": "Potassium",
+      "effective_at": "2025-07-14T14:22:41.318452+00:00",
+      "normalized_at": "2026-07-10T21:18:08.335952+00:00",
+      "value_num": "4.1",
+      "value_text": null,
+      "comparator": null,
+      "unit": "mEq/L",
+      "ref_low_num": "3.5",
+      "ref_high_num": "5.1",
+      "flag_analyzer_interpretation": null,
+      "flag_system_interpretation": "NORMAL",
+      "discrepancy": null,
+      "status": "FINAL",
+      "resource_json": {
+        "id": "79606a44-9a9e-44ca-a35d-3da19919c852",
+        "code": {
+          "text": "Potassium",
+          "coding": [
+            {
+              "code": "K",
+              "system": "https://example.org/fhir/code-system/canonical-analyte",
+              "display": "Potassium"
+            }
+          ]
+        },
+        "meta": {
+          "lastUpdated": "2026-07-10T21:18:08+00:00"
+        },
+        "status": "final",
+        "subject": {
+          "reference": "Patient/PAT-aa8241bf-2503-41ff-bc29-ada2690f14b6"
+        },
+        "resourceType": "Observation",
+        "valueQuantity": {
+          "code": "mEq/L",
+          "unit": "mEq/L",
+          "value": 4.1,
+          "system": "http://unitsofmeasure.org"
+        },
+        "interpretation": [
+          {
+            "text": "NORMAL",
+            "coding": [
+              {
+                "code": "NORMAL",
+                "system": "https://example.org/fhir/flag-system/lab-flag",
+                "display": "NORMAL"
+              }
+            ]
+          }
+        ],
+        "referenceRange": [
+          {
+            "low": {
+              "code": "mEq/L",
+              "unit": "mEq/L",
+              "value": 3.5,
+              "system": "http://unitsofmeasure.org"
+            },
+            "high": {
+              "code": "mEq/L",
+              "unit": "mEq/L",
+              "value": 5.1,
+              "system": "http://unitsofmeasure.org"
+            }
+          }
+        ],
+        "effectiveDateTime": "2025-07-14T14:22:41+00:00"
+      }
+    },
+    {
+      "observation_id": "9deb2f86-3f37-4ecb-b557-dc51be6363f3",
+      "test_id": "d9a698fe-57a1-43f9-89d5-f099c89e9603",
+      "diagnostic_report_id": "965d6007-83ac-4a18-aa8e-696095d085b7",
+      "ingestion_id": "4f196e13-262d-4958-9016-6fa7cc75ea81",
+      "patient_id": "PAT-aa8241bf-2503-41ff-bc29-ada2690f14b6",
+      "code": "HCO3",
+      "display": "Bicarbonate",
+      "effective_at": "2025-07-14T14:22:41.318452+00:00",
+      "normalized_at": "2026-07-10T21:18:08.335952+00:00",
+      "value_num": "25.6",
+      "value_text": null,
+      "comparator": null,
+      "unit": "mEq/L",
+      "ref_low_num": "22",
+      "ref_high_num": "29",
+      "flag_analyzer_interpretation": null,
+      "flag_system_interpretation": "NORMAL",
+      "discrepancy": null,
+      "status": "FINAL",
+      "resource_json": {
+        "id": "9deb2f86-3f37-4ecb-b557-dc51be6363f3",
+        "code": {
+          "text": "Bicarbonate",
+          "coding": [
+            {
+              "code": "HCO3",
+              "system": "https://example.org/fhir/code-system/canonical-analyte",
+              "display": "Bicarbonate"
+            }
+          ]
+        },
+        "meta": {
+          "lastUpdated": "2026-07-10T21:18:08+00:00"
+        },
+        "status": "final",
+        "subject": {
+          "reference": "Patient/PAT-aa8241bf-2503-41ff-bc29-ada2690f14b6"
+        },
+        "resourceType": "Observation",
+        "valueQuantity": {
+          "code": "mEq/L",
+          "unit": "mEq/L",
+          "value": 25.6,
+          "system": "http://unitsofmeasure.org"
+        },
+        "interpretation": [
+          {
+            "text": "NORMAL",
+            "coding": [
+              {
+                "code": "NORMAL",
+                "system": "https://example.org/fhir/flag-system/lab-flag",
+                "display": "NORMAL"
+              }
+            ]
+          }
+        ],
+        "referenceRange": [
+          {
+            "low": {
+              "code": "mEq/L",
+              "unit": "mEq/L",
+              "value": 22.0,
+              "system": "http://unitsofmeasure.org"
+            },
+            "high": {
+              "code": "mEq/L",
+              "unit": "mEq/L",
+              "value": 29.0,
+              "system": "http://unitsofmeasure.org"
+            }
+          }
+        ],
+        "effectiveDateTime": "2025-07-14T14:22:41+00:00"
+      }
+    },
+    {
+      "observation_id": "67bf9cc6-e594-4b49-8370-8ca609fad728",
+      "test_id": "edbcec16-eaef-4699-85f3-3749d23a1d06",
+      "diagnostic_report_id": "965d6007-83ac-4a18-aa8e-696095d085b7",
+      "ingestion_id": "4f196e13-262d-4958-9016-6fa7cc75ea81",
+      "patient_id": "PAT-aa8241bf-2503-41ff-bc29-ada2690f14b6",
+      "code": "BUN",
+      "display": "Blood Urea Nitrogen",
+      "effective_at": "2025-07-14T14:22:41.318452+00:00",
+      "normalized_at": "2026-07-10T21:18:08.335952+00:00",
+      "value_num": "14.3",
+      "value_text": null,
+      "comparator": null,
+      "unit": "mg/dL",
+      "ref_low_num": "7",
+      "ref_high_num": "20",
+      "flag_analyzer_interpretation": null,
+      "flag_system_interpretation": "NORMAL",
+      "discrepancy": null,
+      "status": "FINAL",
+      "resource_json": {
+        "id": "67bf9cc6-e594-4b49-8370-8ca609fad728",
+        "code": {
+          "text": "Blood Urea Nitrogen",
+          "coding": [
+            {
+              "code": "BUN",
+              "system": "https://example.org/fhir/code-system/canonical-analyte",
+              "display": "Blood Urea Nitrogen"
+            }
+          ]
+        },
+        "meta": {
+          "lastUpdated": "2026-07-10T21:18:08+00:00"
+        },
+        "status": "final",
+        "subject": {
+          "reference": "Patient/PAT-aa8241bf-2503-41ff-bc29-ada2690f14b6"
+        },
+        "resourceType": "Observation",
+        "valueQuantity": {
+          "code": "mg/dL",
+          "unit": "mg/dL",
+          "value": 14.3,
+          "system": "http://unitsofmeasure.org"
+        },
+        "interpretation": [
+          {
+            "text": "NORMAL",
+            "coding": [
+              {
+                "code": "NORMAL",
+                "system": "https://example.org/fhir/flag-system/lab-flag",
+                "display": "NORMAL"
+              }
+            ]
+          }
+        ],
+        "referenceRange": [
+          {
+            "low": {
+              "code": "mg/dL",
+              "unit": "mg/dL",
+              "value": 7.0,
+              "system": "http://unitsofmeasure.org"
+            },
+            "high": {
+              "code": "mg/dL",
+              "unit": "mg/dL",
+              "value": 20.0,
+              "system": "http://unitsofmeasure.org"
+            }
+          }
+        ],
+        "effectiveDateTime": "2025-07-14T14:22:41+00:00"
+      }
+    },
+    {
+      "observation_id": "ee3ab055-5e43-4816-bcbd-cdb01c714a81",
+      "test_id": "25ef0d0e-315d-48b0-9ab7-335e870d7a3f",
+      "diagnostic_report_id": "09a741b1-2508-4654-8f1b-d7dc2eedd30e",
+      "ingestion_id": "4f196e13-262d-4958-9016-6fa7cc75ea81",
+      "patient_id": "PAT-aa8241bf-2503-41ff-bc29-ada2690f14b6",
+      "code": "TC",
+      "display": "Total Cholesterol",
+      "effective_at": "2025-07-14T14:22:41.318452+00:00",
+      "normalized_at": "2026-07-10T21:18:08.335952+00:00",
+      "value_num": "235.8",
+      "value_text": null,
+      "comparator": null,
+      "unit": "mg/dL",
+      "ref_low_num": "0",
+      "ref_high_num": "200",
+      "flag_analyzer_interpretation": "H",
+      "flag_system_interpretation": "HIGH",
+      "discrepancy": null,
+      "status": "FINAL",
+      "resource_json": {
+        "id": "ee3ab055-5e43-4816-bcbd-cdb01c714a81",
+        "code": {
+          "text": "Total Cholesterol",
+          "coding": [
+            {
+              "code": "TC",
+              "system": "https://example.org/fhir/code-system/canonical-analyte",
+              "display": "Total Cholesterol"
+            }
+          ]
+        },
+        "meta": {
+          "lastUpdated": "2026-07-10T21:18:08+00:00"
+        },
+        "note": [
+          {
+            "text": "Analyzer interpretation flag: H"
+          }
+        ],
+        "status": "final",
+        "subject": {
+          "reference": "Patient/PAT-aa8241bf-2503-41ff-bc29-ada2690f14b6"
+        },
+        "resourceType": "Observation",
+        "valueQuantity": {
+          "code": "mg/dL",
+          "unit": "mg/dL",
+          "value": 235.8,
+          "system": "http://unitsofmeasure.org"
+        },
+        "interpretation": [
+          {
+            "text": "HIGH",
+            "coding": [
+              {
+                "code": "HIGH",
+                "system": "https://example.org/fhir/flag-system/lab-flag",
+                "display": "HIGH"
+              }
+            ]
+          }
+        ],
+        "referenceRange": [
+          {
+            "low": {
+              "code": "mg/dL",
+              "unit": "mg/dL",
+              "value": 0.0,
+              "system": "http://unitsofmeasure.org"
+            },
+            "high": {
+              "code": "mg/dL",
+              "unit": "mg/dL",
+              "value": 200.0,
+              "system": "http://unitsofmeasure.org"
+            }
+          }
+        ],
+        "effectiveDateTime": "2025-07-14T14:22:41+00:00"
+      }
+    },
+    {
+      "observation_id": "18987b85-4d05-4949-b452-33123d16b967",
+      "test_id": "4f8bcc29-c3a2-4fe9-81aa-906867416087",
+      "diagnostic_report_id": "09a741b1-2508-4654-8f1b-d7dc2eedd30e",
+      "ingestion_id": "4f196e13-262d-4958-9016-6fa7cc75ea81",
+      "patient_id": "PAT-aa8241bf-2503-41ff-bc29-ada2690f14b6",
+      "code": "LDL",
+      "display": "Low-Density Lipoprotein",
+      "effective_at": "2025-07-14T14:22:41.318452+00:00",
+      "normalized_at": "2026-07-10T21:18:08.335952+00:00",
+      "value_num": "155.3",
+      "value_text": null,
+      "comparator": null,
+      "unit": "mg/dL",
+      "ref_low_num": "0",
+      "ref_high_num": "100",
+      "flag_analyzer_interpretation": "H",
+      "flag_system_interpretation": "HIGH",
+      "discrepancy": null,
+      "status": "FINAL",
+      "resource_json": {
+        "id": "18987b85-4d05-4949-b452-33123d16b967",
+        "code": {
+          "text": "Low-Density Lipoprotein",
+          "coding": [
+            {
+              "code": "LDL",
+              "system": "https://example.org/fhir/code-system/canonical-analyte",
+              "display": "Low-Density Lipoprotein"
+            }
+          ]
+        },
+        "meta": {
+          "lastUpdated": "2026-07-10T21:18:08+00:00"
+        },
+        "note": [
+          {
+            "text": "Analyzer interpretation flag: H"
+          }
+        ],
+        "status": "final",
+        "subject": {
+          "reference": "Patient/PAT-aa8241bf-2503-41ff-bc29-ada2690f14b6"
+        },
+        "resourceType": "Observation",
+        "valueQuantity": {
+          "code": "mg/dL",
+          "unit": "mg/dL",
+          "value": 155.3,
+          "system": "http://unitsofmeasure.org"
+        },
+        "interpretation": [
+          {
+            "text": "HIGH",
+            "coding": [
+              {
+                "code": "HIGH",
+                "system": "https://example.org/fhir/flag-system/lab-flag",
+                "display": "HIGH"
+              }
+            ]
+          }
+        ],
+        "referenceRange": [
+          {
+            "low": {
+              "code": "mg/dL",
+              "unit": "mg/dL",
+              "value": 0.0,
+              "system": "http://unitsofmeasure.org"
+            },
+            "high": {
+              "code": "mg/dL",
+              "unit": "mg/dL",
+              "value": 100.0,
+              "system": "http://unitsofmeasure.org"
+            }
+          }
+        ],
+        "effectiveDateTime": "2025-07-14T14:22:41+00:00"
+      }
+    },
+    {
+      "observation_id": "3b02cddf-10a7-42e8-9300-21b1d7a07f6f",
+      "test_id": "5009ead8-5984-4c8a-b4a2-f39bb62668e6",
+      "diagnostic_report_id": "09a741b1-2508-4654-8f1b-d7dc2eedd30e",
+      "ingestion_id": "4f196e13-262d-4958-9016-6fa7cc75ea81",
+      "patient_id": "PAT-aa8241bf-2503-41ff-bc29-ada2690f14b6",
+      "code": "HDL",
+      "display": "High-Density Lipoprotein",
+      "effective_at": "2025-07-14T14:22:41.318452+00:00",
+      "normalized_at": "2026-07-10T21:18:08.335952+00:00",
+      "value_num": "42.1",
+      "value_text": null,
+      "comparator": null,
+      "unit": "mg/dL",
+      "ref_low_num": "40",
+      "ref_high_num": "100",
+      "flag_analyzer_interpretation": null,
+      "flag_system_interpretation": "NORMAL",
+      "discrepancy": null,
+      "status": "FINAL",
+      "resource_json": {
+        "id": "3b02cddf-10a7-42e8-9300-21b1d7a07f6f",
+        "code": {
+          "text": "High-Density Lipoprotein",
+          "coding": [
+            {
+              "code": "HDL",
+              "system": "https://example.org/fhir/code-system/canonical-analyte",
+              "display": "High-Density Lipoprotein"
+            }
+          ]
+        },
+        "meta": {
+          "lastUpdated": "2026-07-10T21:18:08+00:00"
+        },
+        "status": "final",
+        "subject": {
+          "reference": "Patient/PAT-aa8241bf-2503-41ff-bc29-ada2690f14b6"
+        },
+        "resourceType": "Observation",
+        "valueQuantity": {
+          "code": "mg/dL",
+          "unit": "mg/dL",
+          "value": 42.1,
+          "system": "http://unitsofmeasure.org"
+        },
+        "interpretation": [
+          {
+            "text": "NORMAL",
+            "coding": [
+              {
+                "code": "NORMAL",
+                "system": "https://example.org/fhir/flag-system/lab-flag",
+                "display": "NORMAL"
+              }
+            ]
+          }
+        ],
+        "referenceRange": [
+          {
+            "low": {
+              "code": "mg/dL",
+              "unit": "mg/dL",
+              "value": 40.0,
+              "system": "http://unitsofmeasure.org"
+            },
+            "high": {
+              "code": "mg/dL",
+              "unit": "mg/dL",
+              "value": 100.0,
+              "system": "http://unitsofmeasure.org"
+            }
+          }
+        ],
+        "effectiveDateTime": "2025-07-14T14:22:41+00:00"
+      }
+    },
+    {
+      "observation_id": "7da5797f-0021-46a7-9a26-e0d5345a8d31",
+      "test_id": "7d6e2c39-a802-48b8-8401-9eb886ca1be4",
+      "diagnostic_report_id": "09a741b1-2508-4654-8f1b-d7dc2eedd30e",
+      "ingestion_id": "4f196e13-262d-4958-9016-6fa7cc75ea81",
+      "patient_id": "PAT-aa8241bf-2503-41ff-bc29-ada2690f14b6",
+      "code": "TG",
+      "display": "Triglycerides",
+      "effective_at": "2025-07-14T14:22:41.318452+00:00",
+      "normalized_at": "2026-07-10T21:18:08.335952+00:00",
+      "value_num": "140.6",
+      "value_text": null,
+      "comparator": null,
+      "unit": "mg/dL",
+      "ref_low_num": "0",
+      "ref_high_num": "150",
+      "flag_analyzer_interpretation": null,
+      "flag_system_interpretation": "NORMAL",
+      "discrepancy": null,
+      "status": "FINAL",
+      "resource_json": {
+        "id": "7da5797f-0021-46a7-9a26-e0d5345a8d31",
+        "code": {
+          "text": "Triglycerides",
+          "coding": [
+            {
+              "code": "TG",
+              "system": "https://example.org/fhir/code-system/canonical-analyte",
+              "display": "Triglycerides"
+            }
+          ]
+        },
+        "meta": {
+          "lastUpdated": "2026-07-10T21:18:08+00:00"
+        },
+        "status": "final",
+        "subject": {
+          "reference": "Patient/PAT-aa8241bf-2503-41ff-bc29-ada2690f14b6"
+        },
+        "resourceType": "Observation",
+        "valueQuantity": {
+          "code": "mg/dL",
+          "unit": "mg/dL",
+          "value": 140.6,
+          "system": "http://unitsofmeasure.org"
+        },
+        "interpretation": [
+          {
+            "text": "NORMAL",
+            "coding": [
+              {
+                "code": "NORMAL",
+                "system": "https://example.org/fhir/flag-system/lab-flag",
+                "display": "NORMAL"
+              }
+            ]
+          }
+        ],
+        "referenceRange": [
+          {
+            "low": {
+              "code": "mg/dL",
+              "unit": "mg/dL",
+              "value": 0.0,
+              "system": "http://unitsofmeasure.org"
+            },
+            "high": {
+              "code": "mg/dL",
+              "unit": "mg/dL",
+              "value": 150.0,
+              "system": "http://unitsofmeasure.org"
+            }
+          }
+        ],
+        "effectiveDateTime": "2025-07-14T14:22:41+00:00"
+      }
+    },
+    {
+      "observation_id": "ed41f13f-2efc-48bc-9ba2-71dbef2e071d",
+      "test_id": "48210c2f-cb44-414a-8c74-a92927b0d1f0",
+      "diagnostic_report_id": "40b35d8c-7560-435a-9026-719f9d603ad3",
+      "ingestion_id": "4f196e13-262d-4958-9016-6fa7cc75ea81",
+      "patient_id": "PAT-aa8241bf-2503-41ff-bc29-ada2690f14b6",
+      "code": "TBIL",
+      "display": "Total Bilirubin",
+      "effective_at": "2025-07-14T14:22:41.318452+00:00",
+      "normalized_at": "2026-07-10T21:18:08.335952+00:00",
+      "value_num": "0.6",
+      "value_text": null,
+      "comparator": null,
+      "unit": "mg/dL",
+      "ref_low_num": "0.1",
+      "ref_high_num": "1.2",
+      "flag_analyzer_interpretation": null,
+      "flag_system_interpretation": "NORMAL",
+      "discrepancy": null,
+      "status": "FINAL",
+      "resource_json": {
+        "id": "ed41f13f-2efc-48bc-9ba2-71dbef2e071d",
+        "code": {
+          "text": "Total Bilirubin",
+          "coding": [
+            {
+              "code": "TBIL",
+              "system": "https://example.org/fhir/code-system/canonical-analyte",
+              "display": "Total Bilirubin"
+            }
+          ]
+        },
+        "meta": {
+          "lastUpdated": "2026-07-10T21:18:08+00:00"
+        },
+        "status": "final",
+        "subject": {
+          "reference": "Patient/PAT-aa8241bf-2503-41ff-bc29-ada2690f14b6"
+        },
+        "resourceType": "Observation",
+        "valueQuantity": {
+          "code": "mg/dL",
+          "unit": "mg/dL",
+          "value": 0.6,
+          "system": "http://unitsofmeasure.org"
+        },
+        "interpretation": [
+          {
+            "text": "NORMAL",
+            "coding": [
+              {
+                "code": "NORMAL",
+                "system": "https://example.org/fhir/flag-system/lab-flag",
+                "display": "NORMAL"
+              }
+            ]
+          }
+        ],
+        "referenceRange": [
+          {
+            "low": {
+              "code": "mg/dL",
+              "unit": "mg/dL",
+              "value": 0.1,
+              "system": "http://unitsofmeasure.org"
+            },
+            "high": {
+              "code": "mg/dL",
+              "unit": "mg/dL",
+              "value": 1.2,
+              "system": "http://unitsofmeasure.org"
+            }
+          }
+        ],
+        "effectiveDateTime": "2025-07-14T14:22:41+00:00"
+      }
+    },
+    {
+      "observation_id": "695380fc-7199-4c46-8f79-43114fb5c277",
+      "test_id": "6b54aa73-2ee7-4f1c-a89b-9b7461fbc5c6",
+      "diagnostic_report_id": "40b35d8c-7560-435a-9026-719f9d603ad3",
+      "ingestion_id": "4f196e13-262d-4958-9016-6fa7cc75ea81",
+      "patient_id": "PAT-aa8241bf-2503-41ff-bc29-ada2690f14b6",
+      "code": "ALP",
+      "display": "Alkaline Phosphatase",
+      "effective_at": "2025-07-14T14:22:41.318452+00:00",
+      "normalized_at": "2026-07-10T21:18:08.335952+00:00",
+      "value_num": "78.4",
+      "value_text": null,
+      "comparator": null,
+      "unit": "U/L",
+      "ref_low_num": "44",
+      "ref_high_num": "147",
+      "flag_analyzer_interpretation": null,
+      "flag_system_interpretation": "NORMAL",
+      "discrepancy": null,
+      "status": "FINAL",
+      "resource_json": {
+        "id": "695380fc-7199-4c46-8f79-43114fb5c277",
+        "code": {
+          "text": "Alkaline Phosphatase",
+          "coding": [
+            {
+              "code": "ALP",
+              "system": "https://example.org/fhir/code-system/canonical-analyte",
+              "display": "Alkaline Phosphatase"
+            }
+          ]
+        },
+        "meta": {
+          "lastUpdated": "2026-07-10T21:18:08+00:00"
+        },
+        "status": "final",
+        "subject": {
+          "reference": "Patient/PAT-aa8241bf-2503-41ff-bc29-ada2690f14b6"
+        },
+        "resourceType": "Observation",
+        "valueQuantity": {
+          "code": "U/L",
+          "unit": "U/L",
+          "value": 78.4,
+          "system": "http://unitsofmeasure.org"
+        },
+        "interpretation": [
+          {
+            "text": "NORMAL",
+            "coding": [
+              {
+                "code": "NORMAL",
+                "system": "https://example.org/fhir/flag-system/lab-flag",
+                "display": "NORMAL"
+              }
+            ]
+          }
+        ],
+        "referenceRange": [
+          {
+            "low": {
+              "code": "U/L",
+              "unit": "U/L",
+              "value": 44.0,
+              "system": "http://unitsofmeasure.org"
+            },
+            "high": {
+              "code": "U/L",
+              "unit": "U/L",
+              "value": 147.0,
+              "system": "http://unitsofmeasure.org"
+            }
+          }
+        ],
+        "effectiveDateTime": "2025-07-14T14:22:41+00:00"
+      }
+    },
+    {
+      "observation_id": "a2856d60-8d27-4673-b288-31555b3867e2",
+      "test_id": "7551f91f-73b3-4534-8d6b-da20ab9e3588",
+      "diagnostic_report_id": "40b35d8c-7560-435a-9026-719f9d603ad3",
+      "ingestion_id": "4f196e13-262d-4958-9016-6fa7cc75ea81",
+      "patient_id": "PAT-aa8241bf-2503-41ff-bc29-ada2690f14b6",
+      "code": "AST",
+      "display": "Aspartate Aminotransferase",
+      "effective_at": "2025-07-14T14:22:41.318452+00:00",
+      "normalized_at": "2026-07-10T21:18:08.335952+00:00",
+      "value_num": "24.5",
+      "value_text": null,
+      "comparator": null,
+      "unit": "U/L",
+      "ref_low_num": "10",
+      "ref_high_num": "40",
+      "flag_analyzer_interpretation": null,
+      "flag_system_interpretation": "NORMAL",
+      "discrepancy": null,
+      "status": "FINAL",
+      "resource_json": {
+        "id": "a2856d60-8d27-4673-b288-31555b3867e2",
+        "code": {
+          "text": "Aspartate Aminotransferase",
+          "coding": [
+            {
+              "code": "AST",
+              "system": "https://example.org/fhir/code-system/canonical-analyte",
+              "display": "Aspartate Aminotransferase"
+            }
+          ]
+        },
+        "meta": {
+          "lastUpdated": "2026-07-10T21:18:08+00:00"
+        },
+        "status": "final",
+        "subject": {
+          "reference": "Patient/PAT-aa8241bf-2503-41ff-bc29-ada2690f14b6"
+        },
+        "resourceType": "Observation",
+        "valueQuantity": {
+          "code": "U/L",
+          "unit": "U/L",
+          "value": 24.5,
+          "system": "http://unitsofmeasure.org"
+        },
+        "interpretation": [
+          {
+            "text": "NORMAL",
+            "coding": [
+              {
+                "code": "NORMAL",
+                "system": "https://example.org/fhir/flag-system/lab-flag",
+                "display": "NORMAL"
+              }
+            ]
+          }
+        ],
+        "referenceRange": [
+          {
+            "low": {
+              "code": "U/L",
+              "unit": "U/L",
+              "value": 10.0,
+              "system": "http://unitsofmeasure.org"
+            },
+            "high": {
+              "code": "U/L",
+              "unit": "U/L",
+              "value": 40.0,
+              "system": "http://unitsofmeasure.org"
+            }
+          }
+        ],
+        "effectiveDateTime": "2025-07-14T14:22:41+00:00"
+      }
+    },
+    {
+      "observation_id": "7407b749-520a-4c5b-8863-8ee234d4571f",
+      "test_id": "7fbe9943-18ad-4f95-a656-35c7706b9b6a",
+      "diagnostic_report_id": "40b35d8c-7560-435a-9026-719f9d603ad3",
+      "ingestion_id": "4f196e13-262d-4958-9016-6fa7cc75ea81",
+      "patient_id": "PAT-aa8241bf-2503-41ff-bc29-ada2690f14b6",
+      "code": "TP",
+      "display": "Total Protein",
+      "effective_at": "2025-07-14T14:22:41.318452+00:00",
+      "normalized_at": "2026-07-10T21:18:08.335952+00:00",
+      "value_num": "7.2",
+      "value_text": null,
+      "comparator": null,
+      "unit": "g/dL",
+      "ref_low_num": "6",
+      "ref_high_num": "8.3",
+      "flag_analyzer_interpretation": null,
+      "flag_system_interpretation": "NORMAL",
+      "discrepancy": null,
+      "status": "FINAL",
+      "resource_json": {
+        "id": "7407b749-520a-4c5b-8863-8ee234d4571f",
+        "code": {
+          "text": "Total Protein",
+          "coding": [
+            {
+              "code": "TP",
+              "system": "https://example.org/fhir/code-system/canonical-analyte",
+              "display": "Total Protein"
+            }
+          ]
+        },
+        "meta": {
+          "lastUpdated": "2026-07-10T21:18:08+00:00"
+        },
+        "status": "final",
+        "subject": {
+          "reference": "Patient/PAT-aa8241bf-2503-41ff-bc29-ada2690f14b6"
+        },
+        "resourceType": "Observation",
+        "valueQuantity": {
+          "code": "g/dL",
+          "unit": "g/dL",
+          "value": 7.2,
+          "system": "http://unitsofmeasure.org"
+        },
+        "interpretation": [
+          {
+            "text": "NORMAL",
+            "coding": [
+              {
+                "code": "NORMAL",
+                "system": "https://example.org/fhir/flag-system/lab-flag",
+                "display": "NORMAL"
+              }
+            ]
+          }
+        ],
+        "referenceRange": [
+          {
+            "low": {
+              "code": "g/dL",
+              "unit": "g/dL",
+              "value": 6.0,
+              "system": "http://unitsofmeasure.org"
+            },
+            "high": {
+              "code": "g/dL",
+              "unit": "g/dL",
+              "value": 8.3,
+              "system": "http://unitsofmeasure.org"
+            }
+          }
+        ],
+        "effectiveDateTime": "2025-07-14T14:22:41+00:00"
+      }
+    },
+    {
+      "observation_id": "fe32ee5c-47f0-4b96-97fe-0920cd865054",
+      "test_id": "80b264ad-97ca-43d6-b126-f6fce12d9752",
+      "diagnostic_report_id": "40b35d8c-7560-435a-9026-719f9d603ad3",
+      "ingestion_id": "4f196e13-262d-4958-9016-6fa7cc75ea81",
+      "patient_id": "PAT-aa8241bf-2503-41ff-bc29-ada2690f14b6",
+      "code": "ALB",
+      "display": "Albumin",
+      "effective_at": "2025-07-14T14:22:41.318452+00:00",
+      "normalized_at": "2026-07-10T21:18:08.335952+00:00",
+      "value_num": "4.2",
+      "value_text": null,
+      "comparator": null,
+      "unit": "g/dL",
+      "ref_low_num": "3.5",
+      "ref_high_num": "5",
+      "flag_analyzer_interpretation": null,
+      "flag_system_interpretation": "NORMAL",
+      "discrepancy": null,
+      "status": "FINAL",
+      "resource_json": {
+        "id": "fe32ee5c-47f0-4b96-97fe-0920cd865054",
+        "code": {
+          "text": "Albumin",
+          "coding": [
+            {
+              "code": "ALB",
+              "system": "https://example.org/fhir/code-system/canonical-analyte",
+              "display": "Albumin"
+            }
+          ]
+        },
+        "meta": {
+          "lastUpdated": "2026-07-10T21:18:08+00:00"
+        },
+        "status": "final",
+        "subject": {
+          "reference": "Patient/PAT-aa8241bf-2503-41ff-bc29-ada2690f14b6"
+        },
+        "resourceType": "Observation",
+        "valueQuantity": {
+          "code": "g/dL",
+          "unit": "g/dL",
+          "value": 4.2,
+          "system": "http://unitsofmeasure.org"
+        },
+        "interpretation": [
+          {
+            "text": "NORMAL",
+            "coding": [
+              {
+                "code": "NORMAL",
+                "system": "https://example.org/fhir/flag-system/lab-flag",
+                "display": "NORMAL"
+              }
+            ]
+          }
+        ],
+        "referenceRange": [
+          {
+            "low": {
+              "code": "g/dL",
+              "unit": "g/dL",
+              "value": 3.5,
+              "system": "http://unitsofmeasure.org"
+            },
+            "high": {
+              "code": "g/dL",
+              "unit": "g/dL",
+              "value": 5.0,
+              "system": "http://unitsofmeasure.org"
+            }
+          }
+        ],
+        "effectiveDateTime": "2025-07-14T14:22:41+00:00"
+      }
+    },
+    {
+      "observation_id": "5aeba992-6926-489d-ac29-6266e225db29",
+      "test_id": "c4c291ed-30fe-4a5b-9e8e-30d2464001de",
+      "diagnostic_report_id": "40b35d8c-7560-435a-9026-719f9d603ad3",
+      "ingestion_id": "4f196e13-262d-4958-9016-6fa7cc75ea81",
+      "patient_id": "PAT-aa8241bf-2503-41ff-bc29-ada2690f14b6",
+      "code": "ALT",
+      "display": "Alanine Aminotransferase",
+      "effective_at": "2025-07-14T14:22:41.318452+00:00",
+      "normalized_at": "2026-07-10T21:18:08.335952+00:00",
+      "value_num": "32.1",
+      "value_text": null,
+      "comparator": null,
+      "unit": "U/L",
+      "ref_low_num": "7",
+      "ref_high_num": "56",
+      "flag_analyzer_interpretation": null,
+      "flag_system_interpretation": "NORMAL",
+      "discrepancy": null,
+      "status": "FINAL",
+      "resource_json": {
+        "id": "5aeba992-6926-489d-ac29-6266e225db29",
+        "code": {
+          "text": "Alanine Aminotransferase",
+          "coding": [
+            {
+              "code": "ALT",
+              "system": "https://example.org/fhir/code-system/canonical-analyte",
+              "display": "Alanine Aminotransferase"
+            }
+          ]
+        },
+        "meta": {
+          "lastUpdated": "2026-07-10T21:18:08+00:00"
+        },
+        "status": "final",
+        "subject": {
+          "reference": "Patient/PAT-aa8241bf-2503-41ff-bc29-ada2690f14b6"
+        },
+        "resourceType": "Observation",
+        "valueQuantity": {
+          "code": "U/L",
+          "unit": "U/L",
+          "value": 32.1,
+          "system": "http://unitsofmeasure.org"
+        },
+        "interpretation": [
+          {
+            "text": "NORMAL",
+            "coding": [
+              {
+                "code": "NORMAL",
+                "system": "https://example.org/fhir/flag-system/lab-flag",
+                "display": "NORMAL"
+              }
+            ]
+          }
+        ],
+        "referenceRange": [
+          {
+            "low": {
+              "code": "U/L",
+              "unit": "U/L",
+              "value": 7.0,
+              "system": "http://unitsofmeasure.org"
+            },
+            "high": {
+              "code": "U/L",
+              "unit": "U/L",
+              "value": 56.0,
+              "system": "http://unitsofmeasure.org"
+            }
+          }
+        ],
+        "effectiveDateTime": "2025-07-14T14:22:41+00:00"
+      }
+    },
+    {
+      "observation_id": "09020725-dd91-4afe-a83d-36122823f175",
+      "test_id": "29f84f97-d3fb-416f-9d50-286ae25edf1a",
+      "diagnostic_report_id": "24f08f05-02c8-4589-860b-4b247f23c88e",
+      "ingestion_id": "ccda0fbd-2e84-4c41-a834-cfd0f10c3a29",
+      "patient_id": "PAT-aa8241bf-2503-41ff-bc29-ada2690f14b6",
+      "code": "Cl",
+      "display": "Chloride",
+      "effective_at": "2025-09-08T09:47:03.884210+00:00",
+      "normalized_at": "2026-07-10T21:18:08.463779+00:00",
+      "value_num": "102.5",
+      "value_text": null,
+      "comparator": null,
+      "unit": "mEq/L",
+      "ref_low_num": "98",
+      "ref_high_num": "107",
+      "flag_analyzer_interpretation": null,
+      "flag_system_interpretation": "NORMAL",
+      "discrepancy": null,
+      "status": "FINAL",
+      "resource_json": {
+        "id": "09020725-dd91-4afe-a83d-36122823f175",
+        "code": {
+          "text": "Chloride",
+          "coding": [
+            {
+              "code": "Cl",
+              "system": "https://example.org/fhir/code-system/canonical-analyte",
+              "display": "Chloride"
+            }
+          ]
+        },
+        "meta": {
+          "lastUpdated": "2026-07-10T21:18:08+00:00"
+        },
+        "status": "final",
+        "subject": {
+          "reference": "Patient/PAT-aa8241bf-2503-41ff-bc29-ada2690f14b6"
+        },
+        "resourceType": "Observation",
+        "valueQuantity": {
+          "code": "mEq/L",
+          "unit": "mEq/L",
+          "value": 102.5,
+          "system": "http://unitsofmeasure.org"
+        },
+        "interpretation": [
+          {
+            "text": "NORMAL",
+            "coding": [
+              {
+                "code": "NORMAL",
+                "system": "https://example.org/fhir/flag-system/lab-flag",
+                "display": "NORMAL"
+              }
+            ]
+          }
+        ],
+        "referenceRange": [
+          {
+            "low": {
+              "code": "mEq/L",
+              "unit": "mEq/L",
+              "value": 98.0,
+              "system": "http://unitsofmeasure.org"
+            },
+            "high": {
+              "code": "mEq/L",
+              "unit": "mEq/L",
+              "value": 107.0,
+              "system": "http://unitsofmeasure.org"
+            }
+          }
+        ],
+        "effectiveDateTime": "2025-09-08T09:47:03+00:00"
+      }
+    },
+    {
+      "observation_id": "792e6c31-387b-4d55-8c04-eee0dd745c1b",
+      "test_id": "33ce8481-226c-4d4c-96ba-e5046eee7a04",
+      "diagnostic_report_id": "24f08f05-02c8-4589-860b-4b247f23c88e",
+      "ingestion_id": "ccda0fbd-2e84-4c41-a834-cfd0f10c3a29",
+      "patient_id": "PAT-aa8241bf-2503-41ff-bc29-ada2690f14b6",
+      "code": "Na",
+      "display": "Sodium",
+      "effective_at": "2025-09-08T09:47:03.884210+00:00",
+      "normalized_at": "2026-07-10T21:18:08.463779+00:00",
+      "value_num": "140.1",
+      "value_text": null,
+      "comparator": null,
+      "unit": "mEq/L",
+      "ref_low_num": "135",
+      "ref_high_num": "145",
+      "flag_analyzer_interpretation": null,
+      "flag_system_interpretation": "NORMAL",
+      "discrepancy": null,
+      "status": "FINAL",
+      "resource_json": {
+        "id": "792e6c31-387b-4d55-8c04-eee0dd745c1b",
+        "code": {
+          "text": "Sodium",
+          "coding": [
+            {
+              "code": "Na",
+              "system": "https://example.org/fhir/code-system/canonical-analyte",
+              "display": "Sodium"
+            }
+          ]
+        },
+        "meta": {
+          "lastUpdated": "2026-07-10T21:18:08+00:00"
+        },
+        "status": "final",
+        "subject": {
+          "reference": "Patient/PAT-aa8241bf-2503-41ff-bc29-ada2690f14b6"
+        },
+        "resourceType": "Observation",
+        "valueQuantity": {
+          "code": "mEq/L",
+          "unit": "mEq/L",
+          "value": 140.1,
+          "system": "http://unitsofmeasure.org"
+        },
+        "interpretation": [
+          {
+            "text": "NORMAL",
+            "coding": [
+              {
+                "code": "NORMAL",
+                "system": "https://example.org/fhir/flag-system/lab-flag",
+                "display": "NORMAL"
+              }
+            ]
+          }
+        ],
+        "referenceRange": [
+          {
+            "low": {
+              "code": "mEq/L",
+              "unit": "mEq/L",
+              "value": 135.0,
+              "system": "http://unitsofmeasure.org"
+            },
+            "high": {
+              "code": "mEq/L",
+              "unit": "mEq/L",
+              "value": 145.0,
+              "system": "http://unitsofmeasure.org"
+            }
+          }
+        ],
+        "effectiveDateTime": "2025-09-08T09:47:03+00:00"
+      }
+    },
+    {
+      "observation_id": "83e3d4a1-8f25-4a35-a8f6-c562ae6182ae",
+      "test_id": "57f635d0-5e19-4e53-801d-945df7160b96",
+      "diagnostic_report_id": "24f08f05-02c8-4589-860b-4b247f23c88e",
+      "ingestion_id": "ccda0fbd-2e84-4c41-a834-cfd0f10c3a29",
+      "patient_id": "PAT-aa8241bf-2503-41ff-bc29-ada2690f14b6",
+      "code": "Ca",
+      "display": "Calcium",
+      "effective_at": "2025-09-08T09:47:03.884210+00:00",
+      "normalized_at": "2026-07-10T21:18:08.463779+00:00",
+      "value_num": "9.4",
+      "value_text": null,
+      "comparator": null,
+      "unit": "mg/dL",
+      "ref_low_num": "8.6",
+      "ref_high_num": "10.2",
+      "flag_analyzer_interpretation": null,
+      "flag_system_interpretation": "NORMAL",
+      "discrepancy": null,
+      "status": "FINAL",
+      "resource_json": {
+        "id": "83e3d4a1-8f25-4a35-a8f6-c562ae6182ae",
+        "code": {
+          "text": "Calcium",
+          "coding": [
+            {
+              "code": "Ca",
+              "system": "https://example.org/fhir/code-system/canonical-analyte",
+              "display": "Calcium"
+            }
+          ]
+        },
+        "meta": {
+          "lastUpdated": "2026-07-10T21:18:08+00:00"
+        },
+        "status": "final",
+        "subject": {
+          "reference": "Patient/PAT-aa8241bf-2503-41ff-bc29-ada2690f14b6"
+        },
+        "resourceType": "Observation",
+        "valueQuantity": {
+          "code": "mg/dL",
+          "unit": "mg/dL",
+          "value": 9.4,
+          "system": "http://unitsofmeasure.org"
+        },
+        "interpretation": [
+          {
+            "text": "NORMAL",
+            "coding": [
+              {
+                "code": "NORMAL",
+                "system": "https://example.org/fhir/flag-system/lab-flag",
+                "display": "NORMAL"
+              }
+            ]
+          }
+        ],
+        "referenceRange": [
+          {
+            "low": {
+              "code": "mg/dL",
+              "unit": "mg/dL",
+              "value": 8.6,
+              "system": "http://unitsofmeasure.org"
+            },
+            "high": {
+              "code": "mg/dL",
+              "unit": "mg/dL",
+              "value": 10.2,
+              "system": "http://unitsofmeasure.org"
+            }
+          }
+        ],
+        "effectiveDateTime": "2025-09-08T09:47:03+00:00"
+      }
+    },
+    {
+      "observation_id": "cbda0b9c-d578-4a1f-833a-70790d00dbd9",
+      "test_id": "60dd2363-51c9-4c0c-8da7-cebfe00f5a82",
+      "diagnostic_report_id": "24f08f05-02c8-4589-860b-4b247f23c88e",
+      "ingestion_id": "ccda0fbd-2e84-4c41-a834-cfd0f10c3a29",
+      "patient_id": "PAT-aa8241bf-2503-41ff-bc29-ada2690f14b6",
+      "code": "GLU",
+      "display": "Glucose",
+      "effective_at": "2025-09-08T09:47:03.884210+00:00",
+      "normalized_at": "2026-07-10T21:18:08.463779+00:00",
+      "value_num": "98.1",
+      "value_text": null,
+      "comparator": null,
+      "unit": "mg/dL",
+      "ref_low_num": "70",
+      "ref_high_num": "99",
+      "flag_analyzer_interpretation": null,
+      "flag_system_interpretation": "NORMAL",
+      "discrepancy": null,
+      "status": "FINAL",
+      "resource_json": {
+        "id": "cbda0b9c-d578-4a1f-833a-70790d00dbd9",
+        "code": {
+          "text": "Glucose",
+          "coding": [
+            {
+              "code": "GLU",
+              "system": "https://example.org/fhir/code-system/canonical-analyte",
+              "display": "Glucose"
+            }
+          ]
+        },
+        "meta": {
+          "lastUpdated": "2026-07-10T21:18:08+00:00"
+        },
+        "status": "final",
+        "subject": {
+          "reference": "Patient/PAT-aa8241bf-2503-41ff-bc29-ada2690f14b6"
+        },
+        "resourceType": "Observation",
+        "valueQuantity": {
+          "code": "mg/dL",
+          "unit": "mg/dL",
+          "value": 98.1,
+          "system": "http://unitsofmeasure.org"
+        },
+        "interpretation": [
+          {
+            "text": "NORMAL",
+            "coding": [
+              {
+                "code": "NORMAL",
+                "system": "https://example.org/fhir/flag-system/lab-flag",
+                "display": "NORMAL"
+              }
+            ]
+          }
+        ],
+        "referenceRange": [
+          {
+            "low": {
+              "code": "mg/dL",
+              "unit": "mg/dL",
+              "value": 70.0,
+              "system": "http://unitsofmeasure.org"
+            },
+            "high": {
+              "code": "mg/dL",
+              "unit": "mg/dL",
+              "value": 99.0,
+              "system": "http://unitsofmeasure.org"
+            }
+          }
+        ],
+        "effectiveDateTime": "2025-09-08T09:47:03+00:00"
+      }
+    },
+    {
+      "observation_id": "a46cce22-0387-4458-b67f-43fb7603ffc0",
+      "test_id": "a36fdd82-33f8-4bbd-825f-55f956ba1f37",
+      "diagnostic_report_id": "24f08f05-02c8-4589-860b-4b247f23c88e",
+      "ingestion_id": "ccda0fbd-2e84-4c41-a834-cfd0f10c3a29",
+      "patient_id": "PAT-aa8241bf-2503-41ff-bc29-ada2690f14b6",
+      "code": "K",
+      "display": "Potassium",
+      "effective_at": "2025-09-08T09:47:03.884210+00:00",
+      "normalized_at": "2026-07-10T21:18:08.463779+00:00",
+      "value_num": "4.3",
+      "value_text": null,
+      "comparator": null,
+      "unit": "mEq/L",
+      "ref_low_num": "3.5",
+      "ref_high_num": "5.1",
+      "flag_analyzer_interpretation": null,
+      "flag_system_interpretation": "NORMAL",
+      "discrepancy": null,
+      "status": "FINAL",
+      "resource_json": {
+        "id": "a46cce22-0387-4458-b67f-43fb7603ffc0",
+        "code": {
+          "text": "Potassium",
+          "coding": [
+            {
+              "code": "K",
+              "system": "https://example.org/fhir/code-system/canonical-analyte",
+              "display": "Potassium"
+            }
+          ]
+        },
+        "meta": {
+          "lastUpdated": "2026-07-10T21:18:08+00:00"
+        },
+        "status": "final",
+        "subject": {
+          "reference": "Patient/PAT-aa8241bf-2503-41ff-bc29-ada2690f14b6"
+        },
+        "resourceType": "Observation",
+        "valueQuantity": {
+          "code": "mEq/L",
+          "unit": "mEq/L",
+          "value": 4.3,
+          "system": "http://unitsofmeasure.org"
+        },
+        "interpretation": [
+          {
+            "text": "NORMAL",
+            "coding": [
+              {
+                "code": "NORMAL",
+                "system": "https://example.org/fhir/flag-system/lab-flag",
+                "display": "NORMAL"
+              }
+            ]
+          }
+        ],
+        "referenceRange": [
+          {
+            "low": {
+              "code": "mEq/L",
+              "unit": "mEq/L",
+              "value": 3.5,
+              "system": "http://unitsofmeasure.org"
+            },
+            "high": {
+              "code": "mEq/L",
+              "unit": "mEq/L",
+              "value": 5.1,
+              "system": "http://unitsofmeasure.org"
+            }
+          }
+        ],
+        "effectiveDateTime": "2025-09-08T09:47:03+00:00"
+      }
+    },
+    {
+      "observation_id": "e6aee9ef-045e-4f7e-aefd-1e37d6519a8a",
+      "test_id": "dbba2f9f-acdd-41fd-814b-49b85f011070",
+      "diagnostic_report_id": "24f08f05-02c8-4589-860b-4b247f23c88e",
+      "ingestion_id": "ccda0fbd-2e84-4c41-a834-cfd0f10c3a29",
+      "patient_id": "PAT-aa8241bf-2503-41ff-bc29-ada2690f14b6",
+      "code": "BUN",
+      "display": "Blood Urea Nitrogen",
+      "effective_at": "2025-09-08T09:47:03.884210+00:00",
+      "normalized_at": "2026-07-10T21:18:08.463779+00:00",
+      "value_num": "13.7",
+      "value_text": null,
+      "comparator": null,
+      "unit": "mg/dL",
+      "ref_low_num": "7",
+      "ref_high_num": "20",
+      "flag_analyzer_interpretation": null,
+      "flag_system_interpretation": "NORMAL",
+      "discrepancy": null,
+      "status": "FINAL",
+      "resource_json": {
+        "id": "e6aee9ef-045e-4f7e-aefd-1e37d6519a8a",
+        "code": {
+          "text": "Blood Urea Nitrogen",
+          "coding": [
+            {
+              "code": "BUN",
+              "system": "https://example.org/fhir/code-system/canonical-analyte",
+              "display": "Blood Urea Nitrogen"
+            }
+          ]
+        },
+        "meta": {
+          "lastUpdated": "2026-07-10T21:18:08+00:00"
+        },
+        "status": "final",
+        "subject": {
+          "reference": "Patient/PAT-aa8241bf-2503-41ff-bc29-ada2690f14b6"
+        },
+        "resourceType": "Observation",
+        "valueQuantity": {
+          "code": "mg/dL",
+          "unit": "mg/dL",
+          "value": 13.7,
+          "system": "http://unitsofmeasure.org"
+        },
+        "interpretation": [
+          {
+            "text": "NORMAL",
+            "coding": [
+              {
+                "code": "NORMAL",
+                "system": "https://example.org/fhir/flag-system/lab-flag",
+                "display": "NORMAL"
+              }
+            ]
+          }
+        ],
+        "referenceRange": [
+          {
+            "low": {
+              "code": "mg/dL",
+              "unit": "mg/dL",
+              "value": 7.0,
+              "system": "http://unitsofmeasure.org"
+            },
+            "high": {
+              "code": "mg/dL",
+              "unit": "mg/dL",
+              "value": 20.0,
+              "system": "http://unitsofmeasure.org"
+            }
+          }
+        ],
+        "effectiveDateTime": "2025-09-08T09:47:03+00:00"
+      }
+    },
+    {
+      "observation_id": "296b756e-45cb-481d-802e-62cc090e8972",
+      "test_id": "ee9c6914-f931-46f9-b4f1-bcea54e4ab53",
+      "diagnostic_report_id": "24f08f05-02c8-4589-860b-4b247f23c88e",
+      "ingestion_id": "ccda0fbd-2e84-4c41-a834-cfd0f10c3a29",
+      "patient_id": "PAT-aa8241bf-2503-41ff-bc29-ada2690f14b6",
+      "code": "Cr",
+      "display": "Creatinine",
+      "effective_at": "2025-09-08T09:47:03.884210+00:00",
+      "normalized_at": "2026-07-10T21:18:08.463779+00:00",
+      "value_num": "0.88",
+      "value_text": null,
+      "comparator": null,
+      "unit": "mg/dL",
+      "ref_low_num": "0.6",
+      "ref_high_num": "1.3",
+      "flag_analyzer_interpretation": null,
+      "flag_system_interpretation": "NORMAL",
+      "discrepancy": null,
+      "status": "FINAL",
+      "resource_json": {
+        "id": "296b756e-45cb-481d-802e-62cc090e8972",
+        "code": {
+          "text": "Creatinine",
+          "coding": [
+            {
+              "code": "Cr",
+              "system": "https://example.org/fhir/code-system/canonical-analyte",
+              "display": "Creatinine"
+            }
+          ]
+        },
+        "meta": {
+          "lastUpdated": "2026-07-10T21:18:08+00:00"
+        },
+        "status": "final",
+        "subject": {
+          "reference": "Patient/PAT-aa8241bf-2503-41ff-bc29-ada2690f14b6"
+        },
+        "resourceType": "Observation",
+        "valueQuantity": {
+          "code": "mg/dL",
+          "unit": "mg/dL",
+          "value": 0.88,
+          "system": "http://unitsofmeasure.org"
+        },
+        "interpretation": [
+          {
+            "text": "NORMAL",
+            "coding": [
+              {
+                "code": "NORMAL",
+                "system": "https://example.org/fhir/flag-system/lab-flag",
+                "display": "NORMAL"
+              }
+            ]
+          }
+        ],
+        "referenceRange": [
+          {
+            "low": {
+              "code": "mg/dL",
+              "unit": "mg/dL",
+              "value": 0.6,
+              "system": "http://unitsofmeasure.org"
+            },
+            "high": {
+              "code": "mg/dL",
+              "unit": "mg/dL",
+              "value": 1.3,
+              "system": "http://unitsofmeasure.org"
+            }
+          }
+        ],
+        "effectiveDateTime": "2025-09-08T09:47:03+00:00"
+      }
+    },
+    {
+      "observation_id": "692ef3eb-2b30-4092-a103-2903a35bc912",
+      "test_id": "f3adbf96-0d02-4add-9d7a-5d0978c00783",
+      "diagnostic_report_id": "24f08f05-02c8-4589-860b-4b247f23c88e",
+      "ingestion_id": "ccda0fbd-2e84-4c41-a834-cfd0f10c3a29",
+      "patient_id": "PAT-aa8241bf-2503-41ff-bc29-ada2690f14b6",
+      "code": "HCO3",
+      "display": "Bicarbonate",
+      "effective_at": "2025-09-08T09:47:03.884210+00:00",
+      "normalized_at": "2026-07-10T21:18:08.463779+00:00",
+      "value_num": "26.1",
+      "value_text": null,
+      "comparator": null,
+      "unit": "mEq/L",
+      "ref_low_num": "22",
+      "ref_high_num": "29",
+      "flag_analyzer_interpretation": null,
+      "flag_system_interpretation": "NORMAL",
+      "discrepancy": null,
+      "status": "FINAL",
+      "resource_json": {
+        "id": "692ef3eb-2b30-4092-a103-2903a35bc912",
+        "code": {
+          "text": "Bicarbonate",
+          "coding": [
+            {
+              "code": "HCO3",
+              "system": "https://example.org/fhir/code-system/canonical-analyte",
+              "display": "Bicarbonate"
+            }
+          ]
+        },
+        "meta": {
+          "lastUpdated": "2026-07-10T21:18:08+00:00"
+        },
+        "status": "final",
+        "subject": {
+          "reference": "Patient/PAT-aa8241bf-2503-41ff-bc29-ada2690f14b6"
+        },
+        "resourceType": "Observation",
+        "valueQuantity": {
+          "code": "mEq/L",
+          "unit": "mEq/L",
+          "value": 26.1,
+          "system": "http://unitsofmeasure.org"
+        },
+        "interpretation": [
+          {
+            "text": "NORMAL",
+            "coding": [
+              {
+                "code": "NORMAL",
+                "system": "https://example.org/fhir/flag-system/lab-flag",
+                "display": "NORMAL"
+              }
+            ]
+          }
+        ],
+        "referenceRange": [
+          {
+            "low": {
+              "code": "mEq/L",
+              "unit": "mEq/L",
+              "value": 22.0,
+              "system": "http://unitsofmeasure.org"
+            },
+            "high": {
+              "code": "mEq/L",
+              "unit": "mEq/L",
+              "value": 29.0,
+              "system": "http://unitsofmeasure.org"
+            }
+          }
+        ],
+        "effectiveDateTime": "2025-09-08T09:47:03+00:00"
+      }
+    },
+    {
+      "observation_id": "f325b8f8-3809-4095-9672-0c3ec7c1e310",
+      "test_id": "13e82cf3-60db-4d63-b20c-3f113972e754",
+      "diagnostic_report_id": "df27dbfc-c69c-4475-b9cc-d942ed70a71e",
+      "ingestion_id": "ccda0fbd-2e84-4c41-a834-cfd0f10c3a29",
+      "patient_id": "PAT-aa8241bf-2503-41ff-bc29-ada2690f14b6",
+      "code": "TC",
+      "display": "Total Cholesterol",
+      "effective_at": "2025-09-08T09:47:03.884210+00:00",
+      "normalized_at": "2026-07-10T21:18:08.463779+00:00",
+      "value_num": "195.4",
+      "value_text": null,
+      "comparator": null,
+      "unit": "mg/dL",
+      "ref_low_num": "0",
+      "ref_high_num": "200",
+      "flag_analyzer_interpretation": null,
+      "flag_system_interpretation": "NORMAL",
+      "discrepancy": null,
+      "status": "FINAL",
+      "resource_json": {
+        "id": "f325b8f8-3809-4095-9672-0c3ec7c1e310",
+        "code": {
+          "text": "Total Cholesterol",
+          "coding": [
+            {
+              "code": "TC",
+              "system": "https://example.org/fhir/code-system/canonical-analyte",
+              "display": "Total Cholesterol"
+            }
+          ]
+        },
+        "meta": {
+          "lastUpdated": "2026-07-10T21:18:08+00:00"
+        },
+        "status": "final",
+        "subject": {
+          "reference": "Patient/PAT-aa8241bf-2503-41ff-bc29-ada2690f14b6"
+        },
+        "resourceType": "Observation",
+        "valueQuantity": {
+          "code": "mg/dL",
+          "unit": "mg/dL",
+          "value": 195.4,
+          "system": "http://unitsofmeasure.org"
+        },
+        "interpretation": [
+          {
+            "text": "NORMAL",
+            "coding": [
+              {
+                "code": "NORMAL",
+                "system": "https://example.org/fhir/flag-system/lab-flag",
+                "display": "NORMAL"
+              }
+            ]
+          }
+        ],
+        "referenceRange": [
+          {
+            "low": {
+              "code": "mg/dL",
+              "unit": "mg/dL",
+              "value": 0.0,
+              "system": "http://unitsofmeasure.org"
+            },
+            "high": {
+              "code": "mg/dL",
+              "unit": "mg/dL",
+              "value": 200.0,
+              "system": "http://unitsofmeasure.org"
+            }
+          }
+        ],
+        "effectiveDateTime": "2025-09-08T09:47:03+00:00"
+      }
+    },
+    {
+      "observation_id": "e12307e2-a496-4b34-ab7e-12725a906606",
+      "test_id": "215d6872-15c5-4f76-86b4-933ecc1795d0",
+      "diagnostic_report_id": "df27dbfc-c69c-4475-b9cc-d942ed70a71e",
+      "ingestion_id": "ccda0fbd-2e84-4c41-a834-cfd0f10c3a29",
+      "patient_id": "PAT-aa8241bf-2503-41ff-bc29-ada2690f14b6",
+      "code": "LDL",
+      "display": "Low-Density Lipoprotein",
+      "effective_at": "2025-09-08T09:47:03.884210+00:00",
+      "normalized_at": "2026-07-10T21:18:08.463779+00:00",
+      "value_num": "108.7",
+      "value_text": null,
+      "comparator": null,
+      "unit": "mg/dL",
+      "ref_low_num": "0",
+      "ref_high_num": "100",
+      "flag_analyzer_interpretation": "H",
+      "flag_system_interpretation": "HIGH",
+      "discrepancy": null,
+      "status": "FINAL",
+      "resource_json": {
+        "id": "e12307e2-a496-4b34-ab7e-12725a906606",
+        "code": {
+          "text": "Low-Density Lipoprotein",
+          "coding": [
+            {
+              "code": "LDL",
+              "system": "https://example.org/fhir/code-system/canonical-analyte",
+              "display": "Low-Density Lipoprotein"
+            }
+          ]
+        },
+        "meta": {
+          "lastUpdated": "2026-07-10T21:18:08+00:00"
+        },
+        "note": [
+          {
+            "text": "Analyzer interpretation flag: H"
+          }
+        ],
+        "status": "final",
+        "subject": {
+          "reference": "Patient/PAT-aa8241bf-2503-41ff-bc29-ada2690f14b6"
+        },
+        "resourceType": "Observation",
+        "valueQuantity": {
+          "code": "mg/dL",
+          "unit": "mg/dL",
+          "value": 108.7,
+          "system": "http://unitsofmeasure.org"
+        },
+        "interpretation": [
+          {
+            "text": "HIGH",
+            "coding": [
+              {
+                "code": "HIGH",
+                "system": "https://example.org/fhir/flag-system/lab-flag",
+                "display": "HIGH"
+              }
+            ]
+          }
+        ],
+        "referenceRange": [
+          {
+            "low": {
+              "code": "mg/dL",
+              "unit": "mg/dL",
+              "value": 0.0,
+              "system": "http://unitsofmeasure.org"
+            },
+            "high": {
+              "code": "mg/dL",
+              "unit": "mg/dL",
+              "value": 100.0,
+              "system": "http://unitsofmeasure.org"
+            }
+          }
+        ],
+        "effectiveDateTime": "2025-09-08T09:47:03+00:00"
+      }
+    },
+    {
+      "observation_id": "a3650350-76e7-4df8-8f61-6050921654ab",
+      "test_id": "ae380329-bc2b-424b-ba73-f0458e28a411",
+      "diagnostic_report_id": "df27dbfc-c69c-4475-b9cc-d942ed70a71e",
+      "ingestion_id": "ccda0fbd-2e84-4c41-a834-cfd0f10c3a29",
+      "patient_id": "PAT-aa8241bf-2503-41ff-bc29-ada2690f14b6",
+      "code": "HDL",
+      "display": "High-Density Lipoprotein",
+      "effective_at": "2025-09-08T09:47:03.884210+00:00",
+      "normalized_at": "2026-07-10T21:18:08.463779+00:00",
+      "value_num": "44",
+      "value_text": null,
+      "comparator": null,
+      "unit": "mg/dL",
+      "ref_low_num": "40",
+      "ref_high_num": "100",
+      "flag_analyzer_interpretation": null,
+      "flag_system_interpretation": "NORMAL",
+      "discrepancy": null,
+      "status": "FINAL",
+      "resource_json": {
+        "id": "a3650350-76e7-4df8-8f61-6050921654ab",
+        "code": {
+          "text": "High-Density Lipoprotein",
+          "coding": [
+            {
+              "code": "HDL",
+              "system": "https://example.org/fhir/code-system/canonical-analyte",
+              "display": "High-Density Lipoprotein"
+            }
+          ]
+        },
+        "meta": {
+          "lastUpdated": "2026-07-10T21:18:08+00:00"
+        },
+        "status": "final",
+        "subject": {
+          "reference": "Patient/PAT-aa8241bf-2503-41ff-bc29-ada2690f14b6"
+        },
+        "resourceType": "Observation",
+        "valueQuantity": {
+          "code": "mg/dL",
+          "unit": "mg/dL",
+          "value": 44.0,
+          "system": "http://unitsofmeasure.org"
+        },
+        "interpretation": [
+          {
+            "text": "NORMAL",
+            "coding": [
+              {
+                "code": "NORMAL",
+                "system": "https://example.org/fhir/flag-system/lab-flag",
+                "display": "NORMAL"
+              }
+            ]
+          }
+        ],
+        "referenceRange": [
+          {
+            "low": {
+              "code": "mg/dL",
+              "unit": "mg/dL",
+              "value": 40.0,
+              "system": "http://unitsofmeasure.org"
+            },
+            "high": {
+              "code": "mg/dL",
+              "unit": "mg/dL",
+              "value": 100.0,
+              "system": "http://unitsofmeasure.org"
+            }
+          }
+        ],
+        "effectiveDateTime": "2025-09-08T09:47:03+00:00"
+      }
+    },
+    {
+      "observation_id": "37f4e92b-7627-4d89-9767-8fb39b8836d2",
+      "test_id": "f448fdfd-a4dc-4b6a-a4bd-41255cbbbe2f",
+      "diagnostic_report_id": "df27dbfc-c69c-4475-b9cc-d942ed70a71e",
+      "ingestion_id": "ccda0fbd-2e84-4c41-a834-cfd0f10c3a29",
+      "patient_id": "PAT-aa8241bf-2503-41ff-bc29-ada2690f14b6",
+      "code": "TG",
+      "display": "Triglycerides",
+      "effective_at": "2025-09-08T09:47:03.884210+00:00",
+      "normalized_at": "2026-07-10T21:18:08.463779+00:00",
+      "value_num": "135.2",
+      "value_text": null,
+      "comparator": null,
+      "unit": "mg/dL",
+      "ref_low_num": "0",
+      "ref_high_num": "150",
+      "flag_analyzer_interpretation": null,
+      "flag_system_interpretation": "NORMAL",
+      "discrepancy": null,
+      "status": "FINAL",
+      "resource_json": {
+        "id": "37f4e92b-7627-4d89-9767-8fb39b8836d2",
+        "code": {
+          "text": "Triglycerides",
+          "coding": [
+            {
+              "code": "TG",
+              "system": "https://example.org/fhir/code-system/canonical-analyte",
+              "display": "Triglycerides"
+            }
+          ]
+        },
+        "meta": {
+          "lastUpdated": "2026-07-10T21:18:08+00:00"
+        },
+        "status": "final",
+        "subject": {
+          "reference": "Patient/PAT-aa8241bf-2503-41ff-bc29-ada2690f14b6"
+        },
+        "resourceType": "Observation",
+        "valueQuantity": {
+          "code": "mg/dL",
+          "unit": "mg/dL",
+          "value": 135.2,
+          "system": "http://unitsofmeasure.org"
+        },
+        "interpretation": [
+          {
+            "text": "NORMAL",
+            "coding": [
+              {
+                "code": "NORMAL",
+                "system": "https://example.org/fhir/flag-system/lab-flag",
+                "display": "NORMAL"
+              }
+            ]
+          }
+        ],
+        "referenceRange": [
+          {
+            "low": {
+              "code": "mg/dL",
+              "unit": "mg/dL",
+              "value": 0.0,
+              "system": "http://unitsofmeasure.org"
+            },
+            "high": {
+              "code": "mg/dL",
+              "unit": "mg/dL",
+              "value": 150.0,
+              "system": "http://unitsofmeasure.org"
+            }
+          }
+        ],
+        "effectiveDateTime": "2025-09-08T09:47:03+00:00"
+      }
+    },
+    {
+      "observation_id": "d2d22595-1929-4879-90d2-eee8bd8389ee",
+      "test_id": "1e8077cc-6506-4b9b-a732-c998c4850bea",
+      "diagnostic_report_id": "16a95bf6-c958-43ac-b52f-0be2ab6c27e2",
+      "ingestion_id": "ccda0fbd-2e84-4c41-a834-cfd0f10c3a29",
+      "patient_id": "PAT-aa8241bf-2503-41ff-bc29-ada2690f14b6",
+      "code": "AST",
+      "display": "Aspartate Aminotransferase",
+      "effective_at": "2025-09-08T09:47:03.884210+00:00",
+      "normalized_at": "2026-07-10T21:18:08.463779+00:00",
+      "value_num": "26.8",
+      "value_text": null,
+      "comparator": null,
+      "unit": "U/L",
+      "ref_low_num": "10",
+      "ref_high_num": "40",
+      "flag_analyzer_interpretation": null,
+      "flag_system_interpretation": "NORMAL",
+      "discrepancy": null,
+      "status": "FINAL",
+      "resource_json": {
+        "id": "d2d22595-1929-4879-90d2-eee8bd8389ee",
+        "code": {
+          "text": "Aspartate Aminotransferase",
+          "coding": [
+            {
+              "code": "AST",
+              "system": "https://example.org/fhir/code-system/canonical-analyte",
+              "display": "Aspartate Aminotransferase"
+            }
+          ]
+        },
+        "meta": {
+          "lastUpdated": "2026-07-10T21:18:08+00:00"
+        },
+        "status": "final",
+        "subject": {
+          "reference": "Patient/PAT-aa8241bf-2503-41ff-bc29-ada2690f14b6"
+        },
+        "resourceType": "Observation",
+        "valueQuantity": {
+          "code": "U/L",
+          "unit": "U/L",
+          "value": 26.8,
+          "system": "http://unitsofmeasure.org"
+        },
+        "interpretation": [
+          {
+            "text": "NORMAL",
+            "coding": [
+              {
+                "code": "NORMAL",
+                "system": "https://example.org/fhir/flag-system/lab-flag",
+                "display": "NORMAL"
+              }
+            ]
+          }
+        ],
+        "referenceRange": [
+          {
+            "low": {
+              "code": "U/L",
+              "unit": "U/L",
+              "value": 10.0,
+              "system": "http://unitsofmeasure.org"
+            },
+            "high": {
+              "code": "U/L",
+              "unit": "U/L",
+              "value": 40.0,
+              "system": "http://unitsofmeasure.org"
+            }
+          }
+        ],
+        "effectiveDateTime": "2025-09-08T09:47:03+00:00"
+      }
+    },
+    {
+      "observation_id": "2c2e53ff-3600-4a64-b3ec-221323bc4789",
+      "test_id": "5a489a89-8841-4b52-8c72-aa581ad5b977",
+      "diagnostic_report_id": "16a95bf6-c958-43ac-b52f-0be2ab6c27e2",
+      "ingestion_id": "ccda0fbd-2e84-4c41-a834-cfd0f10c3a29",
+      "patient_id": "PAT-aa8241bf-2503-41ff-bc29-ada2690f14b6",
+      "code": "ALB",
+      "display": "Albumin",
+      "effective_at": "2025-09-08T09:47:03.884210+00:00",
+      "normalized_at": "2026-07-10T21:18:08.463779+00:00",
+      "value_num": "4.1",
+      "value_text": null,
+      "comparator": null,
+      "unit": "g/dL",
+      "ref_low_num": "3.5",
+      "ref_high_num": "5",
+      "flag_analyzer_interpretation": null,
+      "flag_system_interpretation": "NORMAL",
+      "discrepancy": null,
+      "status": "FINAL",
+      "resource_json": {
+        "id": "2c2e53ff-3600-4a64-b3ec-221323bc4789",
+        "code": {
+          "text": "Albumin",
+          "coding": [
+            {
+              "code": "ALB",
+              "system": "https://example.org/fhir/code-system/canonical-analyte",
+              "display": "Albumin"
+            }
+          ]
+        },
+        "meta": {
+          "lastUpdated": "2026-07-10T21:18:08+00:00"
+        },
+        "status": "final",
+        "subject": {
+          "reference": "Patient/PAT-aa8241bf-2503-41ff-bc29-ada2690f14b6"
+        },
+        "resourceType": "Observation",
+        "valueQuantity": {
+          "code": "g/dL",
+          "unit": "g/dL",
+          "value": 4.1,
+          "system": "http://unitsofmeasure.org"
+        },
+        "interpretation": [
+          {
+            "text": "NORMAL",
+            "coding": [
+              {
+                "code": "NORMAL",
+                "system": "https://example.org/fhir/flag-system/lab-flag",
+                "display": "NORMAL"
+              }
+            ]
+          }
+        ],
+        "referenceRange": [
+          {
+            "low": {
+              "code": "g/dL",
+              "unit": "g/dL",
+              "value": 3.5,
+              "system": "http://unitsofmeasure.org"
+            },
+            "high": {
+              "code": "g/dL",
+              "unit": "g/dL",
+              "value": 5.0,
+              "system": "http://unitsofmeasure.org"
+            }
+          }
+        ],
+        "effectiveDateTime": "2025-09-08T09:47:03+00:00"
+      }
+    },
+    {
+      "observation_id": "2fd777ed-d2bc-4233-9030-c2eb35e127ac",
+      "test_id": "9e6f0efe-2c28-47ce-bbd9-aa03847790c4",
+      "diagnostic_report_id": "16a95bf6-c958-43ac-b52f-0be2ab6c27e2",
+      "ingestion_id": "ccda0fbd-2e84-4c41-a834-cfd0f10c3a29",
+      "patient_id": "PAT-aa8241bf-2503-41ff-bc29-ada2690f14b6",
+      "code": "TBIL",
+      "display": "Total Bilirubin",
+      "effective_at": "2025-09-08T09:47:03.884210+00:00",
+      "normalized_at": "2026-07-10T21:18:08.463779+00:00",
+      "value_num": "0.7",
+      "value_text": null,
+      "comparator": null,
+      "unit": "mg/dL",
+      "ref_low_num": "0.1",
+      "ref_high_num": "1.2",
+      "flag_analyzer_interpretation": null,
+      "flag_system_interpretation": "NORMAL",
+      "discrepancy": null,
+      "status": "FINAL",
+      "resource_json": {
+        "id": "2fd777ed-d2bc-4233-9030-c2eb35e127ac",
+        "code": {
+          "text": "Total Bilirubin",
+          "coding": [
+            {
+              "code": "TBIL",
+              "system": "https://example.org/fhir/code-system/canonical-analyte",
+              "display": "Total Bilirubin"
+            }
+          ]
+        },
+        "meta": {
+          "lastUpdated": "2026-07-10T21:18:08+00:00"
+        },
+        "status": "final",
+        "subject": {
+          "reference": "Patient/PAT-aa8241bf-2503-41ff-bc29-ada2690f14b6"
+        },
+        "resourceType": "Observation",
+        "valueQuantity": {
+          "code": "mg/dL",
+          "unit": "mg/dL",
+          "value": 0.7,
+          "system": "http://unitsofmeasure.org"
+        },
+        "interpretation": [
+          {
+            "text": "NORMAL",
+            "coding": [
+              {
+                "code": "NORMAL",
+                "system": "https://example.org/fhir/flag-system/lab-flag",
+                "display": "NORMAL"
+              }
+            ]
+          }
+        ],
+        "referenceRange": [
+          {
+            "low": {
+              "code": "mg/dL",
+              "unit": "mg/dL",
+              "value": 0.1,
+              "system": "http://unitsofmeasure.org"
+            },
+            "high": {
+              "code": "mg/dL",
+              "unit": "mg/dL",
+              "value": 1.2,
+              "system": "http://unitsofmeasure.org"
+            }
+          }
+        ],
+        "effectiveDateTime": "2025-09-08T09:47:03+00:00"
+      }
+    },
+    {
+      "observation_id": "20109372-93b7-4804-9bef-8037faea5045",
+      "test_id": "bb795263-9133-4a4b-a98b-dc78aa334a9c",
+      "diagnostic_report_id": "16a95bf6-c958-43ac-b52f-0be2ab6c27e2",
+      "ingestion_id": "ccda0fbd-2e84-4c41-a834-cfd0f10c3a29",
+      "patient_id": "PAT-aa8241bf-2503-41ff-bc29-ada2690f14b6",
+      "code": "ALT",
+      "display": "Alanine Aminotransferase",
+      "effective_at": "2025-09-08T09:47:03.884210+00:00",
+      "normalized_at": "2026-07-10T21:18:08.463779+00:00",
+      "value_num": "61.4",
+      "value_text": null,
+      "comparator": null,
+      "unit": "U/L",
+      "ref_low_num": "7",
+      "ref_high_num": "56",
+      "flag_analyzer_interpretation": "H",
+      "flag_system_interpretation": "HIGH",
+      "discrepancy": null,
+      "status": "FINAL",
+      "resource_json": {
+        "id": "20109372-93b7-4804-9bef-8037faea5045",
+        "code": {
+          "text": "Alanine Aminotransferase",
+          "coding": [
+            {
+              "code": "ALT",
+              "system": "https://example.org/fhir/code-system/canonical-analyte",
+              "display": "Alanine Aminotransferase"
+            }
+          ]
+        },
+        "meta": {
+          "lastUpdated": "2026-07-10T21:18:08+00:00"
+        },
+        "note": [
+          {
+            "text": "Analyzer interpretation flag: H"
+          }
+        ],
+        "status": "final",
+        "subject": {
+          "reference": "Patient/PAT-aa8241bf-2503-41ff-bc29-ada2690f14b6"
+        },
+        "resourceType": "Observation",
+        "valueQuantity": {
+          "code": "U/L",
+          "unit": "U/L",
+          "value": 61.4,
+          "system": "http://unitsofmeasure.org"
+        },
+        "interpretation": [
+          {
+            "text": "HIGH",
+            "coding": [
+              {
+                "code": "HIGH",
+                "system": "https://example.org/fhir/flag-system/lab-flag",
+                "display": "HIGH"
+              }
+            ]
+          }
+        ],
+        "referenceRange": [
+          {
+            "low": {
+              "code": "U/L",
+              "unit": "U/L",
+              "value": 7.0,
+              "system": "http://unitsofmeasure.org"
+            },
+            "high": {
+              "code": "U/L",
+              "unit": "U/L",
+              "value": 56.0,
+              "system": "http://unitsofmeasure.org"
+            }
+          }
+        ],
+        "effectiveDateTime": "2025-09-08T09:47:03+00:00"
+      }
+    },
+    {
+      "observation_id": "a30e43a1-fe2b-4c42-9ad4-4cb3b4ecaec6",
+      "test_id": "d324b5e6-be0e-4183-a18a-7aea4f52706e",
+      "diagnostic_report_id": "16a95bf6-c958-43ac-b52f-0be2ab6c27e2",
+      "ingestion_id": "ccda0fbd-2e84-4c41-a834-cfd0f10c3a29",
+      "patient_id": "PAT-aa8241bf-2503-41ff-bc29-ada2690f14b6",
+      "code": "TP",
+      "display": "Total Protein",
+      "effective_at": "2025-09-08T09:47:03.884210+00:00",
+      "normalized_at": "2026-07-10T21:18:08.463779+00:00",
+      "value_num": "7.1",
+      "value_text": null,
+      "comparator": null,
+      "unit": "g/dL",
+      "ref_low_num": "6",
+      "ref_high_num": "8.3",
+      "flag_analyzer_interpretation": null,
+      "flag_system_interpretation": "NORMAL",
+      "discrepancy": null,
+      "status": "FINAL",
+      "resource_json": {
+        "id": "a30e43a1-fe2b-4c42-9ad4-4cb3b4ecaec6",
+        "code": {
+          "text": "Total Protein",
+          "coding": [
+            {
+              "code": "TP",
+              "system": "https://example.org/fhir/code-system/canonical-analyte",
+              "display": "Total Protein"
+            }
+          ]
+        },
+        "meta": {
+          "lastUpdated": "2026-07-10T21:18:08+00:00"
+        },
+        "status": "final",
+        "subject": {
+          "reference": "Patient/PAT-aa8241bf-2503-41ff-bc29-ada2690f14b6"
+        },
+        "resourceType": "Observation",
+        "valueQuantity": {
+          "code": "g/dL",
+          "unit": "g/dL",
+          "value": 7.1,
+          "system": "http://unitsofmeasure.org"
+        },
+        "interpretation": [
+          {
+            "text": "NORMAL",
+            "coding": [
+              {
+                "code": "NORMAL",
+                "system": "https://example.org/fhir/flag-system/lab-flag",
+                "display": "NORMAL"
+              }
+            ]
+          }
+        ],
+        "referenceRange": [
+          {
+            "low": {
+              "code": "g/dL",
+              "unit": "g/dL",
+              "value": 6.0,
+              "system": "http://unitsofmeasure.org"
+            },
+            "high": {
+              "code": "g/dL",
+              "unit": "g/dL",
+              "value": 8.3,
+              "system": "http://unitsofmeasure.org"
+            }
+          }
+        ],
+        "effectiveDateTime": "2025-09-08T09:47:03+00:00"
+      }
+    },
+    {
+      "observation_id": "a0e4c25b-b487-475e-a865-ab6b629499cd",
+      "test_id": "f4107d3d-66d5-4b8d-9d45-f060cf5996cd",
+      "diagnostic_report_id": "16a95bf6-c958-43ac-b52f-0be2ab6c27e2",
+      "ingestion_id": "ccda0fbd-2e84-4c41-a834-cfd0f10c3a29",
+      "patient_id": "PAT-aa8241bf-2503-41ff-bc29-ada2690f14b6",
+      "code": "ALP",
+      "display": "Alkaline Phosphatase",
+      "effective_at": "2025-09-08T09:47:03.884210+00:00",
+      "normalized_at": "2026-07-10T21:18:08.463779+00:00",
+      "value_num": "82",
+      "value_text": null,
+      "comparator": null,
+      "unit": "U/L",
+      "ref_low_num": "44",
+      "ref_high_num": "147",
+      "flag_analyzer_interpretation": null,
+      "flag_system_interpretation": "NORMAL",
+      "discrepancy": null,
+      "status": "FINAL",
+      "resource_json": {
+        "id": "a0e4c25b-b487-475e-a865-ab6b629499cd",
+        "code": {
+          "text": "Alkaline Phosphatase",
+          "coding": [
+            {
+              "code": "ALP",
+              "system": "https://example.org/fhir/code-system/canonical-analyte",
+              "display": "Alkaline Phosphatase"
+            }
+          ]
+        },
+        "meta": {
+          "lastUpdated": "2026-07-10T21:18:08+00:00"
+        },
+        "status": "final",
+        "subject": {
+          "reference": "Patient/PAT-aa8241bf-2503-41ff-bc29-ada2690f14b6"
+        },
+        "resourceType": "Observation",
+        "valueQuantity": {
+          "code": "U/L",
+          "unit": "U/L",
+          "value": 82.0,
+          "system": "http://unitsofmeasure.org"
+        },
+        "interpretation": [
+          {
+            "text": "NORMAL",
+            "coding": [
+              {
+                "code": "NORMAL",
+                "system": "https://example.org/fhir/flag-system/lab-flag",
+                "display": "NORMAL"
+              }
+            ]
+          }
+        ],
+        "referenceRange": [
+          {
+            "low": {
+              "code": "U/L",
+              "unit": "U/L",
+              "value": 44.0,
+              "system": "http://unitsofmeasure.org"
+            },
+            "high": {
+              "code": "U/L",
+              "unit": "U/L",
+              "value": 147.0,
+              "system": "http://unitsofmeasure.org"
+            }
+          }
+        ],
+        "effectiveDateTime": "2025-09-08T09:47:03+00:00"
+      }
+    },
+    {
+      "observation_id": "ca3c1ac6-d814-46a1-b343-133096484a58",
+      "test_id": "2d645c72-e5dd-42f5-a7e7-43bbaa8b48f7",
+      "diagnostic_report_id": "ea3b2753-c521-43e4-875f-55efaa6664e7",
+      "ingestion_id": "2eef1669-e15a-40db-9e09-36cd6511c44c",
+      "patient_id": "PAT-aa8241bf-2503-41ff-bc29-ada2690f14b6",
+      "code": "K",
+      "display": "Potassium",
+      "effective_at": "2026-01-15T16:05:57.229981+00:00",
+      "normalized_at": "2026-07-10T21:18:08.504242+00:00",
+      "value_num": "4",
+      "value_text": null,
+      "comparator": null,
+      "unit": "mEq/L",
+      "ref_low_num": "3.5",
+      "ref_high_num": "5.1",
+      "flag_analyzer_interpretation": null,
+      "flag_system_interpretation": "NORMAL",
+      "discrepancy": null,
+      "status": "FINAL",
+      "resource_json": {
+        "id": "ca3c1ac6-d814-46a1-b343-133096484a58",
+        "code": {
+          "text": "Potassium",
+          "coding": [
+            {
+              "code": "K",
+              "system": "https://example.org/fhir/code-system/canonical-analyte",
+              "display": "Potassium"
+            }
+          ]
+        },
+        "meta": {
+          "lastUpdated": "2026-07-10T21:18:08+00:00"
+        },
+        "status": "final",
+        "subject": {
+          "reference": "Patient/PAT-aa8241bf-2503-41ff-bc29-ada2690f14b6"
+        },
+        "resourceType": "Observation",
+        "valueQuantity": {
+          "code": "mEq/L",
+          "unit": "mEq/L",
+          "value": 4.0,
+          "system": "http://unitsofmeasure.org"
+        },
+        "interpretation": [
+          {
+            "text": "NORMAL",
+            "coding": [
+              {
+                "code": "NORMAL",
+                "system": "https://example.org/fhir/flag-system/lab-flag",
+                "display": "NORMAL"
+              }
+            ]
+          }
+        ],
+        "referenceRange": [
+          {
+            "low": {
+              "code": "mEq/L",
+              "unit": "mEq/L",
+              "value": 3.5,
+              "system": "http://unitsofmeasure.org"
+            },
+            "high": {
+              "code": "mEq/L",
+              "unit": "mEq/L",
+              "value": 5.1,
+              "system": "http://unitsofmeasure.org"
+            }
+          }
+        ],
+        "effectiveDateTime": "2026-01-15T16:05:57+00:00"
+      }
+    },
+    {
+      "observation_id": "b672c6a0-e6c3-4b81-8069-a7f810f5a38f",
+      "test_id": "430e493b-78e9-4048-a515-33fd7485ff5d",
+      "diagnostic_report_id": "ea3b2753-c521-43e4-875f-55efaa6664e7",
+      "ingestion_id": "2eef1669-e15a-40db-9e09-36cd6511c44c",
+      "patient_id": "PAT-aa8241bf-2503-41ff-bc29-ada2690f14b6",
+      "code": "HCO3",
+      "display": "Bicarbonate",
+      "effective_at": "2026-01-15T16:05:57.229981+00:00",
+      "normalized_at": "2026-07-10T21:18:08.504242+00:00",
+      "value_num": "24.9",
+      "value_text": null,
+      "comparator": null,
+      "unit": "mEq/L",
+      "ref_low_num": "22",
+      "ref_high_num": "29",
+      "flag_analyzer_interpretation": null,
+      "flag_system_interpretation": "NORMAL",
+      "discrepancy": null,
+      "status": "FINAL",
+      "resource_json": {
+        "id": "b672c6a0-e6c3-4b81-8069-a7f810f5a38f",
+        "code": {
+          "text": "Bicarbonate",
+          "coding": [
+            {
+              "code": "HCO3",
+              "system": "https://example.org/fhir/code-system/canonical-analyte",
+              "display": "Bicarbonate"
+            }
+          ]
+        },
+        "meta": {
+          "lastUpdated": "2026-07-10T21:18:08+00:00"
+        },
+        "status": "final",
+        "subject": {
+          "reference": "Patient/PAT-aa8241bf-2503-41ff-bc29-ada2690f14b6"
+        },
+        "resourceType": "Observation",
+        "valueQuantity": {
+          "code": "mEq/L",
+          "unit": "mEq/L",
+          "value": 24.9,
+          "system": "http://unitsofmeasure.org"
+        },
+        "interpretation": [
+          {
+            "text": "NORMAL",
+            "coding": [
+              {
+                "code": "NORMAL",
+                "system": "https://example.org/fhir/flag-system/lab-flag",
+                "display": "NORMAL"
+              }
+            ]
+          }
+        ],
+        "referenceRange": [
+          {
+            "low": {
+              "code": "mEq/L",
+              "unit": "mEq/L",
+              "value": 22.0,
+              "system": "http://unitsofmeasure.org"
+            },
+            "high": {
+              "code": "mEq/L",
+              "unit": "mEq/L",
+              "value": 29.0,
+              "system": "http://unitsofmeasure.org"
+            }
+          }
+        ],
+        "effectiveDateTime": "2026-01-15T16:05:57+00:00"
+      }
+    },
+    {
+      "observation_id": "84c9d43a-a9cd-4c04-804e-6df53cd4b232",
+      "test_id": "56bf9d94-ecf8-4343-9b15-dbc3d4794865",
+      "diagnostic_report_id": "ea3b2753-c521-43e4-875f-55efaa6664e7",
+      "ingestion_id": "2eef1669-e15a-40db-9e09-36cd6511c44c",
+      "patient_id": "PAT-aa8241bf-2503-41ff-bc29-ada2690f14b6",
+      "code": "GLU",
+      "display": "Glucose",
+      "effective_at": "2026-01-15T16:05:57.229981+00:00",
+      "normalized_at": "2026-07-10T21:18:08.504242+00:00",
+      "value_num": "104.6",
+      "value_text": null,
+      "comparator": null,
+      "unit": "mg/dL",
+      "ref_low_num": "70",
+      "ref_high_num": "99",
+      "flag_analyzer_interpretation": "H",
+      "flag_system_interpretation": "HIGH",
+      "discrepancy": null,
+      "status": "FINAL",
+      "resource_json": {
+        "id": "84c9d43a-a9cd-4c04-804e-6df53cd4b232",
+        "code": {
+          "text": "Glucose",
+          "coding": [
+            {
+              "code": "GLU",
+              "system": "https://example.org/fhir/code-system/canonical-analyte",
+              "display": "Glucose"
+            }
+          ]
+        },
+        "meta": {
+          "lastUpdated": "2026-07-10T21:18:08+00:00"
+        },
+        "note": [
+          {
+            "text": "Analyzer interpretation flag: H"
+          }
+        ],
+        "status": "final",
+        "subject": {
+          "reference": "Patient/PAT-aa8241bf-2503-41ff-bc29-ada2690f14b6"
+        },
+        "resourceType": "Observation",
+        "valueQuantity": {
+          "code": "mg/dL",
+          "unit": "mg/dL",
+          "value": 104.6,
+          "system": "http://unitsofmeasure.org"
+        },
+        "interpretation": [
+          {
+            "text": "HIGH",
+            "coding": [
+              {
+                "code": "HIGH",
+                "system": "https://example.org/fhir/flag-system/lab-flag",
+                "display": "HIGH"
+              }
+            ]
+          }
+        ],
+        "referenceRange": [
+          {
+            "low": {
+              "code": "mg/dL",
+              "unit": "mg/dL",
+              "value": 70.0,
+              "system": "http://unitsofmeasure.org"
+            },
+            "high": {
+              "code": "mg/dL",
+              "unit": "mg/dL",
+              "value": 99.0,
+              "system": "http://unitsofmeasure.org"
+            }
+          }
+        ],
+        "effectiveDateTime": "2026-01-15T16:05:57+00:00"
+      }
+    },
+    {
+      "observation_id": "79e1dec1-5cf5-4c72-bb26-ff1374e0e44c",
+      "test_id": "85f85b96-7e2f-48e9-97e0-e76f2b691483",
+      "diagnostic_report_id": "ea3b2753-c521-43e4-875f-55efaa6664e7",
+      "ingestion_id": "2eef1669-e15a-40db-9e09-36cd6511c44c",
+      "patient_id": "PAT-aa8241bf-2503-41ff-bc29-ada2690f14b6",
+      "code": "BUN",
+      "display": "Blood Urea Nitrogen",
+      "effective_at": "2026-01-15T16:05:57.229981+00:00",
+      "normalized_at": "2026-07-10T21:18:08.504242+00:00",
+      "value_num": "15.1",
+      "value_text": null,
+      "comparator": null,
+      "unit": "mg/dL",
+      "ref_low_num": "7",
+      "ref_high_num": "20",
+      "flag_analyzer_interpretation": null,
+      "flag_system_interpretation": "NORMAL",
+      "discrepancy": null,
+      "status": "FINAL",
+      "resource_json": {
+        "id": "79e1dec1-5cf5-4c72-bb26-ff1374e0e44c",
+        "code": {
+          "text": "Blood Urea Nitrogen",
+          "coding": [
+            {
+              "code": "BUN",
+              "system": "https://example.org/fhir/code-system/canonical-analyte",
+              "display": "Blood Urea Nitrogen"
+            }
+          ]
+        },
+        "meta": {
+          "lastUpdated": "2026-07-10T21:18:08+00:00"
+        },
+        "status": "final",
+        "subject": {
+          "reference": "Patient/PAT-aa8241bf-2503-41ff-bc29-ada2690f14b6"
+        },
+        "resourceType": "Observation",
+        "valueQuantity": {
+          "code": "mg/dL",
+          "unit": "mg/dL",
+          "value": 15.1,
+          "system": "http://unitsofmeasure.org"
+        },
+        "interpretation": [
+          {
+            "text": "NORMAL",
+            "coding": [
+              {
+                "code": "NORMAL",
+                "system": "https://example.org/fhir/flag-system/lab-flag",
+                "display": "NORMAL"
+              }
+            ]
+          }
+        ],
+        "referenceRange": [
+          {
+            "low": {
+              "code": "mg/dL",
+              "unit": "mg/dL",
+              "value": 7.0,
+              "system": "http://unitsofmeasure.org"
+            },
+            "high": {
+              "code": "mg/dL",
+              "unit": "mg/dL",
+              "value": 20.0,
+              "system": "http://unitsofmeasure.org"
+            }
+          }
+        ],
+        "effectiveDateTime": "2026-01-15T16:05:57+00:00"
+      }
+    },
+    {
+      "observation_id": "586e8318-6a70-4bf1-805a-7fc7a58ce2c4",
+      "test_id": "87f49af2-b9d4-432f-9650-464f2dfa354a",
+      "diagnostic_report_id": "ea3b2753-c521-43e4-875f-55efaa6664e7",
+      "ingestion_id": "2eef1669-e15a-40db-9e09-36cd6511c44c",
+      "patient_id": "PAT-aa8241bf-2503-41ff-bc29-ada2690f14b6",
+      "code": "Na",
+      "display": "Sodium",
+      "effective_at": "2026-01-15T16:05:57.229981+00:00",
+      "normalized_at": "2026-07-10T21:18:08.504242+00:00",
+      "value_num": "138.7",
+      "value_text": null,
+      "comparator": null,
+      "unit": "mEq/L",
+      "ref_low_num": "135",
+      "ref_high_num": "145",
+      "flag_analyzer_interpretation": null,
+      "flag_system_interpretation": "NORMAL",
+      "discrepancy": null,
+      "status": "FINAL",
+      "resource_json": {
+        "id": "586e8318-6a70-4bf1-805a-7fc7a58ce2c4",
+        "code": {
+          "text": "Sodium",
+          "coding": [
+            {
+              "code": "Na",
+              "system": "https://example.org/fhir/code-system/canonical-analyte",
+              "display": "Sodium"
+            }
+          ]
+        },
+        "meta": {
+          "lastUpdated": "2026-07-10T21:18:08+00:00"
+        },
+        "status": "final",
+        "subject": {
+          "reference": "Patient/PAT-aa8241bf-2503-41ff-bc29-ada2690f14b6"
+        },
+        "resourceType": "Observation",
+        "valueQuantity": {
+          "code": "mEq/L",
+          "unit": "mEq/L",
+          "value": 138.7,
+          "system": "http://unitsofmeasure.org"
+        },
+        "interpretation": [
+          {
+            "text": "NORMAL",
+            "coding": [
+              {
+                "code": "NORMAL",
+                "system": "https://example.org/fhir/flag-system/lab-flag",
+                "display": "NORMAL"
+              }
+            ]
+          }
+        ],
+        "referenceRange": [
+          {
+            "low": {
+              "code": "mEq/L",
+              "unit": "mEq/L",
+              "value": 135.0,
+              "system": "http://unitsofmeasure.org"
+            },
+            "high": {
+              "code": "mEq/L",
+              "unit": "mEq/L",
+              "value": 145.0,
+              "system": "http://unitsofmeasure.org"
+            }
+          }
+        ],
+        "effectiveDateTime": "2026-01-15T16:05:57+00:00"
+      }
+    },
+    {
+      "observation_id": "045a40de-e242-4dc9-86d9-5764a81e3fbb",
+      "test_id": "c0053d1a-a9b6-4e64-b7a5-3cd87f0b663d",
+      "diagnostic_report_id": "ea3b2753-c521-43e4-875f-55efaa6664e7",
+      "ingestion_id": "2eef1669-e15a-40db-9e09-36cd6511c44c",
+      "patient_id": "PAT-aa8241bf-2503-41ff-bc29-ada2690f14b6",
+      "code": "Ca",
+      "display": "Calcium",
+      "effective_at": "2026-01-15T16:05:57.229981+00:00",
+      "normalized_at": "2026-07-10T21:18:08.504242+00:00",
+      "value_num": "9.5",
+      "value_text": null,
+      "comparator": null,
+      "unit": "mg/dL",
+      "ref_low_num": "8.6",
+      "ref_high_num": "10.2",
+      "flag_analyzer_interpretation": null,
+      "flag_system_interpretation": "NORMAL",
+      "discrepancy": null,
+      "status": "FINAL",
+      "resource_json": {
+        "id": "045a40de-e242-4dc9-86d9-5764a81e3fbb",
+        "code": {
+          "text": "Calcium",
+          "coding": [
+            {
+              "code": "Ca",
+              "system": "https://example.org/fhir/code-system/canonical-analyte",
+              "display": "Calcium"
+            }
+          ]
+        },
+        "meta": {
+          "lastUpdated": "2026-07-10T21:18:08+00:00"
+        },
+        "status": "final",
+        "subject": {
+          "reference": "Patient/PAT-aa8241bf-2503-41ff-bc29-ada2690f14b6"
+        },
+        "resourceType": "Observation",
+        "valueQuantity": {
+          "code": "mg/dL",
+          "unit": "mg/dL",
+          "value": 9.5,
+          "system": "http://unitsofmeasure.org"
+        },
+        "interpretation": [
+          {
+            "text": "NORMAL",
+            "coding": [
+              {
+                "code": "NORMAL",
+                "system": "https://example.org/fhir/flag-system/lab-flag",
+                "display": "NORMAL"
+              }
+            ]
+          }
+        ],
+        "referenceRange": [
+          {
+            "low": {
+              "code": "mg/dL",
+              "unit": "mg/dL",
+              "value": 8.6,
+              "system": "http://unitsofmeasure.org"
+            },
+            "high": {
+              "code": "mg/dL",
+              "unit": "mg/dL",
+              "value": 10.2,
+              "system": "http://unitsofmeasure.org"
+            }
+          }
+        ],
+        "effectiveDateTime": "2026-01-15T16:05:57+00:00"
+      }
+    },
+    {
+      "observation_id": "502dd443-7703-430e-ab45-9ff18d695b16",
+      "test_id": "cac97e51-0217-45bc-9aa4-7188adc72be3",
+      "diagnostic_report_id": "ea3b2753-c521-43e4-875f-55efaa6664e7",
+      "ingestion_id": "2eef1669-e15a-40db-9e09-36cd6511c44c",
+      "patient_id": "PAT-aa8241bf-2503-41ff-bc29-ada2690f14b6",
+      "code": "Cl",
+      "display": "Chloride",
+      "effective_at": "2026-01-15T16:05:57.229981+00:00",
+      "normalized_at": "2026-07-10T21:18:08.504242+00:00",
+      "value_num": "100.8",
+      "value_text": null,
+      "comparator": null,
+      "unit": "mEq/L",
+      "ref_low_num": "98",
+      "ref_high_num": "107",
+      "flag_analyzer_interpretation": null,
+      "flag_system_interpretation": "NORMAL",
+      "discrepancy": null,
+      "status": "FINAL",
+      "resource_json": {
+        "id": "502dd443-7703-430e-ab45-9ff18d695b16",
+        "code": {
+          "text": "Chloride",
+          "coding": [
+            {
+              "code": "Cl",
+              "system": "https://example.org/fhir/code-system/canonical-analyte",
+              "display": "Chloride"
+            }
+          ]
+        },
+        "meta": {
+          "lastUpdated": "2026-07-10T21:18:08+00:00"
+        },
+        "status": "final",
+        "subject": {
+          "reference": "Patient/PAT-aa8241bf-2503-41ff-bc29-ada2690f14b6"
+        },
+        "resourceType": "Observation",
+        "valueQuantity": {
+          "code": "mEq/L",
+          "unit": "mEq/L",
+          "value": 100.8,
+          "system": "http://unitsofmeasure.org"
+        },
+        "interpretation": [
+          {
+            "text": "NORMAL",
+            "coding": [
+              {
+                "code": "NORMAL",
+                "system": "https://example.org/fhir/flag-system/lab-flag",
+                "display": "NORMAL"
+              }
+            ]
+          }
+        ],
+        "referenceRange": [
+          {
+            "low": {
+              "code": "mEq/L",
+              "unit": "mEq/L",
+              "value": 98.0,
+              "system": "http://unitsofmeasure.org"
+            },
+            "high": {
+              "code": "mEq/L",
+              "unit": "mEq/L",
+              "value": 107.0,
+              "system": "http://unitsofmeasure.org"
+            }
+          }
+        ],
+        "effectiveDateTime": "2026-01-15T16:05:57+00:00"
+      }
+    },
+    {
+      "observation_id": "e0e58bca-0013-4c1f-906d-d4d3e1ccbd60",
+      "test_id": "d6efcaa5-a4b6-4154-bec8-fd6dab5048b6",
+      "diagnostic_report_id": "ea3b2753-c521-43e4-875f-55efaa6664e7",
+      "ingestion_id": "2eef1669-e15a-40db-9e09-36cd6511c44c",
+      "patient_id": "PAT-aa8241bf-2503-41ff-bc29-ada2690f14b6",
+      "code": "Cr",
+      "display": "Creatinine",
+      "effective_at": "2026-01-15T16:05:57.229981+00:00",
+      "normalized_at": "2026-07-10T21:18:08.504242+00:00",
+      "value_num": "0.91",
+      "value_text": null,
+      "comparator": null,
+      "unit": "mg/dL",
+      "ref_low_num": "0.6",
+      "ref_high_num": "1.3",
+      "flag_analyzer_interpretation": null,
+      "flag_system_interpretation": "NORMAL",
+      "discrepancy": null,
+      "status": "FINAL",
+      "resource_json": {
+        "id": "e0e58bca-0013-4c1f-906d-d4d3e1ccbd60",
+        "code": {
+          "text": "Creatinine",
+          "coding": [
+            {
+              "code": "Cr",
+              "system": "https://example.org/fhir/code-system/canonical-analyte",
+              "display": "Creatinine"
+            }
+          ]
+        },
+        "meta": {
+          "lastUpdated": "2026-07-10T21:18:08+00:00"
+        },
+        "status": "final",
+        "subject": {
+          "reference": "Patient/PAT-aa8241bf-2503-41ff-bc29-ada2690f14b6"
+        },
+        "resourceType": "Observation",
+        "valueQuantity": {
+          "code": "mg/dL",
+          "unit": "mg/dL",
+          "value": 0.91,
+          "system": "http://unitsofmeasure.org"
+        },
+        "interpretation": [
+          {
+            "text": "NORMAL",
+            "coding": [
+              {
+                "code": "NORMAL",
+                "system": "https://example.org/fhir/flag-system/lab-flag",
+                "display": "NORMAL"
+              }
+            ]
+          }
+        ],
+        "referenceRange": [
+          {
+            "low": {
+              "code": "mg/dL",
+              "unit": "mg/dL",
+              "value": 0.6,
+              "system": "http://unitsofmeasure.org"
+            },
+            "high": {
+              "code": "mg/dL",
+              "unit": "mg/dL",
+              "value": 1.3,
+              "system": "http://unitsofmeasure.org"
+            }
+          }
+        ],
+        "effectiveDateTime": "2026-01-15T16:05:57+00:00"
+      }
+    },
+    {
+      "observation_id": "c3027813-ead4-418b-b6d6-860c8f36f752",
+      "test_id": "756fe7fc-e12d-47ed-84bb-2b92c5e40bc2",
+      "diagnostic_report_id": "6b09258f-b4ee-4ef8-b399-a1c4572de8b2",
+      "ingestion_id": "2eef1669-e15a-40db-9e09-36cd6511c44c",
+      "patient_id": "PAT-aa8241bf-2503-41ff-bc29-ada2690f14b6",
+      "code": "TG",
+      "display": "Triglycerides",
+      "effective_at": "2026-01-15T16:05:57.229981+00:00",
+      "normalized_at": "2026-07-10T21:18:08.504242+00:00",
+      "value_num": "120.9",
+      "value_text": null,
+      "comparator": null,
+      "unit": "mg/dL",
+      "ref_low_num": "0",
+      "ref_high_num": "150",
+      "flag_analyzer_interpretation": null,
+      "flag_system_interpretation": "NORMAL",
+      "discrepancy": null,
+      "status": "FINAL",
+      "resource_json": {
+        "id": "c3027813-ead4-418b-b6d6-860c8f36f752",
+        "code": {
+          "text": "Triglycerides",
+          "coding": [
+            {
+              "code": "TG",
+              "system": "https://example.org/fhir/code-system/canonical-analyte",
+              "display": "Triglycerides"
+            }
+          ]
+        },
+        "meta": {
+          "lastUpdated": "2026-07-10T21:18:08+00:00"
+        },
+        "status": "final",
+        "subject": {
+          "reference": "Patient/PAT-aa8241bf-2503-41ff-bc29-ada2690f14b6"
+        },
+        "resourceType": "Observation",
+        "valueQuantity": {
+          "code": "mg/dL",
+          "unit": "mg/dL",
+          "value": 120.9,
+          "system": "http://unitsofmeasure.org"
+        },
+        "interpretation": [
+          {
+            "text": "NORMAL",
+            "coding": [
+              {
+                "code": "NORMAL",
+                "system": "https://example.org/fhir/flag-system/lab-flag",
+                "display": "NORMAL"
+              }
+            ]
+          }
+        ],
+        "referenceRange": [
+          {
+            "low": {
+              "code": "mg/dL",
+              "unit": "mg/dL",
+              "value": 0.0,
+              "system": "http://unitsofmeasure.org"
+            },
+            "high": {
+              "code": "mg/dL",
+              "unit": "mg/dL",
+              "value": 150.0,
+              "system": "http://unitsofmeasure.org"
+            }
+          }
+        ],
+        "effectiveDateTime": "2026-01-15T16:05:57+00:00"
+      }
+    },
+    {
+      "observation_id": "7c8dc5e7-1887-4bc7-9a3e-1e7eba31d76d",
+      "test_id": "79e4a37c-3c13-4ddb-9e62-460c32b82102",
+      "diagnostic_report_id": "6b09258f-b4ee-4ef8-b399-a1c4572de8b2",
+      "ingestion_id": "2eef1669-e15a-40db-9e09-36cd6511c44c",
+      "patient_id": "PAT-aa8241bf-2503-41ff-bc29-ada2690f14b6",
+      "code": "HDL",
+      "display": "High-Density Lipoprotein",
+      "effective_at": "2026-01-15T16:05:57.229981+00:00",
+      "normalized_at": "2026-07-10T21:18:08.504242+00:00",
+      "value_num": "46.3",
+      "value_text": null,
+      "comparator": null,
+      "unit": "mg/dL",
+      "ref_low_num": "40",
+      "ref_high_num": "100",
+      "flag_analyzer_interpretation": null,
+      "flag_system_interpretation": "NORMAL",
+      "discrepancy": null,
+      "status": "FINAL",
+      "resource_json": {
+        "id": "7c8dc5e7-1887-4bc7-9a3e-1e7eba31d76d",
+        "code": {
+          "text": "High-Density Lipoprotein",
+          "coding": [
+            {
+              "code": "HDL",
+              "system": "https://example.org/fhir/code-system/canonical-analyte",
+              "display": "High-Density Lipoprotein"
+            }
+          ]
+        },
+        "meta": {
+          "lastUpdated": "2026-07-10T21:18:08+00:00"
+        },
+        "status": "final",
+        "subject": {
+          "reference": "Patient/PAT-aa8241bf-2503-41ff-bc29-ada2690f14b6"
+        },
+        "resourceType": "Observation",
+        "valueQuantity": {
+          "code": "mg/dL",
+          "unit": "mg/dL",
+          "value": 46.3,
+          "system": "http://unitsofmeasure.org"
+        },
+        "interpretation": [
+          {
+            "text": "NORMAL",
+            "coding": [
+              {
+                "code": "NORMAL",
+                "system": "https://example.org/fhir/flag-system/lab-flag",
+                "display": "NORMAL"
+              }
+            ]
+          }
+        ],
+        "referenceRange": [
+          {
+            "low": {
+              "code": "mg/dL",
+              "unit": "mg/dL",
+              "value": 40.0,
+              "system": "http://unitsofmeasure.org"
+            },
+            "high": {
+              "code": "mg/dL",
+              "unit": "mg/dL",
+              "value": 100.0,
+              "system": "http://unitsofmeasure.org"
+            }
+          }
+        ],
+        "effectiveDateTime": "2026-01-15T16:05:57+00:00"
+      }
+    },
+    {
+      "observation_id": "fdeea675-d51e-4b45-a5a3-8a47cabe3e33",
+      "test_id": "980b7858-d706-4005-a0bf-17158903abe2",
+      "diagnostic_report_id": "6b09258f-b4ee-4ef8-b399-a1c4572de8b2",
+      "ingestion_id": "2eef1669-e15a-40db-9e09-36cd6511c44c",
+      "patient_id": "PAT-aa8241bf-2503-41ff-bc29-ada2690f14b6",
+      "code": "LDL",
+      "display": "Low-Density Lipoprotein",
+      "effective_at": "2026-01-15T16:05:57.229981+00:00",
+      "normalized_at": "2026-07-10T21:18:08.504242+00:00",
+      "value_num": "92.4",
+      "value_text": null,
+      "comparator": null,
+      "unit": "mg/dL",
+      "ref_low_num": "0",
+      "ref_high_num": "100",
+      "flag_analyzer_interpretation": null,
+      "flag_system_interpretation": "NORMAL",
+      "discrepancy": null,
+      "status": "FINAL",
+      "resource_json": {
+        "id": "fdeea675-d51e-4b45-a5a3-8a47cabe3e33",
+        "code": {
+          "text": "Low-Density Lipoprotein",
+          "coding": [
+            {
+              "code": "LDL",
+              "system": "https://example.org/fhir/code-system/canonical-analyte",
+              "display": "Low-Density Lipoprotein"
+            }
+          ]
+        },
+        "meta": {
+          "lastUpdated": "2026-07-10T21:18:08+00:00"
+        },
+        "status": "final",
+        "subject": {
+          "reference": "Patient/PAT-aa8241bf-2503-41ff-bc29-ada2690f14b6"
+        },
+        "resourceType": "Observation",
+        "valueQuantity": {
+          "code": "mg/dL",
+          "unit": "mg/dL",
+          "value": 92.4,
+          "system": "http://unitsofmeasure.org"
+        },
+        "interpretation": [
+          {
+            "text": "NORMAL",
+            "coding": [
+              {
+                "code": "NORMAL",
+                "system": "https://example.org/fhir/flag-system/lab-flag",
+                "display": "NORMAL"
+              }
+            ]
+          }
+        ],
+        "referenceRange": [
+          {
+            "low": {
+              "code": "mg/dL",
+              "unit": "mg/dL",
+              "value": 0.0,
+              "system": "http://unitsofmeasure.org"
+            },
+            "high": {
+              "code": "mg/dL",
+              "unit": "mg/dL",
+              "value": 100.0,
+              "system": "http://unitsofmeasure.org"
+            }
+          }
+        ],
+        "effectiveDateTime": "2026-01-15T16:05:57+00:00"
+      }
+    },
+    {
+      "observation_id": "d2da876b-f808-4728-b953-c91f7ec42840",
+      "test_id": "f4bb1ea2-fa93-4218-b1a1-2129af524c6f",
+      "diagnostic_report_id": "6b09258f-b4ee-4ef8-b399-a1c4572de8b2",
+      "ingestion_id": "2eef1669-e15a-40db-9e09-36cd6511c44c",
+      "patient_id": "PAT-aa8241bf-2503-41ff-bc29-ada2690f14b6",
+      "code": "TC",
+      "display": "Total Cholesterol",
+      "effective_at": "2026-01-15T16:05:57.229981+00:00",
+      "normalized_at": "2026-07-10T21:18:08.504242+00:00",
+      "value_num": "178.3",
+      "value_text": null,
+      "comparator": null,
+      "unit": "mg/dL",
+      "ref_low_num": "0",
+      "ref_high_num": "200",
+      "flag_analyzer_interpretation": null,
+      "flag_system_interpretation": "NORMAL",
+      "discrepancy": null,
+      "status": "FINAL",
+      "resource_json": {
+        "id": "d2da876b-f808-4728-b953-c91f7ec42840",
+        "code": {
+          "text": "Total Cholesterol",
+          "coding": [
+            {
+              "code": "TC",
+              "system": "https://example.org/fhir/code-system/canonical-analyte",
+              "display": "Total Cholesterol"
+            }
+          ]
+        },
+        "meta": {
+          "lastUpdated": "2026-07-10T21:18:08+00:00"
+        },
+        "status": "final",
+        "subject": {
+          "reference": "Patient/PAT-aa8241bf-2503-41ff-bc29-ada2690f14b6"
+        },
+        "resourceType": "Observation",
+        "valueQuantity": {
+          "code": "mg/dL",
+          "unit": "mg/dL",
+          "value": 178.3,
+          "system": "http://unitsofmeasure.org"
+        },
+        "interpretation": [
+          {
+            "text": "NORMAL",
+            "coding": [
+              {
+                "code": "NORMAL",
+                "system": "https://example.org/fhir/flag-system/lab-flag",
+                "display": "NORMAL"
+              }
+            ]
+          }
+        ],
+        "referenceRange": [
+          {
+            "low": {
+              "code": "mg/dL",
+              "unit": "mg/dL",
+              "value": 0.0,
+              "system": "http://unitsofmeasure.org"
+            },
+            "high": {
+              "code": "mg/dL",
+              "unit": "mg/dL",
+              "value": 200.0,
+              "system": "http://unitsofmeasure.org"
+            }
+          }
+        ],
+        "effectiveDateTime": "2026-01-15T16:05:57+00:00"
+      }
+    },
+    {
+      "observation_id": "c1087826-ba04-4fd9-b924-7f653fa363f0",
+      "test_id": "59711cce-dab2-4228-aeaf-f8d0100075c3",
+      "diagnostic_report_id": "41a3f033-4c35-48e5-aecd-7e490fe191ce",
+      "ingestion_id": "2eef1669-e15a-40db-9e09-36cd6511c44c",
+      "patient_id": "PAT-aa8241bf-2503-41ff-bc29-ada2690f14b6",
+      "code": "TP",
+      "display": "Total Protein",
+      "effective_at": "2026-01-15T16:05:57.229981+00:00",
+      "normalized_at": "2026-07-10T21:18:08.504242+00:00",
+      "value_num": "7.3",
+      "value_text": null,
+      "comparator": null,
+      "unit": "g/dL",
+      "ref_low_num": "6",
+      "ref_high_num": "8.3",
+      "flag_analyzer_interpretation": null,
+      "flag_system_interpretation": "NORMAL",
+      "discrepancy": null,
+      "status": "FINAL",
+      "resource_json": {
+        "id": "c1087826-ba04-4fd9-b924-7f653fa363f0",
+        "code": {
+          "text": "Total Protein",
+          "coding": [
+            {
+              "code": "TP",
+              "system": "https://example.org/fhir/code-system/canonical-analyte",
+              "display": "Total Protein"
+            }
+          ]
+        },
+        "meta": {
+          "lastUpdated": "2026-07-10T21:18:08+00:00"
+        },
+        "status": "final",
+        "subject": {
+          "reference": "Patient/PAT-aa8241bf-2503-41ff-bc29-ada2690f14b6"
+        },
+        "resourceType": "Observation",
+        "valueQuantity": {
+          "code": "g/dL",
+          "unit": "g/dL",
+          "value": 7.3,
+          "system": "http://unitsofmeasure.org"
+        },
+        "interpretation": [
+          {
+            "text": "NORMAL",
+            "coding": [
+              {
+                "code": "NORMAL",
+                "system": "https://example.org/fhir/flag-system/lab-flag",
+                "display": "NORMAL"
+              }
+            ]
+          }
+        ],
+        "referenceRange": [
+          {
+            "low": {
+              "code": "g/dL",
+              "unit": "g/dL",
+              "value": 6.0,
+              "system": "http://unitsofmeasure.org"
+            },
+            "high": {
+              "code": "g/dL",
+              "unit": "g/dL",
+              "value": 8.3,
+              "system": "http://unitsofmeasure.org"
+            }
+          }
+        ],
+        "effectiveDateTime": "2026-01-15T16:05:57+00:00"
+      }
+    },
+    {
+      "observation_id": "8b2a354c-3b2c-4b87-97b0-81c1a4f043c0",
+      "test_id": "720d0f03-b0ed-4e00-9918-0ae89d6a0ab3",
+      "diagnostic_report_id": "41a3f033-4c35-48e5-aecd-7e490fe191ce",
+      "ingestion_id": "2eef1669-e15a-40db-9e09-36cd6511c44c",
+      "patient_id": "PAT-aa8241bf-2503-41ff-bc29-ada2690f14b6",
+      "code": "ALT",
+      "display": "Alanine Aminotransferase",
+      "effective_at": "2026-01-15T16:05:57.229981+00:00",
+      "normalized_at": "2026-07-10T21:18:08.504242+00:00",
+      "value_num": "40.2",
+      "value_text": null,
+      "comparator": null,
+      "unit": "U/L",
+      "ref_low_num": "7",
+      "ref_high_num": "56",
+      "flag_analyzer_interpretation": null,
+      "flag_system_interpretation": "NORMAL",
+      "discrepancy": null,
+      "status": "FINAL",
+      "resource_json": {
+        "id": "8b2a354c-3b2c-4b87-97b0-81c1a4f043c0",
+        "code": {
+          "text": "Alanine Aminotransferase",
+          "coding": [
+            {
+              "code": "ALT",
+              "system": "https://example.org/fhir/code-system/canonical-analyte",
+              "display": "Alanine Aminotransferase"
+            }
+          ]
+        },
+        "meta": {
+          "lastUpdated": "2026-07-10T21:18:08+00:00"
+        },
+        "status": "final",
+        "subject": {
+          "reference": "Patient/PAT-aa8241bf-2503-41ff-bc29-ada2690f14b6"
+        },
+        "resourceType": "Observation",
+        "valueQuantity": {
+          "code": "U/L",
+          "unit": "U/L",
+          "value": 40.2,
+          "system": "http://unitsofmeasure.org"
+        },
+        "interpretation": [
+          {
+            "text": "NORMAL",
+            "coding": [
+              {
+                "code": "NORMAL",
+                "system": "https://example.org/fhir/flag-system/lab-flag",
+                "display": "NORMAL"
+              }
+            ]
+          }
+        ],
+        "referenceRange": [
+          {
+            "low": {
+              "code": "U/L",
+              "unit": "U/L",
+              "value": 7.0,
+              "system": "http://unitsofmeasure.org"
+            },
+            "high": {
+              "code": "U/L",
+              "unit": "U/L",
+              "value": 56.0,
+              "system": "http://unitsofmeasure.org"
+            }
+          }
+        ],
+        "effectiveDateTime": "2026-01-15T16:05:57+00:00"
+      }
+    },
+    {
+      "observation_id": "d8f9e6aa-00e5-46c6-9ad0-6fda2425664c",
+      "test_id": "b66415c3-7411-4e16-a9b8-b856b0e1209c",
+      "diagnostic_report_id": "41a3f033-4c35-48e5-aecd-7e490fe191ce",
+      "ingestion_id": "2eef1669-e15a-40db-9e09-36cd6511c44c",
+      "patient_id": "PAT-aa8241bf-2503-41ff-bc29-ada2690f14b6",
+      "code": "AST",
+      "display": "Aspartate Aminotransferase",
+      "effective_at": "2026-01-15T16:05:57.229981+00:00",
+      "normalized_at": "2026-07-10T21:18:08.504242+00:00",
+      "value_num": "22.3",
+      "value_text": null,
+      "comparator": null,
+      "unit": "U/L",
+      "ref_low_num": "10",
+      "ref_high_num": "40",
+      "flag_analyzer_interpretation": null,
+      "flag_system_interpretation": "NORMAL",
+      "discrepancy": null,
+      "status": "FINAL",
+      "resource_json": {
+        "id": "d8f9e6aa-00e5-46c6-9ad0-6fda2425664c",
+        "code": {
+          "text": "Aspartate Aminotransferase",
+          "coding": [
+            {
+              "code": "AST",
+              "system": "https://example.org/fhir/code-system/canonical-analyte",
+              "display": "Aspartate Aminotransferase"
+            }
+          ]
+        },
+        "meta": {
+          "lastUpdated": "2026-07-10T21:18:08+00:00"
+        },
+        "status": "final",
+        "subject": {
+          "reference": "Patient/PAT-aa8241bf-2503-41ff-bc29-ada2690f14b6"
+        },
+        "resourceType": "Observation",
+        "valueQuantity": {
+          "code": "U/L",
+          "unit": "U/L",
+          "value": 22.3,
+          "system": "http://unitsofmeasure.org"
+        },
+        "interpretation": [
+          {
+            "text": "NORMAL",
+            "coding": [
+              {
+                "code": "NORMAL",
+                "system": "https://example.org/fhir/flag-system/lab-flag",
+                "display": "NORMAL"
+              }
+            ]
+          }
+        ],
+        "referenceRange": [
+          {
+            "low": {
+              "code": "U/L",
+              "unit": "U/L",
+              "value": 10.0,
+              "system": "http://unitsofmeasure.org"
+            },
+            "high": {
+              "code": "U/L",
+              "unit": "U/L",
+              "value": 40.0,
+              "system": "http://unitsofmeasure.org"
+            }
+          }
+        ],
+        "effectiveDateTime": "2026-01-15T16:05:57+00:00"
+      }
+    },
+    {
+      "observation_id": "4018b2ce-3833-4b5a-93aa-4c7f4de7e617",
+      "test_id": "c86410ff-cf2f-498f-be6d-db1fb33f6ed1",
+      "diagnostic_report_id": "41a3f033-4c35-48e5-aecd-7e490fe191ce",
+      "ingestion_id": "2eef1669-e15a-40db-9e09-36cd6511c44c",
+      "patient_id": "PAT-aa8241bf-2503-41ff-bc29-ada2690f14b6",
+      "code": "ALP",
+      "display": "Alkaline Phosphatase",
+      "effective_at": "2026-01-15T16:05:57.229981+00:00",
+      "normalized_at": "2026-07-10T21:18:08.504242+00:00",
+      "value_num": "75.6",
+      "value_text": null,
+      "comparator": null,
+      "unit": "U/L",
+      "ref_low_num": "44",
+      "ref_high_num": "147",
+      "flag_analyzer_interpretation": null,
+      "flag_system_interpretation": "NORMAL",
+      "discrepancy": null,
+      "status": "FINAL",
+      "resource_json": {
+        "id": "4018b2ce-3833-4b5a-93aa-4c7f4de7e617",
+        "code": {
+          "text": "Alkaline Phosphatase",
+          "coding": [
+            {
+              "code": "ALP",
+              "system": "https://example.org/fhir/code-system/canonical-analyte",
+              "display": "Alkaline Phosphatase"
+            }
+          ]
+        },
+        "meta": {
+          "lastUpdated": "2026-07-10T21:18:08+00:00"
+        },
+        "status": "final",
+        "subject": {
+          "reference": "Patient/PAT-aa8241bf-2503-41ff-bc29-ada2690f14b6"
+        },
+        "resourceType": "Observation",
+        "valueQuantity": {
+          "code": "U/L",
+          "unit": "U/L",
+          "value": 75.6,
+          "system": "http://unitsofmeasure.org"
+        },
+        "interpretation": [
+          {
+            "text": "NORMAL",
+            "coding": [
+              {
+                "code": "NORMAL",
+                "system": "https://example.org/fhir/flag-system/lab-flag",
+                "display": "NORMAL"
+              }
+            ]
+          }
+        ],
+        "referenceRange": [
+          {
+            "low": {
+              "code": "U/L",
+              "unit": "U/L",
+              "value": 44.0,
+              "system": "http://unitsofmeasure.org"
+            },
+            "high": {
+              "code": "U/L",
+              "unit": "U/L",
+              "value": 147.0,
+              "system": "http://unitsofmeasure.org"
+            }
+          }
+        ],
+        "effectiveDateTime": "2026-01-15T16:05:57+00:00"
+      }
+    },
+    {
+      "observation_id": "467091c7-ad02-4182-80e4-7485dbff0392",
+      "test_id": "c9906eea-ad02-4689-80a1-97e34da858e3",
+      "diagnostic_report_id": "41a3f033-4c35-48e5-aecd-7e490fe191ce",
+      "ingestion_id": "2eef1669-e15a-40db-9e09-36cd6511c44c",
+      "patient_id": "PAT-aa8241bf-2503-41ff-bc29-ada2690f14b6",
+      "code": "ALB",
+      "display": "Albumin",
+      "effective_at": "2026-01-15T16:05:57.229981+00:00",
+      "normalized_at": "2026-07-10T21:18:08.504242+00:00",
+      "value_num": "4.3",
+      "value_text": null,
+      "comparator": null,
+      "unit": "g/dL",
+      "ref_low_num": "3.5",
+      "ref_high_num": "5",
+      "flag_analyzer_interpretation": null,
+      "flag_system_interpretation": "NORMAL",
+      "discrepancy": null,
+      "status": "FINAL",
+      "resource_json": {
+        "id": "467091c7-ad02-4182-80e4-7485dbff0392",
+        "code": {
+          "text": "Albumin",
+          "coding": [
+            {
+              "code": "ALB",
+              "system": "https://example.org/fhir/code-system/canonical-analyte",
+              "display": "Albumin"
+            }
+          ]
+        },
+        "meta": {
+          "lastUpdated": "2026-07-10T21:18:08+00:00"
+        },
+        "status": "final",
+        "subject": {
+          "reference": "Patient/PAT-aa8241bf-2503-41ff-bc29-ada2690f14b6"
+        },
+        "resourceType": "Observation",
+        "valueQuantity": {
+          "code": "g/dL",
+          "unit": "g/dL",
+          "value": 4.3,
+          "system": "http://unitsofmeasure.org"
+        },
+        "interpretation": [
+          {
+            "text": "NORMAL",
+            "coding": [
+              {
+                "code": "NORMAL",
+                "system": "https://example.org/fhir/flag-system/lab-flag",
+                "display": "NORMAL"
+              }
+            ]
+          }
+        ],
+        "referenceRange": [
+          {
+            "low": {
+              "code": "g/dL",
+              "unit": "g/dL",
+              "value": 3.5,
+              "system": "http://unitsofmeasure.org"
+            },
+            "high": {
+              "code": "g/dL",
+              "unit": "g/dL",
+              "value": 5.0,
+              "system": "http://unitsofmeasure.org"
+            }
+          }
+        ],
+        "effectiveDateTime": "2026-01-15T16:05:57+00:00"
+      }
+    },
+    {
+      "observation_id": "abd85032-26e6-4056-ab1f-b3d0992a021b",
+      "test_id": "f03c897f-f137-43b4-a62c-b89275efee5b",
+      "diagnostic_report_id": "41a3f033-4c35-48e5-aecd-7e490fe191ce",
+      "ingestion_id": "2eef1669-e15a-40db-9e09-36cd6511c44c",
+      "patient_id": "PAT-aa8241bf-2503-41ff-bc29-ada2690f14b6",
+      "code": "TBIL",
+      "display": "Total Bilirubin",
+      "effective_at": "2026-01-15T16:05:57.229981+00:00",
+      "normalized_at": "2026-07-10T21:18:08.504242+00:00",
+      "value_num": "0.55",
+      "value_text": null,
+      "comparator": null,
+      "unit": "mg/dL",
+      "ref_low_num": "0.1",
+      "ref_high_num": "1.2",
+      "flag_analyzer_interpretation": null,
+      "flag_system_interpretation": "NORMAL",
+      "discrepancy": null,
+      "status": "FINAL",
+      "resource_json": {
+        "id": "abd85032-26e6-4056-ab1f-b3d0992a021b",
+        "code": {
+          "text": "Total Bilirubin",
+          "coding": [
+            {
+              "code": "TBIL",
+              "system": "https://example.org/fhir/code-system/canonical-analyte",
+              "display": "Total Bilirubin"
+            }
+          ]
+        },
+        "meta": {
+          "lastUpdated": "2026-07-10T21:18:08+00:00"
+        },
+        "status": "final",
+        "subject": {
+          "reference": "Patient/PAT-aa8241bf-2503-41ff-bc29-ada2690f14b6"
+        },
+        "resourceType": "Observation",
+        "valueQuantity": {
+          "code": "mg/dL",
+          "unit": "mg/dL",
+          "value": 0.55,
+          "system": "http://unitsofmeasure.org"
+        },
+        "interpretation": [
+          {
+            "text": "NORMAL",
+            "coding": [
+              {
+                "code": "NORMAL",
+                "system": "https://example.org/fhir/flag-system/lab-flag",
+                "display": "NORMAL"
+              }
+            ]
+          }
+        ],
+        "referenceRange": [
+          {
+            "low": {
+              "code": "mg/dL",
+              "unit": "mg/dL",
+              "value": 0.1,
+              "system": "http://unitsofmeasure.org"
+            },
+            "high": {
+              "code": "mg/dL",
+              "unit": "mg/dL",
+              "value": 1.2,
+              "system": "http://unitsofmeasure.org"
+            }
+          }
+        ],
+        "effectiveDateTime": "2026-01-15T16:05:57+00:00"
+      }
+    }
+  ]
+}
