@@ -25,7 +25,12 @@ class ObservationSetup:
     normalized_at: datetime
 
 
-def _make_ingestion(*, ingestion_id: uuid.UUID) -> Ingestion:
+def _make_ingestion(
+    *,
+    ingestion_id: uuid.UUID,
+    kind: str = "SEED",
+    session_id: uuid.UUID | None = None,
+) -> Ingestion:
     return Ingestion(
         ingestion_id=ingestion_id,
         instrument_id="INST-1",
@@ -37,6 +42,8 @@ def _make_ingestion(*, ingestion_id: uuid.UUID) -> Ingestion:
         server_sha256="0" * 64,
         status="RECEIVED",
         source_filename="fixture.csv",
+        kind=kind,
+        session_id=session_id,
     )
 
 
@@ -421,3 +428,147 @@ def test_get_latest_by_patient_id_excludes_current_ingestion_and_limits_results(
     assert [row.resource_json["id"] for row in rows] == list(
         reversed(historical_ids)
     )
+
+
+def _add_visit_observation(
+    db_session,
+    *,
+    patient_id: str,
+    code: str,
+    effective_at: datetime,
+    kind: str,
+    session_id: uuid.UUID | None,
+) -> uuid.UUID:
+    """Create a full ingestion->panel->test->report->observation chain for a
+    patient, tagged with the given ingestion kind/session_id. Returns the
+    observation_id."""
+    ingestion_id = uuid.uuid4()
+    db_session.add(
+        _make_ingestion(
+            ingestion_id=ingestion_id, kind=kind, session_id=session_id
+        )
+    )
+    db_session.flush()
+
+    panel_id = uuid.uuid4()
+    db_session.add(
+        Panel(
+            panel_id=panel_id,
+            ingestion_id=ingestion_id,
+            sample_id=f"SAM-{ingestion_id.hex[:8]}",
+            patient_id=patient_id,
+            panel_code="BMP",
+            collection_timestamp=effective_at,
+        )
+    )
+    db_session.flush()
+
+    test_id = uuid.uuid4()
+    db_session.add(
+        Test(
+            test_id=test_id,
+            panel_id=panel_id,
+            row_number=1,
+            test_code=code,
+            test_name=None,
+            analyte_type=None,
+            result_raw="1",
+            units_raw=None,
+            result_value_num=1.0,
+            result_comparator=None,
+            ref_low_raw=None,
+            ref_high_raw=None,
+            flag=None,
+        )
+    )
+    diagnostic_report_id = uuid.uuid4()
+    db_session.add(
+        DiagnosticReport(
+            diagnostic_report_id=diagnostic_report_id,
+            ingestion_id=ingestion_id,
+            panel_id=panel_id,
+            patient_id=patient_id,
+            panel_code="BMP",
+            effective_at=effective_at,
+            normalized_at=effective_at,
+            resource_json=None,
+            status="FINAL",
+        )
+    )
+    db_session.flush()
+
+    observation_id = uuid.uuid4()
+    db_session.add(
+        Observation(
+            observation_id=observation_id,
+            test_id=test_id,
+            diagnostic_report_id=diagnostic_report_id,
+            ingestion_id=ingestion_id,
+            patient_id=patient_id,
+            code=code,
+            display="Glucose",
+            effective_at=effective_at,
+            normalized_at=effective_at,
+            value_num=1.0,
+            value_text=None,
+            comparator=None,
+            unit="mg/dL",
+            ref_low_num=None,
+            ref_high_num=None,
+            flag_analyzer_interpretation=None,
+            flag_system_interpretation=None,
+            discrepancy=None,
+            status="FINAL",
+            resource_json=None,
+        )
+    )
+    db_session.flush()
+    return observation_id
+
+
+def test_get_by_patient_id_session_scope_excludes_other_sessions(db_session):
+    """A session-scoped read returns SEED rows plus only the caller's own
+    SESSION upload — never another live session's upload of the same visit
+    (the shared-demo-patient duplicate 'latest' bug)."""
+    patient_id = "PAT-SHARED"
+    repo = ObservationRepository(db_session)
+
+    seed_effective = datetime(2026, 1, 15, 16, 5, tzinfo=timezone.utc)
+    visit_effective = datetime(2026, 7, 9, 23, 35, tzinfo=timezone.utc)
+
+    my_session = uuid.uuid4()
+    other_session = uuid.uuid4()
+
+    seed_obs = _add_visit_observation(
+        db_session,
+        patient_id=patient_id,
+        code="GLU",
+        effective_at=seed_effective,
+        kind="SEED",
+        session_id=None,
+    )
+    mine = _add_visit_observation(
+        db_session,
+        patient_id=patient_id,
+        code="GLU",
+        effective_at=visit_effective,
+        kind="SESSION",
+        session_id=my_session,
+    )
+    theirs = _add_visit_observation(
+        db_session,
+        patient_id=patient_id,
+        code="GLU",
+        effective_at=visit_effective,
+        kind="SESSION",
+        session_id=other_session,
+    )
+
+    scoped = repo.get_by_patient_id(patient_id, session_id=my_session)
+    scoped_ids = {row.observation_id for row in scoped}
+    assert scoped_ids == {seed_obs, mine}
+    assert theirs not in scoped_ids
+
+    # Unscoped read (cookie-less caller) still sees everything.
+    unscoped = repo.get_by_patient_id(patient_id)
+    assert {row.observation_id for row in unscoped} == {seed_obs, mine, theirs}

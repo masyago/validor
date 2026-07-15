@@ -27,7 +27,7 @@ For the demo, 3 test panels and corresponding clinical guidelines were included
 * Dockerized app (hosted on AWS EC2 instance) with live API.
 * See service in action: from raw lab report ingestion through the pipeline.
 
-<img src="supporting_docs/screen_demo.gif" width="500">
+<img src="supporting_docs/screen_demo.gif" width="700">
 
 
 ### Local Demo: Docker & CLI
