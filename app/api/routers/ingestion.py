@@ -1107,6 +1107,7 @@ async def read_diagnostic_reports_for_patient_id(
 )
 async def read_observations_for_patient_id(
     patient_id: PatientId,
+    request: Request,
     include_json: Annotated[
         int,
         Query(
@@ -1133,8 +1134,21 @@ async def read_observations_for_patient_id(
     ] = 0,
     db: Session = Depends(get_session),
 ) -> list[ReadObservationsOkResponse]:
+    # Scope the history to the caller's own session so the shared demo
+    # patient never surfaces another live session's upload of the same visit
+    # as a duplicate "latest" row. Cookie-less callers (CLI, back-office) get
+    # the unscoped view. See app/api/routers/session.py for how the cookie is
+    # minted and how SESSION uploads are tagged.
+    raw_session_id = request.cookies.get(SESSION_COOKIE_NAME)
+    session_id: Optional[UUID] = None
+    if raw_session_id:
+        try:
+            session_id = UUID(raw_session_id)
+        except ValueError:
+            session_id = None
+
     obs_repo = ObservationRepository(db)
-    obs_rows = obs_repo.get_by_patient_id(patient_id)
+    obs_rows = obs_repo.get_by_patient_id(patient_id, session_id=session_id)
 
     """
     Check if patient_id exists in panel_repo as Panel is the first table

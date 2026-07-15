@@ -1,9 +1,10 @@
 from sqlalchemy.orm import Session
-from sqlalchemy import select, update, desc, asc, bindparam, func
+from sqlalchemy import select, update, desc, asc, bindparam, func, or_
 from uuid import UUID
 from sqlalchemy.dialects.postgresql import insert
 from typing import Any, cast
 
+from app.persistence.models.core import Ingestion
 from app.persistence.models.normalization import Observation
 from app.schemas.identifiers import PatientId
 
@@ -203,10 +204,23 @@ class ObservationRepository:
         ]
         self.session.execute(stmt, mapped_params)
 
-    def get_by_patient_id(self, patient_id: PatientId) -> list[Observation]:
+    def get_by_patient_id(
+        self,
+        patient_id: PatientId,
+        *,
+        session_id: UUID | None = None,
+    ) -> list[Observation]:
         """
         Returns zero or multiple rows. If zero rows, returns an empty list.
         Results are ordered by (1) effective_at datetime in descending order (new first). If datetime is the same, results are additionally ordered by observation_id to have reproducible order of the results.
+
+        When ``session_id`` is provided the result is scoped to a single
+        visitor: permanent SEED observations plus only that session's own
+        SESSION uploads. This isolates the shared demo patient so one
+        session never sees another session's still-live upload of the same
+        visit (which would otherwise render as a duplicate "latest" row).
+        When ``session_id`` is None every observation for the patient is
+        returned (unscoped, back-office/CLI behaviour).
         """
         stmt = (
             select(Observation)
@@ -216,6 +230,16 @@ class ObservationRepository:
                 asc(Observation.observation_id),
             )
         )
+        if session_id is not None:
+            stmt = stmt.join(
+                Ingestion,
+                Ingestion.ingestion_id == Observation.ingestion_id,
+            ).where(
+                or_(
+                    Ingestion.kind == "SEED",
+                    Ingestion.session_id == session_id,
+                )
+            )
         return list(self.session.scalars(stmt).all())
 
     def get_latest_by_patient_id(
