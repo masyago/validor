@@ -49,4 +49,6 @@ dev_only/
 .env
 
 # Generated embedding fixtures (regenerate via scripts/build_fixtures.py)
-fixtures/CLAUDE.md
+fixtures/
+
+CLAUDE.md
