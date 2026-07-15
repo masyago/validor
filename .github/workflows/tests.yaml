@@ -17,8 +17,9 @@ jobs:
     services:
     # Label used to access the service container
       postgres:
-        # Docker Hub image
-        image: postgres:17
+        # pgvector image bundles the `vector` extension required by migrations
+        # (matches the local compose.yaml db service: pgvector/pgvector:pg16)
+        image: pgvector/pgvector:pg16
         ports:
             - 5432:5432
         env:
