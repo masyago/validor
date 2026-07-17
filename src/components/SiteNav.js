@@ -16,8 +16,8 @@ export default function SiteNav() {
           <span className="nav-logo-text">Validor</span>
         </a>
         <div className="nav-links">
-          <a href="#pipeline">Pipeline</a>
           <a href="#demo">Demo</a>
+          <a href="#pipeline">Pipeline</a>
           <a href="https://github.com/masyago/validor" target="_blank" rel="noopener noreferrer">GitHub</a>
         </div>
         <a href="#demo" className="nav-cta">
