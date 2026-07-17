@@ -90,8 +90,17 @@ export default function AiAnnotationTab({
                           <div className="finding-body">
                             <div className="finding-desc">{f.description}</div>
                             <div className="finding-meta">
-                              <span className="finding-meta-item">Confidence: <span>{typeof f.confidence === "number" ? f.confidence.toFixed(2) : "—"}</span></span>
                               <span className="finding-meta-item">Trend: <span>{f.trend_direction || "—"}</span></span>
+                              <span className="finding-meta-item conf-score-item">
+                                Confidence Score
+                                <span className="conf-help" tabIndex={0}>
+                                  ?
+                                  <span className="conf-tip" role="tooltip">
+                                    The model&rsquo;s self-reported certainty in this individual finding (0.00&ndash;1.00). Lower values reflect sparse patient history, borderline results, or limited guideline coverage. Any finding below 0.70 flags the report for clinician review.
+                                  </span>
+                                </span>
+                                : <span>{typeof f.confidence === "number" ? f.confidence.toFixed(2) : "—"}</span>
+                              </span>
                             </div>
                             <button className="hist-btn" onClick={() => toggleHistory(f.analyte_code)}>
                               {h?.shown ? "Hide history ▲" : "Show history ▾"}

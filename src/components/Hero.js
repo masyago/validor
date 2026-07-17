@@ -4,17 +4,21 @@ export default function Hero() {
       <div className="hero">
         <div className="hero-badge">
           <span className="hero-badge-dot" />
-          AI-Assisted, Clinician-Approved
+          Governed AI · FHIR R4 · Full Provenance
         </div>
         <h1>
-          Less to review.
+          From raw lab results
           <br />
-          <em>More to say.</em>
+          to a patient message.
         </h1>
+        <p className="hero-sub hero-sub-lead">
+          Clinicians lose hours a day to lab results: reviewing them, spotting what matters, and explaining them to patients.
+        </p>
         <p className="hero-sub">
-          Validor checks every result, but only flags what needs attention.
-          It drafts the message that puts those findings in perspective.
-          Nothing is sent without a clinician's approval.
+          Validor ingests raw analyzer output, validates and normalizes it into FHIR R4, then runs a governed AI layer to surface priority findings, plot trends, and draft the patient message.
+        </p>
+        <p className="hero-sub hero-sub-gov">
+          The AI augments the data, it never gates or alters it. Nothing reaches a patient without a clinician's approval.
         </p>
       </div>
 
