@@ -39,11 +39,10 @@ export default function DemoPanel({
               <span>Clinical scenario</span>
             </div>
             <p className="scenario-text">
-              A patient on long-term statin therapy had four lab visits
-              (BMP, LFT, lipid panel) in the past year. Most analytes stay within
-              range, some are improving over time, but one test (Glucose) has
-              concerning trend. Validor identifies the trends, lists priority findings
-              and drafts a patient message for clinician approval.
+              A patient on long-term statin therapy had three lab visits (BMP, LFT, lipid panel) in the past year. The patient's most recent lab report was just released.
+            </p>
+              <p className="scenario-text">
+              Clicking 'Run Demo' simulates the service receiving new lab results from a lab analyzer and runs the full pipeline with live API calls.
             </p>
           </div>
           <button
@@ -54,12 +53,7 @@ export default function DemoPanel({
           >
             {demoPhase === "loading" ? "Running…" : "Run Demo →"}
           </button>
-          <div className="demo-body">
-            {demoPhase === "idle" && (
-              <div style={{ padding: 24, color: "var(--muted)", fontSize: 13, fontFamily: "var(--mono)" }}>
-                <p>Click <strong style={{ color: "var(--white)" }}>Run Demo</strong> to call the live API.</p>
-              </div>
-            )}
+
 
             {demoPhase === "loading" && (
               <div style={{ padding: 24 }}>
@@ -310,6 +304,5 @@ export default function DemoPanel({
             )}
           </div>
         </div>
-      </div>
   );
 }
