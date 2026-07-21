@@ -21,7 +21,7 @@ export default function SiteNav() {
           <a href="https://github.com/masyago/validor" target="_blank" rel="noopener noreferrer">GitHub</a>
         </div>
         <a href="#demo" className="nav-cta">
-          Try Demo →
+          Try Demo
         </a>
       </nav>
   );

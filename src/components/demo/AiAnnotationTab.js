@@ -57,6 +57,12 @@ export default function AiAnnotationTab({
                 {avgConf != null && (
                   <div className="conf-wrap">
                     <span className="conf-label">Confidence</span>
+                      <span className="conf-help" tabIndex={0}>
+                        ?
+                        <span className="conf-tip" role="tooltip">
+                          The model's self-reported certainty in this individual finding (0.00&ndash;1.00). Lower values reflect sparse patient history, borderline results, or limited guideline coverage. Any finding below 0.70 flags the report for clinician review.
+                        </span>
+                      </span>
                     <div className="conf-bar"><div className="conf-fill" style={{ width: `${Math.round(avgConf * 100)}%` }} /></div>
                     <span className="conf-num">{avgConf.toFixed(2)}</span>
                   </div>
@@ -96,7 +102,7 @@ export default function AiAnnotationTab({
                                 <span className="conf-help" tabIndex={0}>
                                   ?
                                   <span className="conf-tip" role="tooltip">
-                                    The model&rsquo;s self-reported certainty in this individual finding (0.00&ndash;1.00). Lower values reflect sparse patient history, borderline results, or limited guideline coverage. Any finding below 0.70 flags the report for clinician review.
+                                    The model's self-reported certainty in this individual finding (0.00&ndash;1.00). Lower values reflect sparse patient history, borderline results, or limited guideline coverage. Any finding below 0.70 flags the report for clinician review.
                                   </span>
                                 </span>
                                 : <span>{typeof f.confidence === "number" ? f.confidence.toFixed(2) : "—"}</span>
