@@ -51,7 +51,7 @@ export default function DemoPanel({
             disabled={demoPhase === "loading"}
             style={{ opacity: demoPhase === "loading" ? 0.6 : 1, cursor: demoPhase === "loading" ? "not-allowed" : "pointer", marginTop: 12 }}
           >
-            {demoPhase === "loading" ? "Running…" : "Run Demo →"}
+            {demoPhase === "loading" ? "Running…" : "Run Demo"}
           </button>
 
 

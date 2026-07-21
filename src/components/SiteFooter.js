@@ -8,7 +8,7 @@ export default function SiteFooter({ onContact }) {
           </button>
           <a
             className="footer-link"
-            href="https://github.com/masyago/vlast-health"
+            href="https://github.com/masyago/validor"
             target="_blank"
             rel="noopener noreferrer"
           >
