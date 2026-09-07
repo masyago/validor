@@ -2,7 +2,7 @@
 
 Keep styling consistent across CSV generator and uploader.
 
-Expose a `make_console()` factory so non-CLI callers (e.g., Streamlit) can
+Expose a `make_console()` factory so non-CLI callers can
 capture the same output into an in-memory buffer.
 """
 
