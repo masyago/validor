@@ -4,7 +4,7 @@ set -eu
 # Render sets PORT for web services.
 PORT="${PORT:-8000}"
 
-# Streamlit (and some libs) want a writable HOME.
+# Some libs want a writable HOME.
 export HOME="${HOME:-/tmp}"
 
 echo "Running Alembic migrations (with retries)..."

@@ -118,7 +118,7 @@ drafted for clinician review.
 
 #### De-identified AI boundary
 * No direct identifiers cross into the AI layer. It's done via pseudonymization,
-not full de-identification. Hardening this seam is on the roadmap.
+not full de-identification. Hardening is on the roadmap.
 
 #### Grounded and traceable
 * **RAG:** abnormal findings drive a semantic search over clinical guideline
